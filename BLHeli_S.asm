@@ -245,8 +245,8 @@ Flags3:					DS	1		; State flags. NOT reset upon init_start
 PGM_DIR_REV				EQU	0		; Programmed direction. 0=normal, 1=reversed
 PGM_BIDIR_REV				EQU	1		; Programmed bidirectional direction. 0=normal, 1=reversed
 PGM_BIDIR					EQU	2		; Programmed bidirectional operation. 0=normal, 1=bidirectional
-;						EQU	3
-;						EQU	4
+SKIP_T2_INT				EQU	3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
+CLOCK_SET_AT_48MHZ			EQU	4		; Set if 48MHz MCUs run at 48MHz
 ;						EQU	5
 ;						EQU	6
 ;						EQU	7
@@ -320,9 +320,6 @@ Throttle_Gain_M:			DS	1		; Gain to be applied to RCP value (multiplier 0=1x, 1=2
 Throttle_Gain_BD_Rev:		DS	1		; Gain to be applied to RCP value for reverse direction in bidirectional mode
 Throttle_Gain_BD_Rev_M:		DS	1		; Gain to be applied to RCP value for reverse direction in bidirectional mode (multiplier 0=1x, 1=2x, 2=4x etc)
 Beep_Strength:				DS	1		; Strength of beeps
-
-Skip_T2_Int:				DS	1		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
-Clock_Set_At_48MHz:			DS	1		; Variable set if 48MHz MCUs run at 48MHz
 
 Flash_Key_1:				DS	1		; Flash key one
 Flash_Key_2:				DS	1		; Flash key two
@@ -502,8 +499,7 @@ t1_int:
 	mov	A, Temp1
 	rrc	A
 	mov	Temp1, A
-	mov	A, Clock_Set_At_48MHz
-	jz	t1_int_frame_time_scaled
+	jnb	Flags3.CLOCK_SET_AT_48MHZ, t1_int_frame_time_scaled
 
 	clr	C
 	mov	A, Temp2
@@ -533,8 +529,7 @@ t1_int_frame_time_scaled:
 	mov	Temp2, #8				; Number of bits per byte
 	mov	DPTR, #0				; Set pointer
 	mov	Temp1, DShot_Pwm_Thr	; DShot pulse width criteria
-	mov	A, Clock_Set_At_48MHz
-	jnz	t1_int_decode
+	jb	Flags3.CLOCK_SET_AT_48MHZ, t1_int_decode
 
 	clr	C
 	mov	A, Temp1				; Scale pulse width criteria
@@ -806,18 +801,16 @@ t2_int:	; Happens every 32ms
 	clr	TMR2CN0_TF2H				; Clear interrupt flag
 	inc	Timer2_X
 IF MCU_48MHZ == 1
-	mov	A, Clock_Set_At_48MHz
-	jz	t2_int_start
+	jnb	Flags3.CLOCK_SET_AT_48MHZ, t2_int_start
 
 	; Check skip variable
-	mov	A, Skip_T2_Int
-	jz	t2_int_start				; Execute this interrupt
+	jnb	Flags3.SKIP_T2_INT, t2_int_start	; Execute this interrupt
 
-	mov	Skip_T2_Int, #0
+	clr	Flags3.SKIP_T2_INT
 	ajmp	t2_int_exit
 
 t2_int_start:
-	mov	Skip_T2_Int, #1			; Skip next interrupt
+	setb	Flags3.SKIP_T2_INT			; Skip next interrupt
 ENDIF
 	; Update RC pulse timeout counter
 	mov	A, Rcp_Timeout_Cntd			; RC pulse timeout count zero?

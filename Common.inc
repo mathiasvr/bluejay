@@ -215,8 +215,7 @@ IF MCU_48MHZ == 1
 ENDIF
 	orl	TCON, #10h				; Enable timer0 again
 IF MCU_48MHZ == 1
-	mov	A, Clock_Set_At_48MHz
-	jnz	Get_Rcp_End
+	jb	Flags3.CLOCK_SET_AT_48MHZ, Get_Rcp_End
 	clr	C
 	mov	A, Temp1
 	rlc	A
@@ -383,7 +382,7 @@ Set_MCU_Clk_24MHz MACRO
 	mov	SFRPAGE, #10h
 	mov	PFE0CN, #00h			; Set flash timing for 24MHz
 	mov	SFRPAGE, #00h
-	mov	Clock_Set_At_48MHz, #0
+	clr	Flags3.CLOCK_SET_AT_48MHZ
 ENDM
 
 Set_MCU_Clk_48MHz MACRO
@@ -391,5 +390,5 @@ Set_MCU_Clk_48MHz MACRO
 	mov	PFE0CN, #30h			; Set flash timing for 48MHz
 	mov	SFRPAGE, #00h
 	mov	CLKSEL, #03h			; Set clock to 48MHz
-	mov	Clock_Set_At_48MHz, #1
+	setb	Flags3.CLOCK_SET_AT_48MHZ
 ENDM
