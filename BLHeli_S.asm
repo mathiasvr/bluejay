@@ -511,16 +511,16 @@ t1_int:
 
 t1_int_frame_time_scaled:
 	mov	A, Temp2
-	jnz	t1_int_msb_fail		; Frame too long
+	jnz	t1_int_frame_fail		; Frame too long
 	mov	A, Temp1
 	subb	A, DShot_Frame_Length_Thr
-	jc	t1_int_msb_fail		; Frame too short
+	jc	t1_int_frame_fail		; Frame too short
 	subb	A, DShot_Frame_Length_Thr
-	jnc	t1_int_msb_fail		; Frame too long
+	jnc	t1_int_frame_fail		; Frame too long
 
 	; Check that correct number of pulses is received
 	mov	A, DPL				; Read current pointer
-	cjne	A, #16, t1_int_msb_fail
+	cjne	A, #16, t1_int_frame_fail
 
 	; Decode transmitted data
 	mov	Temp5, #0				; Reset timestamp
@@ -539,7 +539,7 @@ t1_int_frame_time_scaled:
 t1_int_decode:
 	ajmp	t1_int_decode_msb
 
-t1_int_msb_fail:
+t1_int_frame_fail:
 	mov	DPTR, #0			; Set pointer to start
 	setb	IE_EX0			; Enable int0 interrupts
 	setb	IE_EX1			; Enable int1 interrupts
@@ -547,34 +547,37 @@ t1_int_msb_fail:
 
 t1_int_decode_msb:
 	; Decode DShot data Msb. Use more code space to save time (by not using loop)
-	Decode_DShot_2Msb
-	Decode_DShot_2Msb
-	Decode_DShot_2Msb
-	Decode_DShot_2Msb
+	Decode_DShot_2Bit	Temp4
+	Decode_DShot_2Bit	Temp4
+	; Decode DShot data Lsb high nibble
+	Decode_DShot_2Bit	Temp3
+	Decode_DShot_2Bit	Temp3
 	ajmp	t1_int_decode_lsb
 
-t1_int_lsb_fail:
+t1_int_decode_fail:
 	mov	DPTR, #0			; Set pointer to start
 	setb	IE_EX0			; Enable int0 interrupts
 	setb	IE_EX1			; Enable int1 interrupts
 	ajmp	int0_int_outside_range
 
 t1_int_decode_lsb:
-	; Decode DShot data Lsb
-	Decode_DShot_2Lsb
-	Decode_DShot_2Lsb
-	Decode_DShot_2Lsb
-	Decode_DShot_2Lsb
+	; Decode DShot data Lsb low nibble
+	Decode_DShot_2Bit	Temp3
+	Decode_DShot_2Bit	Temp3
+	; Decode DShot data checksum
+	Decode_DShot_2Bit	Temp7
+	Decode_DShot_2Bit	Temp7
+
 	; XOR check (in inverted data, which is ok)
-	mov	A, Temp4
-	swap	A
-	xrl	A, Temp4
-	xrl	A, Temp3
-	anl	A, #0F0h
-	mov	Temp2, A
 	mov	A, Temp3
 	swap	A
-	anl	A, #0F0h
+	xrl	A, Temp3
+	xrl	A, Temp4
+	anl	A, #0Fh
+	mov	Temp2, A
+
+	mov	A, Temp7
+	anl	A, #0Fh
 	clr	C
 	subb	A, Temp2
 	jz	t1_int_xor_ok		; XOR check
@@ -585,23 +588,15 @@ t1_int_decode_lsb:
 	ajmp	int0_int_outside_range
 
 t1_int_xor_ok:
-	; Swap to be LSB aligned to 12 bits (and invert)
+	; Invert DShot data
 	mov	A, Temp4
 	cpl	A
-	swap	A
-	anl	A, #0F0h			; Low nibble of high byte
-	mov	Temp2, A
-	mov	A, Temp3
-	cpl	A
-	swap	A
-	anl	A, #0Fh			; High nibble of low byte
-	orl	A, Temp2
-	mov	Temp3, A
-	mov	A, Temp4			; High nibble of high byte
-	cpl	A
-	swap	A
 	anl	A, #0Fh
 	mov	Temp4, A
+	mov	A, Temp3
+	cpl	A
+	mov	Temp3, A
+
 	; Subtract 96 (still 12 bits)
 	clr	C
 	mov	A, Temp3
@@ -779,12 +774,6 @@ ENDIF
 	dec	Rcp_Outside_Range_Cnt
 
 	ajmp	int0_int_pulse_ready
-
-t1_int_frame_fail:
-	mov	DPTR, #0					; Set pointer to start
-	setb	IE_EX0					; Enable int0 interrupts
-	setb	IE_EX1					; Enable int1 interrupts
-	ajmp	int0_int_outside_range
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
