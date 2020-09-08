@@ -524,9 +524,6 @@ t1_int_frame_time_scaled:
 
 	; Decode transmitted data
 	mov	Temp5, #0				; Reset timestamp
-	mov	Temp4, #0				; High byte of receive buffer
-	mov	Temp3, #0				; Low byte of receive buffer
-	mov	Temp2, #8				; Number of bits per byte
 	mov	DPTR, #0				; Set pointer
 	mov	Temp1, DShot_Pwm_Thr	; DShot pulse width criteria
 	jb	Flags3.CLOCK_SET_AT_48MHZ, t1_int_decode
@@ -537,57 +534,45 @@ t1_int_frame_time_scaled:
 	mov	Temp1, A
 
 t1_int_decode:
-	ajmp	t1_int_decode_msb
-
-t1_int_frame_fail:
-	mov	DPTR, #0			; Set pointer to start
-	setb	IE_EX0			; Enable int0 interrupts
-	setb	IE_EX1			; Enable int1 interrupts
-	ajmp	int0_int_outside_range
-
-t1_int_decode_msb:
 	; Decode DShot data Msb. Use more code space to save time (by not using loop)
-	Decode_DShot_2Bit	Temp4
-	Decode_DShot_2Bit	Temp4
-	; Decode DShot data Lsb high nibble
-	Decode_DShot_2Bit	Temp3
-	Decode_DShot_2Bit	Temp3
+	Decode_DShot_2Bit	Temp4, t1_int_frame_fail
+	Decode_DShot_2Bit	Temp4, t1_int_frame_fail
 	ajmp	t1_int_decode_lsb
 
-t1_int_decode_fail:
-	mov	DPTR, #0			; Set pointer to start
-	setb	IE_EX0			; Enable int0 interrupts
-	setb	IE_EX1			; Enable int1 interrupts
+t1_int_frame_fail:
+	mov	DPTR, #0				; Set pointer to start
+	setb	IE_EX0				; Enable int0 interrupts
+	setb	IE_EX1				; Enable int1 interrupts
 	ajmp	int0_int_outside_range
 
 t1_int_decode_lsb:
-	; Decode DShot data Lsb low nibble
-	Decode_DShot_2Bit	Temp3
-	Decode_DShot_2Bit	Temp3
+	; Decode DShot data Lsb
+	Decode_DShot_2Bit	Temp3, t1_int_decode_fail
+	Decode_DShot_2Bit	Temp3, t1_int_decode_fail
+	Decode_DShot_2Bit	Temp3, t1_int_decode_fail
+	Decode_DShot_2Bit	Temp3, t1_int_decode_fail
+	ajmp	t1_int_decode_checksum
+
+t1_int_decode_fail:
+	mov	DPTR, #0				; Set pointer to start
+	setb	IE_EX0				; Enable int0 interrupts
+	setb	IE_EX1				; Enable int1 interrupts
+	ajmp	int0_int_outside_range
+
+t1_int_decode_checksum:
 	; Decode DShot data checksum
-	Decode_DShot_2Bit	Temp7
-	Decode_DShot_2Bit	Temp7
+	Decode_DShot_2Bit	Temp2, t1_int_decode_fail
+	Decode_DShot_2Bit	Temp2, t1_int_decode_fail
 
 	; XOR check (in inverted data, which is ok)
 	mov	A, Temp3
 	swap	A
 	xrl	A, Temp3
 	xrl	A, Temp4
+	xrl	A, Temp2
 	anl	A, #0Fh
-	mov	Temp2, A
+	jnz	t1_int_decode_fail		; XOR check
 
-	mov	A, Temp7
-	anl	A, #0Fh
-	clr	C
-	subb	A, Temp2
-	jz	t1_int_xor_ok		; XOR check
-
-	mov	DPTR, #0			; Set pointer to start
-	setb	IE_EX0			; Enable int0 interrupts
-	setb	IE_EX1			; Enable int1 interrupts
-	ajmp	int0_int_outside_range
-
-t1_int_xor_ok:
 	; Invert DShot data
 	mov	A, Temp4
 	cpl	A
@@ -608,31 +593,25 @@ t1_int_xor_ok:
 	mov	Temp4, A
 	jnc	t1_normal_range
 
-	clr	C
 	mov	A, Temp2			; Check for 0 or dshot command
 	mov	Temp4, #0
 	mov	Temp3, #0
-	mov	Temp2, #0
 	jz	t1_normal_range
 
+	mov	Temp2, #0
 	clr	C				; We are in the special dshot range
 	rrc	A				; Divide by 2
 	jnc	t1_dshot_set_cmd	; Check for tlm bit set (if not telemetry, Temp2 will be zero and result in invalid command)
 
 	mov	Temp2, A
-	clr	C
-	subb	A, Dshot_Cmd
-	jz	t1_dshot_inc_cmd_cnt
+	cjne	A, Dshot_Cmd, t1_dshot_set_cmd
 
-t1_dshot_set_cmd:
-	mov	A, Temp2
-	mov	Dshot_Cmd, A
-	mov	Dshot_Cmd_Cnt, #0
-	mov	Temp2, #0
+	inc	Dshot_Cmd_Cnt
 	jmp	t1_normal_range
 
-t1_dshot_inc_cmd_cnt:
-	inc	Dshot_Cmd_Cnt
+t1_dshot_set_cmd:
+	mov	Dshot_Cmd, Temp2
+	mov	Dshot_Cmd_Cnt, #0
 
 t1_normal_range:
 	; Check for bidirectional operation (0=stop, 96-2095->fwd, 2096-4095->rev)

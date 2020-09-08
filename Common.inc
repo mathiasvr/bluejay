@@ -230,14 +230,14 @@ Get_Rcp_End:
 ENDIF
 ENDM
 
-Decode_DShot_2Bit MACRO dest
+Decode_DShot_2Bit MACRO dest, decode_fail
 	movx	A, @DPTR
 	mov	Temp6, A
 	clr	C
 	subb	A, Temp5					; Subtract previous timestamp
 	clr	C
 	subb	A, Temp1
-	jc	t1_int_decode_fail			; Check that bit is longer than minimum
+	jc	decode_fail				; Check that bit is longer than minimum
 
 	subb	A, Temp1					; Check if bit is zero or one
 	mov	A, dest					; Shift bit into data byte
@@ -250,7 +250,7 @@ Decode_DShot_2Bit MACRO dest
 	subb	A, Temp6
 	clr	C
 	subb	A, Temp1
-	jc	t1_int_decode_fail
+	jc	decode_fail
 
 	subb	A, Temp1
 	mov	A, dest
