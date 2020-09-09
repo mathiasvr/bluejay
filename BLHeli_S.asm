@@ -499,17 +499,8 @@ t1_int:
 	mov	A, Temp1
 	rrc	A
 	mov	Temp1, A
-	jnb	Flags3.CLOCK_SET_AT_48MHZ, t1_int_frame_time_scaled
 
-	clr	C
-	mov	A, Temp2
-	rrc	A
-	mov	Temp2, A
-	mov	A, Temp1
-	rrc	A
-	mov	Temp1, A
 
-t1_int_frame_time_scaled:
 	mov	A, Temp2
 	jnz	t1_int_frame_fail		; Frame too long
 	mov	A, Temp1
@@ -526,14 +517,7 @@ t1_int_frame_time_scaled:
 	mov	Temp5, #0				; Reset timestamp
 	mov	DPTR, #0				; Set pointer
 	mov	Temp1, DShot_Pwm_Thr	; DShot pulse width criteria
-	jb	Flags3.CLOCK_SET_AT_48MHZ, t1_int_decode
 
-	clr	C
-	mov	A, Temp1				; Scale pulse width criteria
-	rrc	A
-	mov	Temp1, A
-
-t1_int_decode:
 	; Decode DShot data Msb. Use more code space to save time (by not using loop)
 	Decode_DShot_2Bit	Temp4, t1_int_frame_fail
 	Decode_DShot_2Bit	Temp4, t1_int_frame_fail
@@ -3508,14 +3492,14 @@ IF MCU_48MHZ == 1
 ELSE
 	mov	DShot_Timer_Preset, #192
 ENDIF
-	mov	DShot_Pwm_Thr, #20			; Load DShot qualification pwm threshold (for DShot150)
+	mov	DShot_Pwm_Thr, #10			; Load DShot qualification pwm threshold (for DShot150)
 	mov	DShot_Frame_Length_Thr, #80	; Load DShot frame length criteria
 	; Test whether signal is DShot150
 	clr	Flags2.RCP_ONESHOT42
 	setb	Flags2.RCP_DSHOT
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
-	mov	DShot_Pwm_Thr, #16			; Load DShot regular pwm threshold
+	mov	DShot_Pwm_Thr, #8			; Load DShot regular pwm threshold
 	clr	C
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 	subb	A, #10
@@ -3530,12 +3514,12 @@ IF MCU_48MHZ == 1
 ELSE
 	mov	DShot_Timer_Preset, #128
 ENDIF
-	mov	DShot_Pwm_Thr, #40			; Load DShot qualification pwm threshold (for DShot300)
+	mov	DShot_Pwm_Thr, #20			; Load DShot qualification pwm threshold (for DShot300)
 	mov	DShot_Frame_Length_Thr, #40	; Load DShot frame length criteria
 	; Test whether signal is DShot300
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
-	mov	DShot_Pwm_Thr, #32			; Load DShot regular pwm threshold
+	mov	DShot_Pwm_Thr, #16			; Load DShot regular pwm threshold
 	clr	C
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 	subb	A, #10
@@ -3550,12 +3534,12 @@ IF MCU_48MHZ == 1
 ELSE
 	mov	DShot_Timer_Preset, #192
 ENDIF
-	mov	DShot_Pwm_Thr, #20			; Load DShot qualification pwm threshold (for DShot600)
+	mov	DShot_Pwm_Thr, #10			; Load DShot qualification pwm threshold (for DShot600)
 	mov	DShot_Frame_Length_Thr, #20	; Load DShot frame length criteria
 	; Test whether signal is DShot600
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
-	mov	DShot_Pwm_Thr, #16			; Load DShot regular pwm threshold
+	mov	DShot_Pwm_Thr, #8			; Load DShot regular pwm threshold
 	clr	C
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 	subb	A, #10
@@ -4113,6 +4097,19 @@ read_initial_temp:
 	; Begin startup sequence
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_48MHz
+
+	; Scale DShot criteria for 48MHz
+	jnb	Flags2.RCP_DSHOT, dshot_scaled_to_48mhz
+	clr	C
+	mov	A, DShot_Frame_Length_Thr		; Scale frame length criteria
+	rlc	A
+	mov	DShot_Frame_Length_Thr, A
+	
+	clr	C
+	mov	A, DShot_Pwm_Thr				; Scale pulse width criteria
+	rlc	A
+	mov	DShot_Pwm_Thr, A
+dshot_scaled_to_48mhz:
 ENDIF
 	jnb	Flags3.PGM_BIDIR, init_start_bidir_done	; Check if bidirectional operation
 
@@ -4365,6 +4362,19 @@ run_to_wait_for_power_on_stall_done:
 	mov	Flags1, #0				; Clear flags1
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz
+
+	; Scale DShot criteria for 24MHz
+	jnb	Flags2.RCP_DSHOT, dshot_scaled_to_24mhz
+	clr	C
+	mov	A, DShot_Frame_Length_Thr		; Scale frame length criteria
+	rrc	A
+	mov	DShot_Frame_Length_Thr, A
+	
+	clr	C
+	mov	A, DShot_Pwm_Thr				; Scale pulse width criteria
+	rrc	A
+	mov	DShot_Pwm_Thr, A
+dshot_scaled_to_24mhz:
 ENDIF
 	setb	IE_EA
 	call	wait100ms					; Wait for pwm to be stopped
