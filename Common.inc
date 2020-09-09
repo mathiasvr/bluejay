@@ -42,95 +42,95 @@ ENDIF
 ;**** **** **** **** ****
 ; ESC selection statements
 IF ESCNO == A_
-$include (A.inc)	; Select pinout A
+$include (targets/A.inc)	; Select pinout A
 ENDIF
 
 IF ESCNO == B_
-$include (B.inc)	; Select pinout B
+$include (targets/B.inc)	; Select pinout B
 ENDIF
 
 IF ESCNO == C_
-$include (C.inc)	; Select pinout C
+$include (targets/C.inc)	; Select pinout C
 ENDIF
 
 IF ESCNO == D_
-$include (D.inc)	; Select pinout D
+$include (targets/D.inc)	; Select pinout D
 ENDIF
 
 IF ESCNO == E_
-$include (E.inc)	; Select pinout E
+$include (targets/E.inc)	; Select pinout E
 ENDIF
 
 IF ESCNO == F_
-$include (F.inc)	; Select pinout F
+$include (targets/F.inc)	; Select pinout F
 ENDIF
 
 IF ESCNO == G_
-$include (G.inc)	; Select pinout G
+$include (targets/G.inc)	; Select pinout G
 ENDIF
 
 IF ESCNO == H_
-$include (H.inc)	; Select pinout H
+$include (targets/H.inc)	; Select pinout H
 ENDIF
 
 IF ESCNO == I_
-$include (I.inc)	; Select pinout I
+$include (targets/I.inc)	; Select pinout I
 ENDIF
 
 IF ESCNO == J_
-$include (J.inc)	; Select pinout J
+$include (targets/J.inc)	; Select pinout J
 ENDIF
 
 IF ESCNO == K_
-$include (K.inc)	; Select pinout K
+$include (targets/K.inc)	; Select pinout K
 ENDIF
 
 IF ESCNO == L_
-$include (L.inc)	; Select pinout L
+$include (targets/L.inc)	; Select pinout L
 ENDIF
 
 IF ESCNO == M_
-$include (M.inc)	; Select pinout M
+$include (targets/M.inc)	; Select pinout M
 ENDIF
 
 IF ESCNO == N_
-$include (N.inc)	; Select pinout N
+$include (targets/N.inc)	; Select pinout N
 ENDIF
 
 IF ESCNO == O_
-$include (O.inc)	; Select pinout O
+$include (targets/O.inc)	; Select pinout O
 ENDIF
 
 IF ESCNO == P_
-$include (P.inc)	; Select pinout P
+$include (targets/P.inc)	; Select pinout P
 ENDIF
 
 IF ESCNO == Q_
-$include (Q.inc)	; Select pinout Q
+$include (targets/Q.inc)	; Select pinout Q
 ENDIF
 
 IF ESCNO == R_
-$include (R.inc)	; Select pinout R
+$include (targets/R.inc)	; Select pinout R
 ENDIF
 
 IF ESCNO == S_
-$include (S.inc)	; Select pinout S
+$include (targets/S.inc)	; Select pinout S
 ENDIF
 
 IF ESCNO == T_
-$include (T.inc)	; Select pinout T
+$include (targets/T.inc)	; Select pinout T
 ENDIF
 
 IF ESCNO == U_
-$include (U.inc)	; Select pinout U
+$include (targets/U.inc)	; Select pinout U
 ENDIF
 
 IF ESCNO == V_
-$include (V.inc)	; Select pinout V
+$include (targets/V.inc)	; Select pinout V
 ENDIF
 
 IF ESCNO == W_
-$include (W.inc)	; Select pinout W
+$include (targets/W.inc)	; Select pinout W
 ENDIF
 
 
