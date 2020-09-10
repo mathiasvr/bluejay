@@ -557,22 +557,16 @@ t1_int_decode_checksum:
 	anl	A, #0Fh
 	jnz	t1_int_decode_fail		; XOR check
 
-	; Invert DShot data
-	mov	A, Temp4
-	cpl	A
-	anl	A, #0Fh
-	mov	Temp4, A
-	mov	A, Temp3
-	cpl	A
-	mov	Temp3, A
-
-	; Subtract 96 (still 12 bits)
+	; Invert DShot data and subtract 96 (still 12 bits)
 	clr	C
 	mov	A, Temp3
+	cpl	A
 	mov	Temp2, A
 	subb	A, #96
 	mov	Temp3, A
 	mov	A, Temp4
+	cpl	A
+	anl	A, #0Fh
 	subb	A, #0
 	mov	Temp4, A
 	jnc	t1_normal_range
