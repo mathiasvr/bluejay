@@ -490,25 +490,16 @@ t1_int:
 	mov	Temp1, A
 	mov	A, Temp2
 	subb	A, DShot_Frame_Start_H
-	mov	Temp2, A
-	; Divide by 2 (or 4 for 48MHz). Unit is then us
-	clr	C
-	mov	A, Temp2
-	rrc	A
-	mov	Temp2, A
-	mov	A, Temp1
-	rrc	A
-	mov	Temp1, A
-
-
-	mov	A, Temp2
 	jnz	t1_int_frame_fail		; Frame too long
+
+	clr	C	; todo: was not cleared?
 	mov	A, Temp1
 	subb	A, DShot_Frame_Length_Thr
 	jc	t1_int_frame_fail		; Frame too short
 	subb	A, DShot_Frame_Length_Thr
 	jnc	t1_int_frame_fail		; Frame too long
 
+	; todo: try using registers instead?
 	; Check that correct number of pulses is received
 	mov	A, DPL				; Read current pointer
 	cjne	A, #16, t1_int_frame_fail
@@ -3469,6 +3460,9 @@ ENDIF
 	jnc	($+4)
 	ajmp	validate_rcp_start
 
+	clr	Flags2.RCP_ONESHOT42
+	setb	Flags2.RCP_DSHOT
+
 	; Setup timers for DShot
 	mov	IT01CF, #(80h+(RTX_PIN SHL 4)+(RTX_PIN))	; Route RCP input to INT0/1, with INT1 inverted
 	mov	TCON, #51h				; Timer 0/1 run and INT0 edge triggered
@@ -3480,17 +3474,18 @@ ENDIF
 	clr	IE_ET0					; Disable timer 0 interrupts
 	setb	IE_ET1					; Enable timer 1 interrupts
 	setb	IE_EX1					; Enable int1 interrupts
+
 	; Setup variables for DSshot150
 IF MCU_48MHZ == 1
 	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot150)
 ELSE
 	mov	DShot_Timer_Preset, #192
 ENDIF
+	; TODO: we cannot currently support DShot150 on 48MHz (because of DShot_Frame_Length_Thr)
+IF MCU_48MHZ == 0
 	mov	DShot_Pwm_Thr, #10			; Load DShot qualification pwm threshold (for DShot150)
-	mov	DShot_Frame_Length_Thr, #80	; Load DShot frame length criteria
+	mov	DShot_Frame_Length_Thr, #160	; Load DShot frame length criteria
 	; Test whether signal is DShot150
-	clr	Flags2.RCP_ONESHOT42
-	setb	Flags2.RCP_DSHOT
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
 	mov	DShot_Pwm_Thr, #8			; Load DShot regular pwm threshold
@@ -3500,6 +3495,7 @@ ENDIF
 	mov	Dshot_Cmd, #0
 	mov	Dshot_Cmd_Cnt, #0
 	jc	validate_rcp_start
+ENDIF
 
 	; Setup variables for DShot300
 	mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot300)
@@ -3509,7 +3505,7 @@ ELSE
 	mov	DShot_Timer_Preset, #128
 ENDIF
 	mov	DShot_Pwm_Thr, #20			; Load DShot qualification pwm threshold (for DShot300)
-	mov	DShot_Frame_Length_Thr, #40	; Load DShot frame length criteria
+	mov	DShot_Frame_Length_Thr, #80	; Load DShot frame length criteria
 	; Test whether signal is DShot300
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
@@ -3529,7 +3525,7 @@ ELSE
 	mov	DShot_Timer_Preset, #192
 ENDIF
 	mov	DShot_Pwm_Thr, #10			; Load DShot qualification pwm threshold (for DShot600)
-	mov	DShot_Frame_Length_Thr, #20	; Load DShot frame length criteria
+	mov	DShot_Frame_Length_Thr, #40	; Load DShot frame length criteria
 	; Test whether signal is DShot600
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
