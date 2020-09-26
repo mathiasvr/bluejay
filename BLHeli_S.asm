@@ -72,6 +72,7 @@ $NOMOD51
 ; Although 24/48 are used in the code, the exact clock frequencies are 24.5MHz or 49.0 MHz
 ; Timer 0 (41.67ns counts) always counts up and is used for
 ; - RC pulse measurement
+; - DShot telemetry signal
 ; Timer 1 (41.67ns counts) always counts up and is used for
 ; - DShot frame sync detection
 ; Timer 2 (500ns counts) always counts up and is used for
@@ -233,10 +234,10 @@ HIGH_RPM					EQU	4		; Set when motor rpm is high (Comm_Period4x_H less than 2)
 
 Flags2:					DS	1		; State flags. NOT reset upon init_start
 RCP_UPDATED				EQU	0		; New RC pulse length value available
-RCP_ONESHOT125				EQU	1		; RC pulse input is OneShot125 (125-250us)
-RCP_ONESHOT42				EQU	2		; RC pulse input is OneShot42 (41.67-83us)
-RCP_MULTISHOT				EQU	3		; RC pulse input is Multishot (5-25us)
-RCP_DSHOT					EQU	4		; RC pulse input is digital shot
+;RCP_ONESHOT125				EQU	1		; RC pulse input is OneShot125 (125-250us)
+;RCP_ONESHOT42				EQU	2		; RC pulse input is OneShot42 (41.67-83us)
+;RCP_MULTISHOT				EQU	3		; RC pulse input is Multishot (5-25us)
+;RCP_DSHOT					EQU	4		; RC pulse input is digital shot
 RCP_DIR_REV				EQU	5		; RC pulse direction in bidirectional mode
 RCP_FULL_RANGE				EQU	6		; When set full input signal range is used (1000-2000us) and stored calibration values are ignored
 RCP_DSHOT_INVERTED			EQU	7		; DShot RC pulse input is inverted (and supports telemetry)
@@ -247,7 +248,7 @@ PGM_BIDIR_REV				EQU	1		; Programmed bidirectional direction. 0=normal, 1=revers
 PGM_BIDIR					EQU	2		; Programmed bidirectional operation. 0=normal, 1=bidirectional
 SKIP_T2_INT				EQU	3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
 CLOCK_SET_AT_48MHZ			EQU	4		; Set if 48MHz MCUs run at 48MHz
-DSHOT_TLM_ACTIVE			EQU	5 		; DShot telemetry data is currently being transmitted
+;DSHOT_TLM_ACTIVE			EQU	5 		; DShot telemetry data is currently being transmitted
 ;						EQU	6
 ;						EQU	7
 
@@ -277,7 +278,7 @@ Demag_Detected_Metric:		DS	1		; Metric used to gauge demag event frequency
 Demag_Pwr_Off_Thresh:		DS	1		; Metric threshold above which power is cut
 Low_Rpm_Pwr_Slope:			DS	1		; Sets the slope of power increase for low rpms
 
-Timer0_X:					DS	1		; Timer 0 extended byte
+;Timer0_X:					DS	1		; Timer 0 extended byte
 Timer2_X:					DS	1		; Timer 2 extended byte
 Prev_Comm_L:				DS	1		; Previous commutation timer 3 timestamp (lo byte)
 Prev_Comm_H:				DS	1		; Previous commutation timer 3 timestamp (hi byte)
@@ -489,13 +490,6 @@ STARTUP_POWER_TABLE:	DB	04h, 06h, 08h, 0Ch, 10h, 18h, 20h, 30h, 40h, 60h, 80h, 0
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t0_int:
-IF MCU_48MHZ == 1
-	inc	Timer0_X
-ENDIF
-	jb	Flags3.DSHOT_TLM_ACTIVE, t0_int_dshot_tlm
-	reti
-
-t0_int_dshot_tlm:
 	push	PSW
 	mov	PSW, #10h	; Select register bank 2 for this interrupt
 
@@ -521,7 +515,6 @@ t0_int_dshot_tlm_finish:
 	setb	RTX_PORT.RTX_PIN				; Float high
 
 	clr	IE_ET0		; Disable timer 0 interrupts
-	clr	Flags3.DSHOT_TLM_ACTIVE
 
 	mov	CKCON0, Temp2	; Restore normal DShot timer 0/1 clock settings
 	mov	TMOD, #0AAh	; Timer 0/1 gated by INT0/1
@@ -890,172 +883,11 @@ t3_int:	; Used for commutation timing
 int0_int:	; Used for RC pulse timing
 	push	ACC
 	mov	A, TL0				; Read pwm for DShot immediately
-	; Test for DShot
-	jnb	Flags2.RCP_DSHOT, int0_int_not_dshot
-
 	mov	TL1, DShot_Timer_Preset	; Reset sync timer
 	movx	@DPTR, A				; Store pwm
 	inc	DPL
 	pop	ACC
 	reti
-
-	; Not DShot
-int0_int_not_dshot:
-	pop	ACC
-	clr	IE_EA
-	anl	EIE1, #0EFh		; Disable pca interrupts
-	push	PSW				; Preserve registers through interrupt
-	push	ACC
-	push	B
-	setb	PSW.3			; Select register bank 1 for this interrupt
-	setb	IE_EA
-	; Get the counter values
-	Get_Rcp_Capture_Values
-	; Scale down to 10 bits (for 24MHz, and 11 bits for 48MHz)
-	jnb	Flags2.RCP_MULTISHOT, int0_int_fall_not_multishot
-
-	; Multishot - Multiply by 2 and add 1/16 and 1/32
-	mov	A, Temp1		; Divide by 16
-	swap	A
-	anl	A, #0Fh
-	mov	Temp3, A
-	mov	A, Temp2
-	swap	A
-	anl	A, #0F0h
-	orl	A, Temp3
-	mov	Temp3, A
-	clr	C			; Make divided by 32
-	rrc	A
-	add	A, Temp3		; Add 1/16 to 1/32
-	mov	Temp3, A
-	clr	C			; Multiply by 2
-	mov	A, Temp1
-	rlc	A
-	mov	Temp1, A
-	mov	A, Temp2
-	rlc	A
-	mov	Temp2, A
-	mov	A, Temp1		; Add 1/16 and 1/32
-	add	A, Temp3
-	mov	Temp3, A
-	mov	A, Temp2
-IF MCU_48MHZ == 0
-	addc	A, #03h		; Add to low end, to make signal look like 20-40us
-ELSE
-	addc	A, #06h
-ENDIF
-	mov	Temp4, A
-	ajmp	int0_int_fall_gain_done
-
-int0_int_fall_not_multishot:
-	jnb	Flags2.RCP_ONESHOT42, int0_int_fall_not_oneshot_42
-
-	; Oneshot42 - Add 2/256
-	clr	C
-	mov	A, Temp1
-	rlc	A
-	mov	A, Temp2
-	rlc	A
-	mov	Temp3, A
-	mov	A, Temp1
-	add	A, Temp3
-	mov	Temp3, A
-	mov	A, Temp2
-	addc	A, #0
-	mov	Temp4, A
-	ajmp	int0_int_fall_gain_done
-
-int0_int_fall_not_oneshot_42:
-	jnb	Flags2.RCP_ONESHOT125, int0_int_fall_not_oneshot_125
-
-	; Oneshot125 - multiply by 86/256
-	mov	A, Temp1		; Multiply by 86 and divide by 256
-	mov	B, #56h
-	mul	AB
-	mov	Temp3, B
-	mov	A, Temp2
-	mov	B, #56h
-	mul	AB
-	add	A, Temp3
-	mov	Temp3, A
-	xch	A, B
-	addc	A, #0
-	mov	Temp4, A
-	ajmp	int0_int_fall_gain_done
-
-int0_int_fall_not_oneshot_125:
-	; Regular signal - multiply by 43/1024
-IF MCU_48MHZ == 1
-	clr	C
-	mov	A, Temp3		; Divide by 2
-	rrc	A
-	mov	Temp3, A
-	mov	A, Temp2
-	rrc	A
-	mov	Temp2, A
-	mov	A, Temp1
-	rrc	A
-	mov	Temp1, A
-ENDIF
-	mov	A, Temp1		; Multiply by 43 and divide by 1024
-IF MCU_48MHZ == 0
-	mov	B, #2Bh
-ELSE
-	mov	B, #56h		; Multiply by 86
-ENDIF
-	mul	AB
-	mov	Temp3, B
-	mov	A, Temp2
-IF MCU_48MHZ == 0
-	mov	B, #2Bh
-ELSE
-	mov	B, #56h		; Multiply by 86
-ENDIF
-	mul	AB
-	add	A, Temp3
-	mov	Temp3, A
-	xch	A, B
-	addc	A, #0
-	clr	C
-	rrc	A			; Divide by 2 for total 512
-	mov	Temp4, A
-	mov	A, Temp3
-	rrc	A
-	mov	Temp3, A
-	clr	C
-	mov	A, Temp4		; Divide by 2 for total 1024
-	rrc	A
-	mov	Temp4, A
-	mov	A, Temp3
-	rrc	A
-	mov	Temp3, A
-
-int0_int_fall_gain_done:
-	; Check if 2235us or above (in order to ignore false pulses)
-	clr	C
-	mov	A, Temp4					; Is pulse 2235us or higher?
-IF MCU_48MHZ == 0
-	subb	A, #09h
-ELSE
-	subb	A, #12h
-ENDIF
-	jnc	int0_int_outside_range		; Yes - ignore pulse
-
-	; Check if below 900us (in order to ignore false pulses)
-	clr	C
-	mov	A, Temp3
-IF MCU_48MHZ == 0
-	subb	A, #9Ah
-ELSE
-	subb	A, #34h
-ENDIF
-	mov	A, Temp4
-IF MCU_48MHZ == 0
-	subb	A, #03h
-ELSE
-	subb	A, #07h
-ENDIF
-	jnc	int0_int_check_full_range	; No - proceed
 
 int0_int_outside_range:
 	inc	Rcp_Outside_Range_Cnt
@@ -1075,219 +907,6 @@ int0_int_outside_range:
 int0_int_exit_timeout:
 	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
 	ajmp int0_int_exit
-
-int0_int_check_full_range:
-	; Decrement outside range counter
-	mov	A, Rcp_Outside_Range_Cnt
-	jz	($+4)
-
-	dec	Rcp_Outside_Range_Cnt
-
-	; Calculate "1000us" plus throttle minimum
-	jnb	Flags2.RCP_FULL_RANGE, int0_int_set_min	; Check if full range is chosen
-
-	mov	Temp5, #0					; Set 1000us as default minimum
-IF MCU_48MHZ == 0
-	mov	Temp6, #4
-ELSE
-	mov	Temp6, #8
-ENDIF
-	ajmp	int0_int_calculate
-
-int0_int_set_min:
-	mov	Temp5, Min_Throttle_L		; Min throttle value scaled
-	mov	Temp6, Min_Throttle_H
-	jnb	Flags3.PGM_BIDIR, ($+7)
-
-	mov	Temp5, Center_Throttle_L		; Center throttle value scaled
-	mov	Temp6, Center_Throttle_H
-
-int0_int_calculate:
-	clr	C
-	mov	A, Temp3					; Subtract minimum
-	subb	A, Temp5
-	mov	Temp3, A
-	mov	A, Temp4
-	subb	A, Temp6
-	mov	Temp4, A
-	mov	Bit_Access_Int.0, C
-	mov	Temp7, Throttle_Gain					; Load Temp7/Temp8 with throttle gain
-	mov	Temp8, Throttle_Gain_M
-	jnb	Flags3.PGM_BIDIR, int0_int_not_bidir		; If not bidirectional operation - branch
-
-	jnc	int0_int_bidir_fwd						; If result is positive - branch
-
-	jb	Flags2.RCP_DIR_REV, int0_int_bidir_rev_chk	; If same direction - branch
-
-	setb	Flags2.RCP_DIR_REV
-	ajmp	int0_int_bidir_rev_chk
-
-int0_int_bidir_fwd:
-	jnb	Flags2.RCP_DIR_REV, int0_int_bidir_rev_chk	; If same direction - branch
-
-	clr	Flags2.RCP_DIR_REV
-
-int0_int_bidir_rev_chk:
-	jnb	Flags2.RCP_DIR_REV, ($+7)
-
-	mov	Temp7, Throttle_Gain_BD_Rev		; Load Temp7/Temp8 with throttle gain for bidirectional reverse
-	mov	Temp8, Throttle_Gain_BD_Rev_M
-
-	jb	Flags3.PGM_BIDIR_REV, ($+5)
-
-	cpl	Flags2.RCP_DIR_REV
-
-	clr	C							; Multiply throttle value by 2
-	mov	A, Temp3
-	rlc	A
-	mov	Temp3, A
-	mov	A, Temp4
-	rlc	A
-	mov	Temp4, A
-	mov	C, Bit_Access_Int.0
-	jnc	int0_int_bidir_do_deadband		; If result is positive - branch
-
-	mov	A, Temp3						; Change sign
-	cpl	A
-	add	A, #1
-	mov	Temp3, A
-	mov	A, Temp4
-	cpl	A
-	addc	A, #0
-	mov	Temp4, A
-
-int0_int_bidir_do_deadband:
-	clr	C							; Subtract deadband
-	mov	A, Temp3
-IF MCU_48MHZ == 0
-	subb	A, #40
-ELSE
-	subb	A, #80
-ENDIF
-	mov	Temp3, A
-	mov	A, Temp4
-	subb	A, #0
-	mov	Temp4, A
-	jnc	int0_int_do_throttle_gain
-
-	mov	Temp1, #0
-	mov	Temp3, #0
-	mov	Temp4, #0
-	ajmp	int0_int_do_throttle_gain
-
-int0_int_not_bidir:
-	mov	C, Bit_Access_Int.0
-	jnc	int0_int_do_throttle_gain		; If result is positive - branch
-
-int0_int_unidir_neg:
-	mov	Temp1, #0						; Yes - set to minimum
-	mov	Temp3, #0
-	mov	Temp4, #0
-	ajmp	int0_int_pulse_ready
-
-int0_int_do_throttle_gain:
-	; Boost pwm during direct start
-	mov	A, Flags1
-	anl	A, #((1 SHL STARTUP_PHASE)+(1 SHL INITIAL_RUN_PHASE))
-	jz	int0_int_startup_boosted
-
-	jb	Flags1.MOTOR_STARTED, int0_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
-
-	mov	A, Pwm_Limit_Beg				; Set 25% of max startup power as minimum power
-IF MCU_48MHZ == 1
-	rlc	A
-ENDIF
-	mov	Temp2, A
-	mov	A, Temp4
-	jnz	int0_int_startup_boost_stall
-
-	clr	C
-	mov	A, Temp2
-	subb	A, Temp3
-	jc	int0_int_startup_boost_stall
-
-	mov	A, Temp2
-	mov	Temp3, A
-
-int0_int_startup_boost_stall:
-	mov	A, Stall_Cnt					; Add an extra power boost during start
-	swap	A
-IF MCU_48MHZ == 1
-	rlc	A
-ENDIF
-	add	A, Temp3
-	mov	Temp3, A
-	mov	A, Temp4
-	addc	A, #0
-	mov	Temp4, A
-
-int0_int_startup_boosted:
-	mov	A, Temp3						; Multiply throttle value by throttle gain
-	mov	B, Temp7						; Temp7 has Throttle_Gain
-	mul	AB
-	mov	Temp2, A
-	mov	Temp3, B
-	mov	A, Temp4
-	mov	B, Temp7						; Temp7 has Throttle_Gain
-	mul	AB
-	add	A, Temp3
-	mov	Temp3, A
-	xch	A, B
-	addc	A, #0
-	mov	Temp4, A
-	clr	C							; Generate 8bit number
-	mov	A, Temp4
-	rrc	A
-	mov	Temp6, A
-	mov	A, Temp3
-	rrc	A
-	mov	Temp1, A
-IF MCU_48MHZ == 1
-	clr	C
-	mov	A, Temp6
-	rrc	A
-	mov	Temp6, A
-	mov	A, Temp1
-	rrc	A
-	mov	Temp1, A
-ENDIF
-	inc	Temp8						; Temp8 has Throttle_Gain_M
-int0_int_gain_loop:
-	mov	A, Temp8
-	dec	A
-	jz	int0_int_gain_rcp_done			; Skip one multiply by 2 of New_Rcp
-
-	clr	C
-	mov	A, Temp1						; Multiply New_Rcp by 2
-	rlc	A
-	mov	Temp1, A
-
-int0_int_gain_rcp_done:
-	clr	C
-	mov	A, Temp2						; Multiply pwm by 2
-	rlc	A
-	mov	A, Temp3
-	rlc	A
-	mov	Temp3, A
-	mov	A, Temp4
-	rlc	A
-	mov	Temp4, A
-	djnz	Temp8, int0_int_gain_loop
-
-	mov	A, Temp4
-IF MCU_48MHZ == 0
-	jnb	ACC.2, int0_int_pulse_ready		; Check that RC pulse is within legal range
-ELSE
-	jnb	ACC.3, int0_int_pulse_ready
-ENDIF
-
-	mov	Temp1, #0FFh
-	mov	Temp3, #0FFh
-IF MCU_48MHZ == 0
-	mov	Temp4, #3
-ELSE
-	mov	Temp4, #7
-ENDIF
 
 int0_int_pulse_ready:
 	mov	New_Rcp, Temp1					; Store new pulse length
@@ -1384,8 +1003,6 @@ int0_int_set_pca_int_hi_pwm:
 ENDIF
 
 int0_pca_generated:
-	jnb	Flags2.RCP_DSHOT, int0_int_exit
-
 	; Prepare DShot telemetry
 IF MCU_48MHZ == 1
 	; Only use telemetry for compatible clock frequency
@@ -1808,7 +1425,6 @@ dshot_tlm_12bit_encoded:
 	mov	CKCON0, #01h				; Timer 0 is system clock divided by 4
 	mov	TMOD, #0A2h				; Timer 0 runs free not gated by INT0
 
-	setb	Flags3.DSHOT_TLM_ACTIVE		; Activate DShot telemetry
 	clr	TCON_TF0					; Clear timer 0 overflow flag
 	setb	IE_ET0					; Enable timer 0 interrupts
 
@@ -3634,55 +3250,6 @@ test_throttle_gain_mult:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Average throttle
-;
-; Outputs result in Temp8
-;
-; Averages throttle calibration readings
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-average_throttle:
-	setb	Flags2.RCP_FULL_RANGE	; Set range to 1000-2020us
-	call	find_throttle_gains		; Set throttle gains
-	call	wait30ms
-	call	wait30ms
-	mov	Temp3, #0
-	mov	Temp4, #0
-	mov	Temp5, #16		; Average 16 measurments
-average_throttle_meas:
-	call	wait3ms			; Wait for new RC pulse value
-	mov	A, New_Rcp		; Get new RC pulse value
-	add	A, Temp3
-	mov	Temp3, A
-	mov	A, #0
-	addc	A, Temp4
-	mov	Temp4, A
-	djnz	Temp5, average_throttle_meas
-
-	mov	Temp5, #4			; Shift 4 times
-average_throttle_div:
-	clr	C
-	mov	A, Temp4			; Shift right
-	rrc	A
-	mov	Temp4, A
-	mov	A, Temp3
-	rrc	A
-	mov	Temp3, A
-	djnz	Temp5, average_throttle_div
-
-	mov	Temp8, A			; Copy to Temp8
-	mov	A, Temp4
-	jz	($+4)
-
-	mov	Temp8, #0FFh
-
-	clr	Flags2.RCP_FULL_RANGE
-	call	find_throttle_gains	; Set throttle gains
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
 ; LED control
 ;
 ; No assumptions
@@ -3826,11 +3393,7 @@ bootloader_done:
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz
 ENDIF
-	; Setup timers for pwm input
-	mov	IT01CF, #RTX_PIN	; Route RCP input to INT0
-	mov	TCON, #11h		; Timer 0 run and INT0 edge triggered
-	mov	CKCON0, #04h		; Timer 0 clock is system clock
-	mov	TMOD, #09h		; Timer 0 set to 16bits and gated by INT0
+
 	mov	TMR2CN0, #04h		; Timer 2 enabled
 	mov	TMR3CN0, #04h		; Timer 3 enabled
 	Initialize_PCA			; Initialize PCA
@@ -3856,50 +3419,12 @@ ENDIF
 	; Initialize RC pulse
 	clr	Flags2.RCP_UPDATED			; Clear updated flag
 	call	wait200ms
-	; Clear all shot flags
-	clr	Flags2.RCP_ONESHOT125		; Clear OneShot125 flag
-	clr	Flags2.RCP_ONESHOT42		; Clear OneShot42 flag
-	clr	Flags2.RCP_MULTISHOT		; Clear Multishot flag
-	clr	Flags2.RCP_DSHOT			; Clear DShot flag
+
 	mov	Dshot_Cmd, #0				; Clear Dshot command
 	mov	Dshot_Cmd_Cnt, #0			; Clear Dshot command count
-	; Test whether signal is regular pwm
-	mov	Rcp_Outside_Range_Cnt, #0	; Reset out of range counter
-	call	wait100ms					; Wait for new RC pulse
-	clr	C
-	mov	A, Rcp_Outside_Range_Cnt		; Check how many pulses were outside normal range ("900-2235us")
-	subb	A, #10
-	jnc	($+4)
-	ajmp	validate_rcp_start
-
-	; Test whether signal is OneShot125
-	setb	Flags2.RCP_ONESHOT125		; Set OneShot125 flag
-	mov	Rcp_Outside_Range_Cnt, #0	; Reset out of range counter
-	call	wait100ms					; Wait for new RC pulse
-	clr	C
-	mov	A, Rcp_Outside_Range_Cnt		; Check how many pulses were outside normal range ("900-2235us")
-	subb	A, #10
-	jnc	($+4)
-	ajmp	validate_rcp_start
-
-	; Test whether signal is OneShot42
-	clr	Flags2.RCP_ONESHOT125
-	setb	Flags2.RCP_ONESHOT42		; Set OneShot42 flag
-	mov	Rcp_Outside_Range_Cnt, #0	; Reset out of range counter
-	call	wait100ms					; Wait for new RC pulse
-	clr	C
-	mov	A, Rcp_Outside_Range_Cnt		; Check how many pulses were outside normal range ("900-2235us")
-	subb	A, #10
-	jnc	($+4)
-	ajmp	validate_rcp_start
-
-	clr	Flags2.RCP_ONESHOT42
-	setb	Flags2.RCP_DSHOT
 
 	; Setup RCP for DShot
 	call	detect_rcp_level
-
-	clr	Flags3.DSHOT_TLM_ACTIVE
 
 	; Route RCP according to detected DShot signal (normal or inverted)
 	mov	IT01CF, #(80h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to INT0/1, with INT1 inverted
@@ -3912,6 +3437,7 @@ ENDIF
 	mov	TMOD, #0AAh				; Timer 0/1 set to 8bits auto reload and gated by INT0/1
 	mov	TH0, #0					; Auto reload value zero
 	mov	TH1, #0
+
 	; Setup interrupts for DShot
 	setb IP_PT0					; Add high priority to timer 0 interrupts
 	clr	IE_ET0					; Disable timer 0 interrupts
@@ -3991,26 +3517,6 @@ ENDIF
 	mov	Dshot_Cmd_Cnt, #0
 	jc	validate_rcp_start
 
-	; Setup timers for Multishot
-	mov	IT01CF, #RTX_PIN			; Route RCP input to INT0
-	mov	TCON, #11h				; Timer 0 run and INT0 edge triggered
-	mov	CKCON0, #04h				; Timer 0 clock is system clock
-	mov	TMOD, #09h				; Timer 0 set to 16bits and gated by INT0
-	; Setup interrupts for Multishot
-	clr IP_PT0					; Normal priority for timer 0 interrupts
-	setb	IE_ET0					; Enable timer 0 interrupts
-	clr	IE_ET1					; Disable timer 1 interrupts
-	clr	IE_EX1					; Disable int1 interrupts
-	; Test whether signal is Multishot
-	clr	Flags2.RCP_DSHOT
-	setb	Flags2.RCP_MULTISHOT		; Set Multishot flag
-	mov	Rcp_Outside_Range_Cnt, #0	; Reset out of range counter
-	call	wait100ms					; Wait for new RC pulse
-	clr	C
-	mov	A, Rcp_Outside_Range_Cnt		; Check how many pulses were outside normal range ("900-2235us")
-	subb	A, #10
-	jc	validate_rcp_start
-
 	ajmp	init_no_signal
 
 validate_rcp_start:
@@ -4029,115 +3535,6 @@ validate_rcp_start:
 
 	; Arming sequence start
 arming_start:
-	jb	Flags2.RCP_DSHOT, ($+6)		; Disable tx programming for DShot
-	jnb	Flags3.PGM_BIDIR, ($+6)
-
-	ljmp	program_by_tx_checked		; Disable tx programming if bidirectional operation
-
-	call	wait3ms
-	mov	Temp1, #Pgm_Enable_TX_Program	; Start programming mode entry if enabled
-	mov	A, @Temp1
-	clr	C
-	subb	A, #1					; Is TX programming enabled?
-	jnc	arming_initial_arm_check		; Yes - proceed
-
-	jmp	program_by_tx_checked		; No - branch
-
-arming_initial_arm_check:
-	mov	A, Initial_Arm				; Yes - check if it is initial arm sequence
-	clr	C
-	subb	A, #1					; Is it the initial arm sequence?
-	jnc	arming_check				; Yes - proceed
-
-	jmp	program_by_tx_checked		; No - branch
-
-arming_check:
-	; Initialize flash keys to valid values
-	mov	Flash_Key_1, #0A5h
-	mov	Flash_Key_2, #0F1h
-	; Throttle calibration and tx program entry
-	mov	Temp8, #2				; Set 1 seconds wait time
-throttle_high_cal:
-	setb	Flags2.RCP_FULL_RANGE	; Set range to 1000-2020us
-	call	find_throttle_gains		; Set throttle gains
-	call	wait100ms				; Wait for new throttle value
-	clr	IE_EA				; Disable interrupts (freeze New_Rcp value)
-	clr	Flags2.RCP_FULL_RANGE	; Set programmed range
-	call	find_throttle_gains		; Set throttle gains
-	clr	C
-	mov	A, New_Rcp			; Load new RC pulse value
-	subb	A, #(255/2)			; Is RC pulse above midstick?
-	setb	IE_EA				; Enable interrupts
-	jc	program_by_tx_checked	; No - branch
-
-	call	wait1ms
-	clr	IE_EA				; Disable all interrupts
-	call	beep_f4
-	setb	IE_EA				; Enable all interrupts
-	djnz	Temp8, throttle_high_cal	; Continue to wait
-
-	call	average_throttle
-	clr	C
-	mov	A, Temp8
-	mov	Temp1, #Pgm_Max_Throttle	; Store
-	mov	@Temp1, A
-	call	wait200ms
-	call	success_beep
-
-throttle_low_cal_start:
-	mov	Temp8, #10			; Set 3 seconds wait time
-throttle_low_cal:
-	setb	Flags2.RCP_FULL_RANGE	; Set range to 1000-2020us
-	call	find_throttle_gains		; Set throttle gains
-	call	wait100ms
-	clr	IE_EA				; Disable interrupts (freeze New_Rcp value)
-	clr	Flags2.RCP_FULL_RANGE	; Set programmed range
-	call	find_throttle_gains		; Set throttle gains
-	clr	C
-	mov	A, New_Rcp			; Load new RC pulse value
-	subb	A, #(255/2)			; Below midstick?
-	setb	IE_EA				; Enable interrupts
-	jnc	throttle_low_cal_start	; No - start over
-
-	call	wait1ms
-	clr	IE_EA				; Disable all interrupts
-	call	beep_f1
-	call	wait10ms
-	call	beep_f1
-	setb	IE_EA				; Enable all interrupts
-	djnz	Temp8, throttle_low_cal	; Continue to wait
-
-	call	average_throttle
-	mov	A, Temp8
-	add	A, #3				; Add about 1%
-	mov	Temp1, #Pgm_Min_Throttle	; Store
-	mov	@Temp1, A
-	mov	Temp1, A				; Min throttle in Temp1
-	mov	Temp2, #Pgm_Max_Throttle
-	mov	A, @Temp2
-	clr	C
-	subb	A, #35				; Subtract 35 (140us) from max throttle
-	jc	program_by_tx_entry_limit
-	subb	A, Temp1				; Subtract min from max
-	jnc	program_by_tx_entry_store
-
-program_by_tx_entry_limit:
-	mov	A, Temp1				; Load min
-	add	A, #35				; Make max 140us higher than min
-	mov	Temp1, #Pgm_Max_Throttle	; Store new max
-	mov	@Temp1, A
-
-program_by_tx_entry_store:
-	call	wait200ms
-	call	erase_and_store_all_in_eeprom
-	call	success_beep_inverted
-
-program_by_tx_entry_wait:
-	call	wait100ms
-	call	find_throttle_gains		; Set throttle gains
-	ljmp	init_no_signal			; Go back
-
-program_by_tx_checked:
 	; Initialize flash keys to invalid values
 	mov	Flash_Key_1, #0
 	mov	Flash_Key_2, #0
@@ -4544,7 +3941,6 @@ IF MCU_48MHZ == 1
 	Set_MCU_Clk_48MHz
 
 	; Scale DShot criteria for 48MHz
-	jnb	Flags2.RCP_DSHOT, dshot_scaled_to_48mhz
 	clr	C
 	mov	A, DShot_Frame_Length_Thr		; Scale frame length criteria
 	rlc	A
@@ -4554,7 +3950,6 @@ IF MCU_48MHZ == 1
 	mov	A, DShot_Pwm_Thr				; Scale pulse width criteria
 	rlc	A
 	mov	DShot_Pwm_Thr, A
-dshot_scaled_to_48mhz:
 ENDIF
 	jnb	Flags3.PGM_BIDIR, init_start_bidir_done	; Check if bidirectional operation
 
@@ -4809,7 +4204,6 @@ IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz
 
 	; Scale DShot criteria for 24MHz
-	jnb	Flags2.RCP_DSHOT, dshot_scaled_to_24mhz
 	clr	C
 	mov	A, DShot_Frame_Length_Thr		; Scale frame length criteria
 	rrc	A
@@ -4819,7 +4213,6 @@ IF MCU_48MHZ == 1
 	mov	A, DShot_Pwm_Thr				; Scale pulse width criteria
 	rrc	A
 	mov	DShot_Pwm_Thr, A
-dshot_scaled_to_24mhz:
 ENDIF
 	setb	IE_EA
 	call	wait100ms					; Wait for pwm to be stopped

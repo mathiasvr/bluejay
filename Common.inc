@@ -199,37 +199,6 @@ CSEG AT 73h			; Timer3 overflow/compare interrupt
 	jmp	t3_int	
 ENDM
 
-Get_Rcp_Capture_Values MACRO
-	anl	TCON, #0EFh				; Disable timer0
-	mov	Temp1, TL0				; Get timer0 values
-	mov	Temp2, TH0
-IF MCU_48MHZ == 1
-	mov	Temp3, Timer0_X
-	jnb	TCON_TF0, ($+4)			; Check if interrupt is pending
-	inc	Temp3					; If it is pending, then timer has already wrapped
-ENDIF
-	mov	TL0, #0					; Reset timer0
-	mov	TH0, #0
-IF MCU_48MHZ == 1
-	mov	Timer0_X, #0
-ENDIF
-	orl	TCON, #10h				; Enable timer0 again
-IF MCU_48MHZ == 1
-	jb	Flags3.CLOCK_SET_AT_48MHZ, Get_Rcp_End
-	clr	C
-	mov	A, Temp1
-	rlc	A
-	mov	Temp1, A
-	mov	A, Temp2
-	rlc	A
-	mov	Temp2, A
-	mov	A, Temp3
-	rlc	A
-	mov	Temp3, A
-Get_Rcp_End:
-ENDIF
-ENDM
-
 Decode_DShot_2Bit MACRO dest, decode_fail
 	movx	A, @DPTR
 	mov	Temp6, A
