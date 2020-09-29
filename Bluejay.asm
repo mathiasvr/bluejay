@@ -532,29 +532,39 @@ t1_int:
 	ajmp	t1_int_decode_lsb
 
 t1_int_frame_fail:
-	mov	DPTR, #0				; Set pointer to start
-	setb	IE_EX0				; Enable int0 interrupts
-	setb	IE_EX1				; Enable int1 interrupts
 	ajmp	int0_int_outside_range
 
 t1_int_decode_lsb:
 	; Decode DShot data Lsb
-	Decode_DShot_2Bit	Temp3, t1_int_decode_fail
-	Decode_DShot_2Bit	Temp3, t1_int_decode_fail
-	Decode_DShot_2Bit	Temp3, t1_int_decode_fail
-	Decode_DShot_2Bit	Temp3, t1_int_decode_fail
+	Decode_DShot_2Bit	Temp3, int0_int_outside_range
+	Decode_DShot_2Bit	Temp3, int0_int_outside_range
+	Decode_DShot_2Bit	Temp3, int0_int_outside_range
+	Decode_DShot_2Bit	Temp3, int0_int_outside_range
 	ajmp	t1_int_decode_checksum
 
-t1_int_decode_fail:
-	mov	DPTR, #0				; Set pointer to start
-	setb	IE_EX0				; Enable int0 interrupts
-	setb	IE_EX1				; Enable int1 interrupts
-	ajmp	int0_int_outside_range
+int0_int_outside_range:
+	inc	Rcp_Outside_Range_Cnt
+	mov	A, Rcp_Outside_Range_Cnt
+	jnz	($+4)
+
+	dec	Rcp_Outside_Range_Cnt
+
+	clr	C
+	mov	A, Rcp_Outside_Range_Cnt
+	subb	A, #50					; Allow a given number of outside pulses
+	jc	int0_int_exit_timeout		; If outside limits - ignore first pulses
+
+	mov	New_Rcp, #0				; Set pulse length to zero
+	jmp	t1_int_dshot_no_tlm			; Exit without reseting timeout
+
+int0_int_exit_timeout:
+	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
+	jmp	t1_int_dshot_no_tlm
 
 t1_int_decode_checksum:
 	; Decode DShot data checksum
-	Decode_DShot_2Bit	Temp2, t1_int_decode_fail
-	Decode_DShot_2Bit	Temp2, t1_int_decode_fail
+	Decode_DShot_2Bit	Temp2, int0_int_outside_range
+	Decode_DShot_2Bit	Temp2, int0_int_outside_range
 
 	; XOR check (in inverted data, which is ok)
 	mov	A, Temp3
@@ -565,7 +575,7 @@ t1_int_decode_checksum:
 	jnb	Flags2.RCP_DSHOT_INVERTED, ($+4)
 	cpl	A	; Invert checksum if using inverted DShot
 	anl	A, #0Fh
-	jnz	t1_int_decode_fail		; XOR check
+	jnz	int0_int_outside_range		; XOR check
 
 	; Invert DShot data and subtract 96 (still 12 bits)
 	clr	C
@@ -832,25 +842,6 @@ int0_int:	; Used for RC pulse timing
 	pop	ACC
 	reti
 
-int0_int_outside_range:
-	inc	Rcp_Outside_Range_Cnt
-	mov	A, Rcp_Outside_Range_Cnt
-	jnz	($+4)
-
-	dec	Rcp_Outside_Range_Cnt
-
-	clr	C
-	mov	A, Rcp_Outside_Range_Cnt
-	subb	A, #50					; Allow a given number of outside pulses
-	jc	int0_int_exit_timeout		; If outside limits - ignore first pulses
-
-	mov	New_Rcp, #0				; Set pulse length to zero
-	ajmp	int0_int_exit				; Exit without reseting timeout
-
-int0_int_exit_timeout:
-	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
-	ajmp int0_int_exit
-
 int0_int_pulse_ready:
 	mov	New_Rcp, Temp1					; Store new pulse length
 	setb	Flags2.RCP_UPDATED				; Set updated flag
@@ -953,17 +944,15 @@ IF MCU_48MHZ == 1
 ENDIF
 	jnb	Flags2.RCP_DSHOT_INVERTED, t1_int_dshot_no_tlm
 	call	dshot_tlm_create_packet
-	jmp	int0_int_exit_no_pca
+	jmp	int0_int_exit_no_int
 
 t1_int_dshot_no_tlm:
 	mov	DPTR, #0						; Set pointer to start
 	setb	IE_EX0						; Enable int0 interrupts
 	setb	IE_EX1						; Enable int1 interrupts	
-
-int0_int_exit:
 	orl	EIE1, #10h					; Enable pca interrupts
 
-int0_int_exit_no_pca:
+int0_int_exit_no_int:
 	pop	B							; Restore preserved registers
 	pop	ACC
 	pop	PSW
