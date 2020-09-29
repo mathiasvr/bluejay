@@ -1,67 +1,33 @@
 $NOMOD51
 ;**** **** **** **** ****
 ;
-; BLHeli program for controlling brushless motors in multirotors
+; Bluejay digital ESC firmware for controlling brushless motors in multirotors
 ;
+; Copyright 2020 Mathias Rasmussen
 ; Copyright 2011, 2012 Steffen Skaug
-; This program is distributed under the terms of the GNU General Public License
 ;
-; This file is part of BLHeli.
+; This file is part of Bluejay.
 ;
-; BLHeli is free software: you can redistribute it and/or modify
+; Bluejay is free software: you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation, either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; BLHeli is distributed in the hope that it will be useful,
+; Bluejay is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
 ;
 ; You should have received a copy of the GNU General Public License
-; along with BLHeli.  If not, see <http://www.gnu.org/licenses/>.
+; along with Bluejay.  If not, see <http://www.gnu.org/licenses/>.
 ;
 ;**** **** **** **** ****
 ;
-; This software was initially designed for use with Eflite mCP X, but is now adapted to copters/planes in general
+; Bluejay is a fork of BLHeli_S <https://github.com/bitdump/BLHeli> by Steffen Skaug.
 ;
-; The software was inspired by and started from from Bernard Konze's BLMC: http://home.versanet.de/~bkonze/blc_6a/blc_6a.htm
-; And also Simon Kirby's TGY: https://github.com/sim-/tgy
+; The input signal can be DShot with rates: DShot150, DShot300 and DShot600. A 48MHz MCU is required for DShot600.
 ;
-; This file is best viewed with tab width set to 5
-;
-; The code is designed for multirotor applications, running damped light mode
-;
-; The input signal can be Normal (1-2ms), OneShot125 (125-250us), OneShot42 (41.7-83.3us) or Multishot (5-25us) at rates as high as allowed by the format.
-; Three Dshot signal rates are also supported, Dshot150, Dshot300 and Dshot600. A 48MHz MCU is required for Dshot600.
-; The code autodetects normal, OneShot125, Oneshot42, Multishot or Dshot.
-;
-; The first lines of the software must be modified according to the chosen environment:
-; ESCNO EQU "ESC"
-; MCU_48MHZ EQU "N"
-; FETON_DELAY EQU "N"
-;
-;**** **** **** **** ****
-; Revision history:
-; - Rev16.0 Started. Built upon rev 14.5 of base code
-;           Using hardware pwm for very smooth throttle response, silent running and support of very high rpms
-;           Implemented reverse bidirectional mode
-;           Implemented separate throttle gains fwd and rev in bidirectional mode
-;           Implemented support for Oneshot42 and Multishot
-; - Rev16.1 Made low rpm power limiting programmable through the startup power parameter
-; - Rev16.2 Fixed bug that prevented temperature protection
-;           Improved robustness to very high input signal rates
-;           Beeps can be turned off by programming beep strength to 1
-;           Throttle cal difference is checked to be above required minimum before storing. Throttle cal max is not stored until successful min throttle cal
-; - Rev16.3 Implemented programmable temperature protection
-;           Improved protection of bootloader and generally reduced risk of flash corruption
-;           Some small changes for improved sync hold
-; - Rev16.4 Fixed bug where bootloader operation could be blocked by a defective "eeprom" signature
-; - Rev16.5 Added support for DShot150, DShot300 and DShot600
-; - Rev16.6 Fixed signal detection issue of multishot at 32kHz
-;           Improved bidirectional mode for high input signal rates
-; - Rev16.7 Addition of Dshot commands for beeps and temporary reverse direction (largely by brycedjohnson)
-;
+; This file is best viewed with tab width set to 5.
 ;
 ;**** **** **** **** ****
 ; Minimum 8K Bytes of In-System Self-Programmable Flash
@@ -133,28 +99,6 @@ W_			EQU 23	; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
 ;**** **** **** **** ****
 ; Select the port mapping to use (or unselect all for use with external batch compile file)
 ;ESCNO EQU A_
-;ESCNO EQU B_
-;ESCNO EQU C_
-;ESCNO EQU D_
-;ESCNO EQU E_
-;ESCNO EQU F_
-;ESCNO EQU G_
-;ESCNO EQU H_
-;ESCNO EQU I_
-;ESCNO EQU J_
-;ESCNO EQU K_
-;ESCNO EQU L_
-;ESCNO EQU M_
-;ESCNO EQU N_
-;ESCNO EQU O_
-;ESCNO EQU P_
-;ESCNO EQU Q_
-;ESCNO EQU R_
-;ESCNO EQU S_
-;ESCNO EQU T_
-;ESCNO EQU U_
-;ESCNO EQU V_
-;ESCNO EQU W_
 
 ;**** **** **** **** ****
 ; Select the MCU type (or unselect for use with external batch compile file)
@@ -166,7 +110,6 @@ W_			EQU 23	; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
 
 
 $include (Common.inc)				; Include common source code for EFM8BBx based ESCs
-
 
 ;**** **** **** **** ****
 ; Programming defaults
