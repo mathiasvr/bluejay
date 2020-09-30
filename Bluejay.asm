@@ -123,10 +123,10 @@ DEFAULT_PGM_BEACON_STRENGTH			EQU 80	; Beacon strength
 DEFAULT_PGM_BEACON_DELAY				EQU 4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
 
 ; COMMON
-DEFAULT_PGM_ENABLE_TX_PROGRAM			EQU 1	; 1=Enabled	0=Disabled
-DEFAULT_PGM_MIN_THROTTLE				EQU 37	; 4*37+1000=1148
-DEFAULT_PGM_MAX_THROTTLE				EQU 208	; 4*208+1000=1832
-DEFAULT_PGM_CENTER_THROTTLE			EQU 122	; 4*122+1000=1488 (used in bidirectional mode)
+_DEFAULT_PGM_ENABLE_TX_PROGRAM			EQU 1	; 1=Enabled	0=Disabled
+_DEFAULT_PGM_MIN_THROTTLE				EQU 37	; 4*37+1000=1148
+_DEFAULT_PGM_MAX_THROTTLE				EQU 208	; 4*208+1000=1832
+_DEFAULT_PGM_CENTER_THROTTLE			EQU 122	; 4*122+1000=1488 (used in bidirectional mode)
 DEFAULT_PGM_ENABLE_TEMP_PROT			EQU 7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
 DEFAULT_PGM_ENABLE_POWER_PROT			EQU 1	; 1=Enabled	0=Disabled
 DEFAULT_PGM_BRAKE_ON_STOP			EQU 0	; 1=Enabled	0=Disabled
@@ -203,12 +203,12 @@ Tlm_Data_H:			DS	1			; DShot telemetry data high byte
 DSEG AT 30h							; Ram data segment, direct addressing
 Initial_Arm:				DS	1		; Variable that is set during the first arm sequence after power on
 
-Min_Throttle_L:			DS	1		; Minimum throttle scaled (lo byte)
-Min_Throttle_H:			DS	1		; Minimum throttle scaled (hi byte)
-Center_Throttle_L:			DS	1		; Center throttle scaled (lo byte)
-Center_Throttle_H:			DS	1		; Center throttle scaled (hi byte)
-Max_Throttle_L:			DS	1		; Maximum throttle scaled (lo byte)
-Max_Throttle_H:			DS	1		; Maximum throttle scaled (hi byte)
+;Min_Throttle_L:			DS	1		; Minimum throttle scaled (lo byte)
+;Min_Throttle_H:			DS	1		; Minimum throttle scaled (hi byte)
+;Center_Throttle_L:			DS	1		; Center throttle scaled (lo byte)
+;Center_Throttle_H:			DS	1		; Center throttle scaled (hi byte)
+;Max_Throttle_L:			DS	1		; Maximum throttle scaled (lo byte)
+;Max_Throttle_H:			DS	1		; Maximum throttle scaled (hi byte)
 
 Power_On_Wait_Cnt_L:		DS	1		; Power on wait counter (lo byte)
 Power_On_Wait_Cnt_H:		DS	1		; Power on wait counter (hi byte)
@@ -307,8 +307,8 @@ Pgm_Comm_Timing:			DS	1		; Programmed commutation timing
 _Pgm_Damping_Force:			DS	1		; Programmed damping force (unused - place holder)
 _Pgm_Gov_Range:			DS	1		; Programmed governor range
 _Pgm_Startup_Method:		DS	1		; Programmed startup method (unused - place holder)
-Pgm_Min_Throttle:			DS	1		; Programmed throttle minimum
-Pgm_Max_Throttle:			DS	1		; Programmed throttle maximum
+_Pgm_Min_Throttle:			DS	1		; Programmed throttle minimum
+_Pgm_Max_Throttle:			DS	1		; Programmed throttle maximum
 Pgm_Beep_Strength:			DS	1		; Programmed beep strength
 Pgm_Beacon_Strength:		DS	1		; Programmed beacon strength
 Pgm_Beacon_Delay:			DS	1		; Programmed beacon delay
@@ -354,7 +354,7 @@ Eep_Pgm_Direction:			DB	DEFAULT_PGM_DIRECTION			; EEPROM copy of programmed rota
 _Eep_Pgm_Input_Pol:			DB	0FFh
 Eep_Initialized_L:			DB	055h							; EEPROM initialized signature low byte
 Eep_Initialized_H:			DB	0AAh							; EEPROM initialized signature high byte
-Eep_Enable_TX_Program:		DB	DEFAULT_PGM_ENABLE_TX_PROGRAM		; EEPROM TX programming enable
+Eep_Enable_TX_Program:		DB	_DEFAULT_PGM_ENABLE_TX_PROGRAM		; EEPROM TX programming enable
 _Eep_Main_Rearm_Start:		DB	0FFh
 _Eep_Pgm_Gov_Setup_Target:	DB	0FFh
 _Eep_Pgm_Startup_Rpm:		DB	0FFh
@@ -364,15 +364,15 @@ Eep_Pgm_Comm_Timing:		DB	DEFAULT_PGM_COMM_TIMING			; EEPROM copy of programmed c
 _Eep_Pgm_Damping_Force:		DB	0FFh
 _Eep_Pgm_Gov_Range:			DB	0FFh
 _Eep_Pgm_Startup_Method:		DB	0FFh
-Eep_Pgm_Min_Throttle:		DB	DEFAULT_PGM_MIN_THROTTLE			; EEPROM copy of programmed minimum throttle
-Eep_Pgm_Max_Throttle:		DB	DEFAULT_PGM_MAX_THROTTLE			; EEPROM copy of programmed minimum throttle
+_Eep_Pgm_Min_Throttle:		DB	_DEFAULT_PGM_MIN_THROTTLE			; EEPROM copy of programmed minimum throttle
+_Eep_Pgm_Max_Throttle:		DB	_DEFAULT_PGM_MAX_THROTTLE			; EEPROM copy of programmed minimum throttle
 Eep_Pgm_Beep_Strength:		DB	DEFAULT_PGM_BEEP_STRENGTH		; EEPROM copy of programmed beep strength
 Eep_Pgm_Beacon_Strength:		DB	DEFAULT_PGM_BEACON_STRENGTH		; EEPROM copy of programmed beacon strength
 Eep_Pgm_Beacon_Delay:		DB	DEFAULT_PGM_BEACON_DELAY			; EEPROM copy of programmed beacon delay
 _Eep_Pgm_Throttle_Rate:		DB	0FFh
 Eep_Pgm_Demag_Comp:			DB	DEFAULT_PGM_DEMAG_COMP			; EEPROM copy of programmed demag compensation
 _Eep_Pgm_BEC_Voltage_High:	DB	0FFh
-Eep_Pgm_Center_Throttle:		DB	DEFAULT_PGM_CENTER_THROTTLE		; EEPROM copy of programmed center throttle
+_Eep_Pgm_Center_Throttle:		DB	_DEFAULT_PGM_CENTER_THROTTLE		; EEPROM copy of programmed center throttle
 _Eep_Pgm_Main_Spoolup_Time:	DB	0FFh
 Eep_Pgm_Temp_Prot_Enable:	DB	DEFAULT_PGM_ENABLE_TEMP_PROT		; EEPROM copy of programmed temperature protection enable
 Eep_Pgm_Enable_Power_Prot:	DB	DEFAULT_PGM_ENABLE_POWER_PROT		; EEPROM copy of programmed low rpm power protection enable
@@ -2782,7 +2782,7 @@ set_default_parameters:
 	mov	@Temp1, #DEFAULT_PGM_DIRECTION
 
 	mov	Temp1, #Pgm_Enable_TX_Program
-	mov	@Temp1, #DEFAULT_PGM_ENABLE_TX_PROGRAM
+	mov	@Temp1, #_DEFAULT_PGM_ENABLE_TX_PROGRAM
 	inc	Temp1
 	mov	@Temp1, #0FFh	; Main rearm start
 	inc	Temp1
@@ -2802,9 +2802,9 @@ set_default_parameters:
 	inc	Temp1
 	mov	@Temp1, #0FFh	; Startup method
 	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_MIN_THROTTLE
+	mov	@Temp1, #_DEFAULT_PGM_MIN_THROTTLE
 	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_MAX_THROTTLE
+	mov	@Temp1, #_DEFAULT_PGM_MAX_THROTTLE
 	inc	Temp1
 	mov	@Temp1, #DEFAULT_PGM_BEEP_STRENGTH
 	inc	Temp1
@@ -2818,7 +2818,7 @@ set_default_parameters:
 	inc	Temp1
 	mov	@Temp1, #0FFh	; Bec voltage high
 	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_CENTER_THROTTLE
+	mov	@Temp1, #_DEFAULT_PGM_CENTER_THROTTLE
 	inc	Temp1
 	mov	@Temp1, #0FFh
 	inc	Temp1
@@ -2834,54 +2834,6 @@ set_default_parameters:
 	inc	Temp1
 	mov	@Temp1, #DEFAULT_PGM_LED_CONTROL
 	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; Scale throttle cal
-;
-; No assumptions
-;
-; Scales a throttle cal value
-; Input is ACC, output is Temp2/Temp1
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-scale_throttle_cal:
-	mov	Temp3, A
-	mov	B, #0Ch		; Calculate "3%" (for going from 1000us to numerical 1024)
-	mul	AB
-	mov	Temp4, B
-	mov	A, Temp3
-	clr	C			; Shift to 9 bits
-	rlc	A
-	mov	Temp1, A
-	mov	A, #1
-	rlc	A
-	mov	Temp2, A
-	mov	A, Temp1		; Shift to 10 bits
-	clr	C
-	rlc	A
-	mov	Temp1, A
-	mov	A, Temp2
-	rlc	A
-	mov	Temp2, A
-	mov	A, Temp1		; Add "3%"
-	clr	C
-	add	A, Temp4
-	mov	Temp1, A
-	mov	A, Temp2
-	addc	A, #0
-	mov	Temp2, A
-IF MCU_48MHZ == 1
-	mov	A, Temp1		; Shift to 11 bits
-	clr	C
-	rlc	A
-	mov	Temp1, A
-	mov	A, Temp2
-	rlc	A
-	mov	Temp2, A
-ENDIF
-ret
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -2954,23 +2906,6 @@ decode_temp_step:
 
 decode_temp_done:
 	mov	Temp_Prot_Limit, A
-	; Decode throttle cal
-	mov	Temp1, #Pgm_Min_Throttle		; Throttle cal is in 4us units
-	mov	A, @Temp1
-	call	scale_throttle_cal
-	mov	Min_Throttle_L, Temp1
-	mov	Min_Throttle_H, Temp2
-	mov	Temp1, #Pgm_Center_Throttle	; Throttle cal is in 4us units
-	mov	A, @Temp1
-	call	scale_throttle_cal
-	mov	Center_Throttle_L, Temp1
-	mov	Center_Throttle_H, Temp2
-	mov	Temp1, #Pgm_Max_Throttle		; Throttle cal is in 4us units
-	mov	A, @Temp1
-	call	scale_throttle_cal
-	mov	Max_Throttle_L, Temp1
-	mov	Max_Throttle_H, Temp2
-	call	switch_power_off
 	ret
 
 
