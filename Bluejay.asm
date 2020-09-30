@@ -1965,9 +1965,7 @@ calc_next_comm_timing_fast:
 	mov	Temp3, A
 	jc	load_min_time_fast		; Check that result is still positive
 
-	clr	C
-	subb	A, #1
-	jnc	calc_new_wait_times_fast_done	; Check that result is still above minumum
+	jnz	calc_new_wait_times_fast_done	; Check that result is still above minumum
 
 load_min_time_fast:
 	mov	Temp3, #1
@@ -2386,10 +2384,8 @@ comp_read_wrong_load_timeout:
 	ajmp	comp_read_wrong_timeout_set
 
 comp_read_ok:
-	clr	C
 	mov	A, Startup_Cnt				; Force a timeout for the first commutation
-	subb	A, #1
-	jnc	($+4)
+	jnz	($+4)
 	ajmp	wait_for_comp_out_start
 
 	jnb	Flags0.DEMAG_DETECTED, ($+5)	; Do not accept correct comparator output if it is demag
