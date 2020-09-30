@@ -3464,15 +3464,12 @@ arming_start:
 	; Initialize flash keys to invalid values
 	mov	Flash_Key_1, #0
 	mov	Flash_Key_2, #0
+
 	call	wait100ms				; Wait for new throttle value
-	clr	C
+
 	mov	A, New_Rcp			; Load new RC pulse value
-	subb	A, #1				; Below stop?
-	jc	arm_end_beep			; Yes - proceed
+	jnz	arming_start			; Start over if not below stop
 
-	jmp	arming_start			; No - start over
-
-arm_end_beep:
 	; Beep arm sequence end signal
 	clr	IE_EA				; Disable all interrupts
 	call	beep_f4				; Signal that rcpulse is ready
@@ -3543,17 +3540,13 @@ wait_for_power_on_no_beep:
 	jmp	init_no_signal				; If pulses missing - go back to detect input signal
 
 wait_for_power_on_not_missing:
-	clr	C
 	mov	A, New_Rcp				; Load new RC pulse value
-	subb	A, #1					; Higher than stop
-	jnc	wait_for_power_on_nonzero	; Yes - proceed
+	jnz	wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
 
-	clr	C
 	mov	A, Dshot_Cmd
-	subb	A, #1				; 1 or higher
-	jnc	check_dshot_cmd		; Check Dshot command
+	jnz	check_dshot_cmd		; Check DShot command (if not zero)
 
-	ljmp	wait_for_power_on_loop	; If not Dshot command - start over
+	ljmp	wait_for_power_on_loop	; If notDShot command - start over
 
 wait_for_power_on_nonzero:
 	lcall	wait100ms			; Wait to see if start pulse was only a glitch
@@ -4007,10 +4000,8 @@ run6:
 	jmp	normal_run_checks
 
 direct_start_check_rcp:
-	clr	C
 	mov	A, New_Rcp				; Load new pulse value
-	subb	A, #1					; Check if pulse is below stop value
-	jc	($+5)
+	jz	($+5)					; Check if pulse is below stop value
 
 	ljmp	run1						; Continue to run
 
@@ -4037,10 +4028,8 @@ initial_run_check_startup_rot:
 
 	jb	Flags3.PGM_BIDIR, initial_run_continue_run	; Check if bidirectional operation
 
-	clr	C
 	mov	A, New_Rcp				; Load new pulse value
-	subb	A, #1					; Check if pulse is below stop value
-	jc	($+5)
+	jz	($+5)					; Check if pulse is below stop value
 
 initial_run_continue_run:
 	ljmp	run1						; Continue to run
