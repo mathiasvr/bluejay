@@ -3325,58 +3325,52 @@ bootloader_done:
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz
 ENDIF
+	; Setup timers for DShot
+	mov	TCON, #51h			; Timer 0/1 run and INT0 edge triggered
+	mov	CKCON0, #01h			; Timer 0/1 clock is system clock divided by 4 (for DShot150)
+	mov	TMOD, #0AAh			; Timer 0/1 set to 8bits auto reload and gated by INT0/1
+	mov	TH0, #0				; Auto reload value zero
+	mov	TH1, #0
 
 	mov	TMR2CN0, #04h		; Timer 2 enabled
 	mov	TMR3CN0, #04h		; Timer 3 enabled
+
 	Initialize_PCA			; Initialize PCA
 	Set_Pwm_Polarity		; Set pwm polarity
 	Enable_Power_Pwm_Module	; Enable power pwm module
 	Enable_Damp_Pwm_Module	; Enable damping pwm module
-	; Enable interrupts
-IF MCU_48MHZ == 0
-	mov	IE, #21h			; Enable timer 2 interrupts and INT0 interrupts
-ELSE
-	mov	IE, #23h			; Enable timer 0, timer 2 interrupts and INT0 interrupts
-ENDIF
-	mov	EIE1, #90h		; Enable timer 3 and PCA0 interrupts
-	mov	IP, #01h			; High priority to INT0 interrupts
 	; Initialize comparator
 	Initialize_Comparator	; Initialize comparator
 	; Initialize ADC
 	Initialize_Adc			; Initialize ADC operation
 	call	wait1ms
-	setb	IE_EA			; Enable all interrupts
 	; Reset stall count
 	mov	Stall_Cnt, #0
 	; Initialize RC pulse
 	clr	Flags2.RCP_UPDATED			; Clear updated flag
 	call	wait200ms
 
+
 	mov	Dshot_Cmd, #0				; Clear Dshot command
 	mov	Dshot_Cmd_Cnt, #0			; Clear Dshot command count
 
 	; Setup RCP for DShot
-	call	detect_rcp_level
+
+	call	detect_rcp_level			; Detect normal or inverted DShot
 
 	; Route RCP according to detected DShot signal (normal or inverted)
 	mov	IT01CF, #(80h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to INT0/1, with INT1 inverted
 	jnb	Flags2.RCP_DSHOT_INVERTED, ($+6)
 	mov	IT01CF, #(08h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to INT0/1, with INT0 inverted
 
-	; Setup timers for DShot
-	mov	TCON, #51h				; Timer 0/1 run and INT0 edge triggered
-	mov	CKCON0, #01h				; Timer 0/1 clock is system clock divided by 4 (for DShot150)
-	mov	TMOD, #0AAh				; Timer 0/1 set to 8bits auto reload and gated by INT0/1
-	mov	TH0, #0					; Auto reload value zero
-	mov	TH1, #0
-
 	; Setup interrupts for DShot
-	setb IP_PT0					; Add high priority to timer 0 interrupts
-	clr	IE_ET0					; Disable timer 0 interrupts
-	setb	IE_ET1					; Enable timer 1 interrupts
-	setb	IE_EX1					; Enable int1 interrupts
+	mov	IE, #2Dh			; Enable timer 1/2 interrupts and INT0/1 interrupts
+	mov	EIE1, #90h		; Enable timer 3 and PCA0 interrupts
+	mov	IP, #03h			; High priority to timer 0 and INT0 interrupts
 
-	; Setup variables for DSshot150
+	setb	IE_EA			; Enable all interrupts
+
+	; Setup variables for DShot150
 IF MCU_48MHZ == 1
 	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot150)
 ELSE
@@ -3401,8 +3395,9 @@ IF MCU_48MHZ == 0
 	jc	validate_rcp_start
 ENDIF
 
+	mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot300/600)
+
 	; Setup variables for DShot300
-	mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot300)
 IF MCU_48MHZ == 1
 	mov	DShot_Timer_Preset, #0		; Load DShot sync timer preset (for DShot300)
 ELSE
@@ -3426,7 +3421,6 @@ ENDIF
 	jc	validate_rcp_start
 
 	; Setup variables for DShot600
-	;mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot600)
 IF MCU_48MHZ == 1
 	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot600)
 ELSE
