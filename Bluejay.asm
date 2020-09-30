@@ -415,6 +415,14 @@ DShot_GCR_Get_Time MACRO
 	mov	A, DShot_GCR_Pulse_Time_3
 ENDM
 
+IF MCU_48MHZ == 0
+	PCA_BIT	EQU	1
+	PWR_H_BIT	EQU	1
+ELSE
+	PCA_BIT	EQU	2
+	PWR_H_BIT	EQU	2
+ENDIF
+
 ;**** **** **** **** ****
 Interrupt_Table_Definition	; SiLabs interrupts
 CSEG AT 80h				; Code segment after interrupt vectors
@@ -831,11 +839,7 @@ IF FETON_DELAY != 0
 	Enable_COVF_Interrupt				; Generate a pca interrupt
 ELSE
 	mov	A, Current_Power_Pwm_Reg_H
-IF MCU_48MHZ == 0
-	jnb	ACC.1, t1_int_set_pca_int_hi_pwm
-ELSE
-	jnb	ACC.2, t1_int_set_pca_int_hi_pwm
-ENDIF
+	jnb	ACC.PWR_H_BIT, t1_int_set_pca_int_hi_pwm
 
 	Clear_COVF_Interrupt
 	Enable_COVF_Interrupt				; Generate a pca interrupt
@@ -992,33 +996,20 @@ pca_int:	; Used for setting pwm registers
 	setb	PSW.3				; Select register bank 1 for this interrupt
 
 IF FETON_DELAY != 0				; HI/LO enable style drivers
-
 	mov	Temp1, PCA0L			; Read low byte, to transfer high byte to holding register
 	mov	A, Current_Power_Pwm_Reg_H
-IF MCU_48MHZ == 0
-	jnb	ACC.1, pca_int_hi_pwm
-ELSE
-	jnb	ACC.2, pca_int_hi_pwm
-ENDIF
+	jnb	ACC.PWR_H_BIT, pca_int_hi_pwm
+
 	mov	A, PCA0H
-IF MCU_48MHZ == 0
-	jb	ACC.1, pca_int_exit		; Power below 50%, update pca in the 0x00-0x0F range
-	jb	ACC.0, pca_int_exit
-ELSE
-	jb	ACC.2, pca_int_exit
-	jb	ACC.1, pca_int_exit
-ENDIF
+	jb	ACC.PCA_BIT, pca_int_exit		; Power below 50%, update pca in the 0x00-0x0F range
+	jb	ACC.(PCA_BIT-1), pca_int_exit
+
 	ajmp	pca_int_set_pwm
 
 pca_int_hi_pwm:
 	mov	A, PCA0H
-IF MCU_48MHZ == 0
-	jnb	ACC.1, pca_int_exit		; Power above 50%, update pca in the 0x20-0x2F range
-	jb	ACC.0, pca_int_exit
-ELSE
-	jnb	ACC.2, pca_int_exit
-	jb	ACC.1, pca_int_exit
-ENDIF
+	jnb	ACC.PCA_BIT, pca_int_exit		; Power above 50%, update pca in the 0x20-0x2F range
+	jb	ACC.(PCA_BIT-1), pca_int_exit
 
 pca_int_set_pwm:
 	Set_Power_Pwm_Regs
@@ -1031,7 +1022,6 @@ ELSE							; EN/PWM style drivers
 	mov	Current_Power_Pwm_Reg_H, Power_Pwm_Reg_H
 	Disable_COVF_Interrupt
 	Disable_CCF_Interrupt
-
 ENDIF
 
 	; Pwm updated, disable pca interrupt
