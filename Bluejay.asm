@@ -391,11 +391,11 @@ Eep_Name:					DB	"                "				; Name tag (16 Bytes)
 IF MCU_48MHZ == 1
 	DSHOT_TLM_CLOCK		EQU	49000000				; 49MHz
 	DSHOT_TLM_START_DELAY	EQU	-(8 * 49 / 4)			; Start telemetry after 8us (~30us after receiving DShot cmd)
-	DSHOT_TLM_PREDELAY		EQU	833 * 49 / 4 / 1000		; 10 ticks (~833ns) inherent delay
+	DSHOT_TLM_PREDELAY		EQU	8					; 8 timer 0 ticks inherent delay
 ELSE
 	DSHOT_TLM_CLOCK		EQU	24500000				; 24.5MHz
 	DSHOT_TLM_START_DELAY	EQU	-1					; Start telemetry after 1 tick (~37us after receiving DShot cmd)
-	DSHOT_TLM_PREDELAY		EQU	1249 * 245 / 4 / 10000	; 7 ticks (~1249ns) inherent delay
+	DSHOT_TLM_PREDELAY		EQU	6					; 6 timer 0 ticks inherent delay
 ENDIF
 
 Set_DShot_Tlm_Bitrate MACRO rate
