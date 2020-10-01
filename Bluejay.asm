@@ -751,101 +751,7 @@ ENDIF
 
 	dec	Rcp_Outside_Range_Cnt
 
-	ajmp	int0_int_pulse_ready
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; Timer 2 interrupt routine
-;
-; No assumptions
-; Requirements: Temp variables can NOT be used since PSW.x is not set
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-t2_int:	; Happens every 32ms
-	push	PSW			; Preserve registers through interrupt
-	push	ACC
-	clr	TMR2CN0_TF2H				; Clear interrupt flag
-	inc	Timer2_X
-IF MCU_48MHZ == 1
-	jnb	Flags3.CLOCK_SET_AT_48MHZ, t2_int_start
-
-	; Check skip variable
-	jnb	Flags3.SKIP_T2_INT, t2_int_start	; Execute this interrupt
-
-	clr	Flags3.SKIP_T2_INT
-	ajmp	t2_int_exit
-
-t2_int_start:
-	setb	Flags3.SKIP_T2_INT			; Skip next interrupt
-ENDIF
-	; Update RC pulse timeout counter
-	mov	A, Rcp_Timeout_Cntd			; RC pulse timeout count zero?
-	jz	($+4)					; Yes - do not decrement
-
-	dec	Rcp_Timeout_Cntd			; No decrement
-
-	; Check RC pulse against stop value
-	clr	C
-	mov	A, New_Rcp				; Load new pulse value
-	jz	t2_int_rcp_stop			; Check if pulse is below stop value
-
-	; RC pulse higher than stop value, reset stop counter
-	mov	Rcp_Stop_Cnt, #0			; Reset rcp stop counter
-	ajmp	t2_int_exit
-
-t2_int_rcp_stop:
-	; RC pulse less than stop value
-	mov	A, Rcp_Stop_Cnt			; Increment stop counter
-	add	A, #1
-	mov	Rcp_Stop_Cnt, A
-	jnc	($+5)					; Branch if counter has not wrapped
-
-	mov	Rcp_Stop_Cnt, #0FFh			; Set stop counter to max
-
-t2_int_exit:
-	pop	ACC						; Restore preserved registers
-	pop	PSW
-	reti
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; Timer 3 interrupt routine
-;
-; No assumptions
-; Requirements: Temp variables can NOT be used since PSW.x is not set
-;               ACC can not be used, as it is not pushed to stack
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-t3_int:	; Used for commutation timing
-	clr	IE_EA			; Disable all interrupts
-	anl	EIE1, #7Fh		; Disable timer 3 interrupts
-	mov	TMR3RLL, #0FAh		; Set a short delay before next interrupt
-	mov	TMR3RLH, #0FFh
-	clr	Flags0.T3_PENDING	; Flag that timer has wrapped
-	anl	TMR3CN0, #07Fh		; Timer 3 interrupt flag cleared
-	setb	IE_EA			; Enable all interrupts
-	reti
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; Int0 interrupt routine
-;
-; No assumptions
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-int0_int:	; Used for RC pulse timing
-	push	ACC
-	mov	A, TL0				; Read pwm for DShot immediately
-	mov	TL1, DShot_Timer_Preset	; Reset sync timer
-	movx	@DPTR, A				; Store pwm
-	inc	DPL
-	pop	ACC
-	reti
-
-int0_int_pulse_ready:
+;int0_int_pulse_ready:
 	mov	New_Rcp, Temp1					; Store new pulse length
 	setb	Flags2.RCP_UPDATED				; Set updated flag
 	; Check if zero
@@ -959,6 +865,98 @@ int0_int_exit_no_int:
 	pop	B							; Restore preserved registers
 	pop	ACC
 	pop	PSW
+	reti
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Timer 2 interrupt routine
+;
+; No assumptions
+; Requirements: Temp variables can NOT be used since PSW.x is not set
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+t2_int:	; Happens every 32ms
+	push	PSW			; Preserve registers through interrupt
+	push	ACC
+	clr	TMR2CN0_TF2H				; Clear interrupt flag
+	inc	Timer2_X
+IF MCU_48MHZ == 1
+	jnb	Flags3.CLOCK_SET_AT_48MHZ, t2_int_start
+
+	; Check skip variable
+	jnb	Flags3.SKIP_T2_INT, t2_int_start	; Execute this interrupt
+
+	clr	Flags3.SKIP_T2_INT
+	ajmp	t2_int_exit
+
+t2_int_start:
+	setb	Flags3.SKIP_T2_INT			; Skip next interrupt
+ENDIF
+	; Update RC pulse timeout counter
+	mov	A, Rcp_Timeout_Cntd			; RC pulse timeout count zero?
+	jz	($+4)					; Yes - do not decrement
+
+	dec	Rcp_Timeout_Cntd			; No decrement
+
+	; Check RC pulse against stop value
+	clr	C
+	mov	A, New_Rcp				; Load new pulse value
+	jz	t2_int_rcp_stop			; Check if pulse is below stop value
+
+	; RC pulse higher than stop value, reset stop counter
+	mov	Rcp_Stop_Cnt, #0			; Reset rcp stop counter
+	ajmp	t2_int_exit
+
+t2_int_rcp_stop:
+	; RC pulse less than stop value
+	mov	A, Rcp_Stop_Cnt			; Increment stop counter
+	add	A, #1
+	mov	Rcp_Stop_Cnt, A
+	jnc	($+5)					; Branch if counter has not wrapped
+
+	mov	Rcp_Stop_Cnt, #0FFh			; Set stop counter to max
+
+t2_int_exit:
+	pop	ACC						; Restore preserved registers
+	pop	PSW
+	reti
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Timer 3 interrupt routine
+;
+; No assumptions
+; Requirements: Temp variables can NOT be used since PSW.x is not set
+;               ACC can not be used, as it is not pushed to stack
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+t3_int:	; Used for commutation timing
+	clr	IE_EA			; Disable all interrupts
+	anl	EIE1, #7Fh		; Disable timer 3 interrupts
+	mov	TMR3RLL, #0FAh		; Set a short delay before next interrupt
+	mov	TMR3RLH, #0FFh
+	clr	Flags0.T3_PENDING	; Flag that timer has wrapped
+	anl	TMR3CN0, #07Fh		; Timer 3 interrupt flag cleared
+	setb	IE_EA			; Enable all interrupts
+	reti
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Int0 interrupt routine
+;
+; No assumptions
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+int0_int:	; Used for RC pulse timing
+	push	ACC
+	mov	A, TL0				; Read pwm for DShot immediately
+	mov	TL1, DShot_Timer_Preset	; Reset sync timer
+	movx	@DPTR, A				; Store pwm
+	inc	DPL
+	pop	ACC
 	reti
 
 
