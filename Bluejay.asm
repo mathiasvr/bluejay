@@ -555,6 +555,9 @@ int0_int_outside_range:
 	jc	int0_int_exit_timeout		; If outside limits - ignore first pulses
 
 	mov	New_Rcp, #0				; Set pulse length to zero
+	mov	Dshot_Cmd, #0				; Clear DShot command
+	mov	Dshot_Cmd_Cnt, #0			; Clear DShot command count
+
 	jmp	t1_int_dshot_no_tlm			; Exit without reseting timeout
 
 int0_int_exit_timeout:
