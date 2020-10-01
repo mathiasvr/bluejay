@@ -532,17 +532,17 @@ t1_int:
 	ajmp	t1_int_decode_lsb
 
 t1_int_frame_fail:
-	ajmp	int0_int_outside_range
+	ajmp	t1_int_outside_range
 
 t1_int_decode_lsb:
 	; Decode DShot data Lsb
-	Decode_DShot_2Bit	Temp3, int0_int_outside_range
-	Decode_DShot_2Bit	Temp3, int0_int_outside_range
-	Decode_DShot_2Bit	Temp3, int0_int_outside_range
-	Decode_DShot_2Bit	Temp3, int0_int_outside_range
+	Decode_DShot_2Bit	Temp3, t1_int_outside_range
+	Decode_DShot_2Bit	Temp3, t1_int_outside_range
+	Decode_DShot_2Bit	Temp3, t1_int_outside_range
+	Decode_DShot_2Bit	Temp3, t1_int_outside_range
 	ajmp	t1_int_decode_checksum
 
-int0_int_outside_range:
+t1_int_outside_range:
 	inc	Rcp_Outside_Range_Cnt
 	mov	A, Rcp_Outside_Range_Cnt
 	jnz	($+4)
@@ -552,7 +552,7 @@ int0_int_outside_range:
 	clr	C
 	mov	A, Rcp_Outside_Range_Cnt
 	subb	A, #50					; Allow a given number of outside pulses
-	jc	int0_int_exit_timeout		; If outside limits - ignore first pulses
+	jc	t1_int_exit_timeout		; If outside limits - ignore first pulses
 
 	mov	New_Rcp, #0				; Set pulse length to zero
 	mov	Dshot_Cmd, #0				; Clear DShot command
@@ -560,14 +560,14 @@ int0_int_outside_range:
 
 	jmp	t1_int_dshot_no_tlm			; Exit without reseting timeout
 
-int0_int_exit_timeout:
+t1_int_exit_timeout:
 	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
 	jmp	t1_int_dshot_no_tlm
 
 t1_int_decode_checksum:
 	; Decode DShot data checksum
-	Decode_DShot_2Bit	Temp2, int0_int_outside_range
-	Decode_DShot_2Bit	Temp2, int0_int_outside_range
+	Decode_DShot_2Bit	Temp2, t1_int_outside_range
+	Decode_DShot_2Bit	Temp2, t1_int_outside_range
 
 	; XOR check (in inverted data, which is ok)
 	mov	A, Temp3
@@ -578,7 +578,7 @@ t1_int_decode_checksum:
 	jnb	Flags2.RCP_DSHOT_INVERTED, ($+4)
 	cpl	A	; Invert checksum if using inverted DShot
 	anl	A, #0Fh
-	jnz	int0_int_outside_range		; XOR check
+	jnz	t1_int_outside_range		; XOR check
 
 	; Invert DShot data and subtract 96 (still 12 bits)
 	clr	C
@@ -751,7 +751,7 @@ ENDIF
 
 	dec	Rcp_Outside_Range_Cnt
 
-;int0_int_pulse_ready:
+	; Pulse ready
 	mov	New_Rcp, Temp1					; Store new pulse length
 	setb	Flags2.RCP_UPDATED				; Set updated flag
 	; Check if zero
@@ -773,7 +773,7 @@ ENDIF
 	clr	C
 	mov	A, Temp5
 	subb	A, New_Rcp
-	jnc	int0_int_set_pwm_registers
+	jnc	t1_int_set_pwm_registers
 
 	mov	A, Temp5						; Multiply limit by 4 (8 for 48MHz MCUs)
 IF MCU_48MHZ == 0
@@ -785,7 +785,7 @@ ENDIF
 	mov	Temp3, A
 	mov	Temp4, B
 
-int0_int_set_pwm_registers:
+t1_int_set_pwm_registers:
 	mov	A, Temp3
 	cpl	A
 	mov	Temp1, A
@@ -809,12 +809,12 @@ ENDIF
 	mov	A, Temp2
 	subb	A, #0
 	mov	Temp4, A
-	jnc	int0_int_set_pwm_damp_set
+	jnc	t1_int_set_pwm_damp_set
 
 	mov	Temp3, #0
 	mov	Temp4, #0
 
-int0_int_set_pwm_damp_set:
+t1_int_set_pwm_damp_set:
 ENDIF
 	mov	Power_Pwm_Reg_L, Temp1
 	mov	Power_Pwm_Reg_H, Temp2
@@ -831,21 +831,21 @@ IF FETON_DELAY != 0
 ELSE
 	mov	A, Current_Power_Pwm_Reg_H
 IF MCU_48MHZ == 0
-	jnb	ACC.1, int0_int_set_pca_int_hi_pwm
+	jnb	ACC.1, t1_int_set_pca_int_hi_pwm
 ELSE
-	jnb	ACC.2, int0_int_set_pca_int_hi_pwm
+	jnb	ACC.2, t1_int_set_pca_int_hi_pwm
 ENDIF
 
 	Clear_COVF_Interrupt
 	Enable_COVF_Interrupt				; Generate a pca interrupt
-	jmp	int0_pca_generated
+	jmp	t1_pca_generated
 
-int0_int_set_pca_int_hi_pwm:
+t1_int_set_pca_int_hi_pwm:
 	Clear_CCF_Interrupt
 	Enable_CCF_Interrupt				; Generate pca interrupt
 ENDIF
 
-int0_pca_generated:
+t1_pca_generated:
 	; Prepare DShot telemetry
 IF MCU_48MHZ == 1
 	; Only use telemetry for compatible clock frequency
@@ -853,7 +853,7 @@ IF MCU_48MHZ == 1
 ENDIF
 	jnb	Flags2.RCP_DSHOT_INVERTED, t1_int_dshot_no_tlm
 	call	dshot_tlm_create_packet
-	jmp	int0_int_exit_no_int
+	jmp	t1_int_exit_no_int
 
 t1_int_dshot_no_tlm:
 	mov	DPTR, #0						; Set pointer to start
@@ -861,7 +861,7 @@ t1_int_dshot_no_tlm:
 	setb	IE_EX1						; Enable int1 interrupts	
 	orl	EIE1, #10h					; Enable pca interrupts
 
-int0_int_exit_no_int:
+t1_int_exit_no_int:
 	pop	B							; Restore preserved registers
 	pop	ACC
 	pop	PSW
