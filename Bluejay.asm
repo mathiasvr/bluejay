@@ -484,9 +484,7 @@ t0_int_dshot_tlm_finish:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t1_int:
-	clr	IE_EA
 	clr	IE_EX0				; Disable int0 interrupts
-	anl	EIE1, #0EFh			; Disable pca interrupts
 	clr	TCON_TR1				; Stop timer 1
 	mov	TL1, DShot_Timer_Preset	; Reset sync timer
 	push	PSW
@@ -497,7 +495,6 @@ t1_int:
 	mov	Temp1, TMR2L			; Read timer value
 	mov	Temp2, TMR2H
 	setb	TMR2CN0_TR2			; Timer 2 enabled
-	setb	IE_EA
 
 	; Reset timer 0
 	mov	TL0, #0
@@ -826,6 +823,8 @@ IF FETON_DELAY != 0
 ENDIF
 
 	mov	Rcp_Timeout_Cntd, #10			; Set timeout count
+
+	anl	EIE1, #0EFh					; Disable pca interrupts
 
 IF FETON_DELAY != 0
 	Clear_COVF_Interrupt
