@@ -3202,6 +3202,8 @@ arming_start:
 	; Armed and waiting for power on
 wait_for_power_on:
 	clr	A
+	mov	Comm_Period4x_L, A		; Reset commutation period for telemetry
+	mov	Comm_Period4x_H, A
 	mov	Power_On_Wait_Cnt_L, A	; Clear wait counter
 	mov	Power_On_Wait_Cnt_H, A
 wait_for_power_on_loop:
