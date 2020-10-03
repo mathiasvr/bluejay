@@ -485,7 +485,7 @@ t1_int:
 	mov	TL1, DShot_Timer_Preset		; Reset sync timer
 
 	push	PSW
-	setb	PSW.3					; Select register bank 1 for this interrupt
+	mov	PSW, #8h					; Select register bank 1 for this interrupt
 	push	ACC
 	push	B
 
@@ -976,7 +976,7 @@ pca_int:	; Used for setting pwm registers
 	clr	IE_EA
 	push	PSW						; Preserve registers through interrupt
 	push	ACC
-	setb	PSW.3					; Select register bank 1 for this interrupt
+	mov	PSW, #8h					; Select register bank 1 for this interrupt
 
 IF FETON_DELAY != 0					; HI/LO enable style drivers
 	mov	Temp1, PCA0L				; Read low byte, to transfer high byte to holding register
