@@ -3304,7 +3304,7 @@ check_dshot_cmd:
 	mov	Beep_Strength, @Temp1
 	setb	IE_EA
 	call	wait100ms
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_beep_2:
 	clr	C
@@ -3321,7 +3321,7 @@ dshot_beep_2:
 	mov	Beep_Strength, @Temp1
 	setb	IE_EA
 	call	wait100ms
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_beep_3:
 	clr	C
@@ -3338,7 +3338,7 @@ dshot_beep_3:
 	mov	Beep_Strength, @Temp1
 	setb	IE_EA
 	call	wait100ms
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_beep_4:
 	clr	C
@@ -3355,7 +3355,7 @@ dshot_beep_4:
 	mov	Beep_Strength, @Temp1
 	setb	IE_EA
 	call	wait100ms
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_beep_5:
 	clr	C
@@ -3372,7 +3372,7 @@ dshot_beep_5:
 	mov	Beep_Strength, @Temp1
 	setb	IE_EA
 	call	wait100ms
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_direction_1:
 	clr	C
@@ -3383,8 +3383,7 @@ dshot_direction_1:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jnc	($+4)					; Same as "jc dont_clear_dshot_cmd"
-	ajmp	wait_for_power_on_not_missing
+	jc dont_clear_dshot_cmd
 
 	mov	A, #1
 	jnb	Flags3.PGM_BIDIR, ($+5)
@@ -3393,7 +3392,7 @@ dshot_direction_1:
 	mov	@Temp1, A
 	clr	Flags3.PGM_DIR_REV
 	clr	Flags3.PGM_BIDIR_REV
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_direction_2:
 	clr	C
@@ -3404,8 +3403,7 @@ dshot_direction_2:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jnc	($+4)					; Same as "jc dont_clear_dshot_cmd"
-	ajmp	wait_for_power_on_not_missing
+	jc dont_clear_dshot_cmd
 
 	mov	A, #2
 	jnb	Flags3.PGM_BIDIR, ($+5)
@@ -3414,7 +3412,7 @@ dshot_direction_2:
 	mov	@Temp1, A
 	setb	Flags3.PGM_DIR_REV
 	setb	Flags3.PGM_BIDIR_REV
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_direction_bidir_off:
 	clr	C
@@ -3425,8 +3423,7 @@ dshot_direction_bidir_off:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jnc	($+4)					; Same as "jc dont_clear_dshot_cmd"
-	ajmp	wait_for_power_on_not_missing
+	jc dont_clear_dshot_cmd
 
 	jnb	Flags3.PGM_BIDIR, dshot_direction_bidir_on
 
@@ -3436,7 +3433,7 @@ dshot_direction_bidir_off:
 	subb	A, #2
 	mov	@Temp1, A
 	clr	Flags3.PGM_BIDIR
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_direction_bidir_on:
 	clr	C
@@ -3447,8 +3444,7 @@ dshot_direction_bidir_on:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jnc	($+4)					; Same as "jc dont_clear_dshot_cmd"
-	ajmp	wait_for_power_on_not_missing
+	jc dont_clear_dshot_cmd
 
 	jb	Flags3.PGM_BIDIR, dshot_direction_normal
 
@@ -3457,7 +3453,14 @@ dshot_direction_bidir_on:
 	add	A, #2
 	mov	@Temp1, A
 	setb	Flags3.PGM_BIDIR
-	jmp	clear_dshot_cmd
+	;ajmp	clear_dshot_cmd
+
+clear_dshot_cmd:
+	mov	Dshot_Cmd, #0
+	mov	Dshot_Cmd_Cnt, #0
+
+dont_clear_dshot_cmd:
+	ajmp	wait_for_power_on_not_missing
 
 dshot_direction_normal:
 	clr	C
@@ -3468,8 +3471,7 @@ dshot_direction_normal:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jnc	($+4)					; Same as "jc dont_clear_dshot_cmd"
-	ajmp	wait_for_power_on_not_missing
+	jc dont_clear_dshot_cmd
 
 	clr	IE_EA					; DPTR used in interrupts
 	mov	DPTR, #Eep_Pgm_Direction		; Read from flash
@@ -3485,7 +3487,7 @@ dshot_direction_normal:
 	setb	Flags3.PGM_DIR_REV
 	jc	($+4)
 	setb	Flags3.PGM_BIDIR_REV
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_direction_reverse:			; Temporary reverse
 	clr	C
@@ -3529,24 +3531,24 @@ dshot_save_settings:
 	subb	A, #12
 	jnz	clear_dshot_cmd
 
-	mov	Flash_Key_1, #0A5h			; Initialize flash keys to valid values
-	mov	Flash_Key_2, #0F1h
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dont_clear_dshot_cmd
 
+	mov	Flash_Key_1, #0A5h			; Initialize flash keys to valid values
+	mov	Flash_Key_2, #0F1h
+
 	call	erase_and_store_all_in_eeprom
-	setb	IE_EA
 
-clear_dshot_cmd:
-	mov	Dshot_Cmd, #0
-	mov	Dshot_Cmd_Cnt, #0
-
-dont_clear_dshot_cmd:
 	mov	Flash_Key_1, #0			; Initialize flash keys to invalid values
 	mov	Flash_Key_2, #0
-	jmp	wait_for_power_on_not_missing
+
+	setb	IE_EA
+	
+	jmp	clear_dshot_cmd
+
+
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
