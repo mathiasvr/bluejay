@@ -3290,10 +3290,8 @@ wait_for_power_on_nonzero:
 	ljmp	init_start
 
 check_dshot_cmd:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #1
-	jnz	dshot_beep_2
+	mov	Temp1, Dshot_Cmd
+	cjne	Temp1, #1, dshot_beep_2
 
 	clr	IE_EA
 	call	switch_power_off		; Switch power off in case braking is set
@@ -3307,10 +3305,7 @@ check_dshot_cmd:
 	ajmp	clear_dshot_cmd
 
 dshot_beep_2:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #2
-	jnz	dshot_beep_3
+	cjne	Temp1, #2, dshot_beep_3
 
 	clr	IE_EA
 	call	switch_power_off		; Switch power off in case braking is set
@@ -3324,10 +3319,7 @@ dshot_beep_2:
 	ajmp	clear_dshot_cmd
 
 dshot_beep_3:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #3
-	jnz	dshot_beep_4
+	cjne	Temp1, #3, dshot_beep_4
 
 	clr	IE_EA
 	call	switch_power_off		; Switch power off in case braking is set
@@ -3341,10 +3333,7 @@ dshot_beep_3:
 	ajmp	clear_dshot_cmd
 
 dshot_beep_4:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #4
-	jnz	dshot_beep_5
+	cjne	Temp1, #4, dshot_beep_5
 
 	clr	IE_EA
 	call	switch_power_off		; Switch power off in case braking is set
@@ -3358,10 +3347,7 @@ dshot_beep_4:
 	ajmp	clear_dshot_cmd
 
 dshot_beep_5:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #5
-	jnz	dshot_direction_1
+	cjne	Temp1, #5, dshot_direction_1
 
 	clr	IE_EA
 	call	switch_power_off		; Switch power off in case braking is set
@@ -3375,10 +3361,7 @@ dshot_beep_5:
 	ajmp	clear_dshot_cmd
 
 dshot_direction_1:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #7
-	jnz	dshot_direction_2
+	cjne	Temp1, #7, dshot_direction_2
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
@@ -3395,10 +3378,7 @@ dshot_direction_1:
 	ajmp	clear_dshot_cmd
 
 dshot_direction_2:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #8
-	jnz	dshot_direction_bidir_off
+	cjne	Temp1, #8, dshot_direction_bidir_off
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
@@ -3415,17 +3395,14 @@ dshot_direction_2:
 	ajmp	clear_dshot_cmd
 
 dshot_direction_bidir_off:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #9
-	jnz	dshot_direction_bidir_on
+	cjne	Temp1, #9, dshot_direction_bidir_on
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc dont_clear_dshot_cmd
 
-	jnb	Flags3.PGM_BIDIR, dshot_direction_bidir_on
+	jnb	Flags3.PGM_BIDIR, clear_dshot_cmd
 
 	clr	C
 	mov	Temp1, #Pgm_Direction
@@ -3436,24 +3413,20 @@ dshot_direction_bidir_off:
 	ajmp	clear_dshot_cmd
 
 dshot_direction_bidir_on:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #10
-	jnz	dshot_direction_normal
+	cjne	Temp1, #10, dshot_direction_normal
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc dont_clear_dshot_cmd
 
-	jb	Flags3.PGM_BIDIR, dshot_direction_normal
+	jb	Flags3.PGM_BIDIR, clear_dshot_cmd
 
 	mov	Temp1, #Pgm_Direction
 	mov	A, @Temp1
 	add	A, #2
 	mov	@Temp1, A
 	setb	Flags3.PGM_BIDIR
-	;ajmp	clear_dshot_cmd
 
 clear_dshot_cmd:
 	mov	Dshot_Cmd, #0
@@ -3463,10 +3436,7 @@ dont_clear_dshot_cmd:
 	ajmp	wait_for_power_on_not_missing
 
 dshot_direction_normal:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #20
-	jnz	dshot_direction_reverse
+	cjne	Temp1, #20, dshot_direction_reverse
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
@@ -3490,10 +3460,7 @@ dshot_direction_normal:
 	ajmp	clear_dshot_cmd
 
 dshot_direction_reverse:			; Temporary reverse
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #21
-	jnz	dshot_save_settings
+	cjne	Temp1, #21, dshot_save_settings
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
@@ -3523,13 +3490,10 @@ dshot_direction_reverse:			; Temporary reverse
 	setb	Flags3.PGM_DIR_REV
 	jc	($+4)
 	setb	Flags3.PGM_BIDIR_REV
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 dshot_save_settings:
-	clr	C
-	mov	A, Dshot_Cmd
-	subb	A, #12
-	jnz	clear_dshot_cmd
+	cjne	Temp1, #12, clear_dshot_cmd
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
@@ -3546,7 +3510,7 @@ dshot_save_settings:
 
 	setb	IE_EA
 	
-	jmp	clear_dshot_cmd
+	ajmp	clear_dshot_cmd
 
 
 
