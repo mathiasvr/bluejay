@@ -1944,8 +1944,7 @@ calc_next_comm_timing_fast:
 	mov	Comm_Period4x_L, Temp3	; Store Comm_Period4x_X
 	mov	Comm_Period4x_H, Temp4
 	clr	C
-	mov	A, Temp4				; If erpm below 156k - go to normal case
-	subb	A, #2
+	subb	A, #2				; If erpm below 156k - go to normal case
 	jc	($+4)
 
 	clr	Flags1.HIGH_RPM		; Clear high rpm bit
@@ -1962,7 +1961,6 @@ calc_next_comm_timing_fast:
 	orl	A, Temp7
 	mov	Temp3, A
 	clr	C
-	mov	A, Temp3
 	subb	A, Temp1
 	mov	Temp3, A
 	jc	load_min_time_fast		; Check that result is still positive
@@ -2117,8 +2115,7 @@ calc_new_wait_times_fast:
 	mov	A, Temp1					; Copy values
 	mov	Temp3, A
 	setb	C						; Negative numbers - set carry
-	mov	A, Temp1					; Divide by 2
-	rrc	A
+	rrc	A						; Divide by 2
 	mov	Temp5, A
 	mov	Wt_Zc_Tout_Start_L, Temp1	; Set 15deg time for zero cross scan timeout
 	clr	C
