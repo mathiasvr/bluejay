@@ -2468,19 +2468,13 @@ eval_comp_exit:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_for_comm:
 	; Update demag metric
-	mov	Temp1, #0
-	jnb	Flags0.DEMAG_DETECTED, ($+5)
-
-	mov	Temp1, #1
-
 	mov	A, Demag_Detected_Metric	; Sliding average of 8, 256 when demag and 0 when not. Limited to minimum 120
 	mov	B, #7
 	mul	AB					; Multiply by 7
-	mov	Temp2, A
-	mov	A, B					; Add new value for current demag status
-	add	A, Temp1
-	mov	B, A
-	mov	A, Temp2
+
+	jnb	Flags0.DEMAG_DETECTED, ($+4)	; Add new value for current demag status
+	inc	B
+
 	mov	C, B.0				; Divide by 8
 	rrc	A
 	mov	C, B.1
@@ -2491,7 +2485,6 @@ wait_for_comm:
 	clr	C
 	subb	A, #120				; Limit to minimum 120
 	jnc	($+5)
-
 	mov	Demag_Detected_Metric, #120
 
 	clr	C
