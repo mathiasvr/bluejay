@@ -554,9 +554,10 @@ t1_int_outside_range:
 	subb	A, #50					; Allow a given number of outside pulses
 	jc	t1_int_exit_timeout		; If outside limits - ignore first pulses
 
-	mov	New_Rcp, #0				; Set pulse length to zero
-	mov	Dshot_Cmd, #0				; Clear DShot command
-	mov	Dshot_Cmd_Cnt, #0			; Clear DShot command count
+	clr	A
+	mov	New_Rcp, A				; Set pulse length to zero
+	mov	Dshot_Cmd, A				; Clear DShot command
+	mov	Dshot_Cmd_Cnt, A			; Clear DShot command count
 
 	jmp	t1_int_dshot_no_tlm			; Exit without reseting timeout
 
@@ -811,8 +812,9 @@ ENDIF
 	mov	Temp4, A
 	jnc	t1_int_set_pwm_damp_set
 
-	mov	Temp3, #0
-	mov	Temp4, #0
+	clr	A
+	mov	Temp3, A
+	mov	Temp4, A
 
 t1_int_set_pwm_damp_set:
 ENDIF
@@ -1901,8 +1903,7 @@ calc_new_wait_per_demag_done:
 
 load_min_time:
 	mov	Temp3, #1
-	clr	A
-	mov	Temp4, A
+	mov	Temp4, #0
 
 calc_new_wait_times_exit:
 	ljmp	wait_advance_timing
