@@ -2061,17 +2061,11 @@ ENDIF
 
 adjust_timing_two_steps:
 	mov	A, Temp1					; Add 15deg and store in Temp1/2
-	add	A, Temp1
+	setb	C						; Add 1 to final result (Temp1/2 * 2 + 1)
+	addc	A, Temp1
 	mov	Temp1, A
 	mov	A, Temp2
 	addc	A, Temp2
-	mov	Temp2, A
-	clr	C
-	mov	A, Temp1
-	add	A, #1
-	mov	Temp1, A
-	mov	A, Temp2
-	addc	A, #0
 	mov	Temp2, A
 	mov	Temp3, #-1				; Store minimum time in Temp3/4
 	mov	Temp4, #0FFh
