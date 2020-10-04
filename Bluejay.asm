@@ -2067,7 +2067,7 @@ adjust_timing_two_steps:
 	mov	A, Temp2
 	addc	A, Temp2
 	mov	Temp2, A
-	mov	Temp3, #-1				; Store minimum time in Temp3/4
+	mov	Temp3, #0FFh				; Store minimum time in Temp3/4
 	mov	Temp4, #0FFh
 
 store_times_up_or_down:
@@ -2132,7 +2132,7 @@ adjust_timing_two_steps_fast:
 	add	A, Temp1
 	add	A, #1
 	mov	Temp1, A
-	mov	Temp3, #-1				; Store minimum time in Temp3
+	mov	Temp3, #0FFh				; Store minimum time in Temp3
 
 store_times_up_or_down_fast:
 	clr	C
