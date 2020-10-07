@@ -777,7 +777,7 @@ ENDIF
 	; Check against limit
 	clr	C
 	mov	A, Temp5
-	subb	A, New_Rcp
+	subb	A, Temp1	; New_Rcp
 	jnc	t1_int_set_pwm_registers
 
 	mov	A, Temp5						; Multiply limit by 4 (8 for 48MHz MCUs)
