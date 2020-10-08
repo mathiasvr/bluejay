@@ -3183,10 +3183,6 @@ validate_rcp_start:
 
 	; Arming sequence start
 arming_start:
-	; Initialize flash keys to invalid values
-	mov	Flash_Key_1, #0
-	mov	Flash_Key_2, #0
-
 	call	wait100ms				; Wait for new throttle value
 
 	mov	A, New_Rcp			; Load new RC pulse value
