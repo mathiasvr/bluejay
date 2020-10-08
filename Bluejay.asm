@@ -176,7 +176,7 @@ HIGH_RPM					EQU	4		; Set when motor rpm is high (Comm_Period4x_H less than 2)
 ;						EQU	7
 
 Flags2:					DS	1		; State flags. NOT reset upon init_start
-RCP_UPDATED				EQU	0		; New RC pulse length value available
+;RCP_UPDATED				EQU	0		; New RC pulse length value available
 ;RCP_ONESHOT125				EQU	1		; RC pulse input is OneShot125 (125-250us)
 ;RCP_ONESHOT42				EQU	2		; RC pulse input is OneShot42 (41.67-83us)
 ;RCP_MULTISHOT				EQU	3		; RC pulse input is Multishot (5-25us)
@@ -759,7 +759,6 @@ ENDIF
 
 	; Pulse ready
 	mov	New_Rcp, Temp1					; Store new pulse length
-	setb	Flags2.RCP_UPDATED				; Set updated flag
 	; Check if zero
 	mov	A, Temp1						; Load new pulse value
 	jz	($+5)						; Check if pulse is zero
@@ -3077,10 +3076,6 @@ ENDIF
 	call	wait1ms
 	; Reset stall count
 	mov	Stall_Cnt, #0
-	; Initialize RC pulse
-	clr	Flags2.RCP_UPDATED			; Clear updated flag
-	call	wait200ms
-
 
 	mov	Dshot_Cmd, #0				; Clear Dshot command
 	mov	Dshot_Cmd_Cnt, #0			; Clear Dshot command count
@@ -3100,6 +3095,7 @@ ENDIF
 	mov	IP, #03h			; High priority to timer 0 and INT0 interrupts
 
 	setb	IE_EA			; Enable all interrupts
+	call wait200ms
 
 	; Setup variables for DShot150
 IF MCU_48MHZ == 1
@@ -3177,11 +3173,6 @@ ENDIF
 	ajmp	init_no_signal
 
 validate_rcp_start:
-	; Validate RC pulse
-	call	wait3ms					; Wait for new RC pulse
-	jb	Flags2.RCP_UPDATED, ($+6)	; Is there an updated RC pulse available - proceed
-	ljmp	init_no_signal				; Go back to detect input signal
-
 	; Beep arm sequence start signal
 	clr	IE_EA					; Disable all interrupts
 	call	beep_f1					; Signal that RC pulse is ready
