@@ -265,35 +265,13 @@ ENDIF
 ENDM
 
 Set_Power_Pwm_Regs MACRO
-IF FETON_DELAY == 0
 	mov	PCA0_POWER_L, Power_Pwm_Reg_L
 	mov	PCA0_POWER_H, Power_Pwm_Reg_H
-ELSE
-	clr	C
-	mov	A, Power_Pwm_Reg_H
-	rrc	A
-	mov	Temp1, A
-	mov	A, Power_Pwm_Reg_L
-	rrc	A
-	mov	PCA0_POWER_L, A
-	mov	PCA0_POWER_H, Temp1
-ENDIF
 ENDM
 
 Set_Damp_Pwm_Regs MACRO
-IF FETON_DELAY == 0
 	mov	PCA0_DAMP_L, Damp_Pwm_Reg_L
 	mov	PCA0_DAMP_H, Damp_Pwm_Reg_H
-ELSE
-	clr	C
-	mov	A, Damp_Pwm_Reg_H
-	rrc	A
-	mov	Temp1, A
-	mov	A, Damp_Pwm_Reg_L
-	rrc	A
-	mov	PCA0_DAMP_L, A
-	mov	PCA0_DAMP_H, Temp1
-ENDIF
 ENDM
 
 Clear_COVF_Interrupt MACRO

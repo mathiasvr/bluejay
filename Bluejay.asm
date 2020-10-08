@@ -413,12 +413,20 @@ DShot_GCR_Get_Time MACRO
 	mov	A, DShot_GCR_Pulse_Time_3
 ENDM
 
-IF MCU_48MHZ == 0
-	PCA_BIT	EQU	1
-	PWR_H_BIT	EQU	1
+IF FETON_DELAY != 0
+	IF MCU_48MHZ == 0
+		PCA_BIT	EQU	1
+		PWR_H_BIT	EQU	0
+	ELSE
+		PCA_BIT	EQU	2
+		PWR_H_BIT	EQU	1
+	ENDIF
 ELSE
-	PCA_BIT	EQU	2
-	PWR_H_BIT	EQU	2
+	IF MCU_48MHZ == 0
+		PWR_H_BIT	EQU	1
+	ELSE
+		PWR_H_BIT	EQU	2
+	ENDIF
 ENDIF
 
 ;**** **** **** **** ****
@@ -789,9 +797,10 @@ ENDIF
 	mov	Temp4, B
 
 t1_int_set_pwm_registers:
-	mov	A, Temp3
-	cpl	A
-	mov	Temp1, A
+IF FETON_DELAY != 0
+	clr	C
+ENDIF
+
 	mov	A, Temp4
 	cpl	A
 IF MCU_48MHZ == 0
@@ -799,14 +808,26 @@ IF MCU_48MHZ == 0
 ELSE
 	anl	A, #7
 ENDIF
+IF FETON_DELAY != 0
+	rrc	A				; Scale to 10/9 bit pwm
+ENDIF
 	mov	Temp2, A
+
+	mov	A, Temp3
+	cpl	A
+IF FETON_DELAY != 0
+	rrc	A				; Scale to 10/9 bit pwm
+ENDIF
+	mov	Temp1, A
+
+
 IF FETON_DELAY != 0
 	clr	C
 	mov	A, Temp1						; Skew damping fet timing
 IF MCU_48MHZ == 0
-	subb	A, #FETON_DELAY
+	subb	A, #((FETON_DELAY+1) SHR 1)
 ELSE
-	subb	A, #(FETON_DELAY SHL 1)
+	subb	A, #(FETON_DELAY)
 ENDIF
 	mov	Temp3, A
 	mov	A, Temp2
@@ -820,8 +841,10 @@ ENDIF
 
 t1_int_set_pwm_damp_set:
 ENDIF
+
 	mov	Power_Pwm_Reg_L, Temp1
 	mov	Power_Pwm_Reg_H, Temp2
+
 IF FETON_DELAY != 0
 	mov	Damp_Pwm_Reg_L, Temp3
 	mov	Damp_Pwm_Reg_H, Temp4
