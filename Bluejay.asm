@@ -2320,7 +2320,18 @@ comp_check_timeout_not_timed_out:
 	Read_Comp_Out					; Read comparator output
 	anl	A, #40h
 	cjne	A, Bit_Access, comp_read_wrong
-	sjmp	comp_read_ok
+
+	; Comp read ok
+	mov	A, Startup_Cnt				; Force a timeout for the first commutation
+	jz	wait_for_comp_out_start
+
+	jb	Flags0.DEMAG_DETECTED, wait_for_comp_out_start	; Do not accept correct comparator output if it is demag
+
+	djnz	Temp1, comp_check_timeout	; Decrement readings counter - repeat comparator reading if not zero
+
+	clr	Flags0.COMP_TIMED_OUT
+
+	sjmp	setup_comm_wait
 
 comp_read_wrong:
 	jnb	Flags1.STARTUP_PHASE, comp_read_wrong_not_startup
@@ -2390,22 +2401,6 @@ comp_read_wrong_load_timeout:
 	mov	TMR3L, #0
 	mov	TMR3H, A
 	sjmp	comp_read_wrong_timeout_set
-
-comp_read_ok:
-	mov	A, Startup_Cnt				; Force a timeout for the first commutation
-	jnz	($+4)
-	ajmp	wait_for_comp_out_start
-
-	jnb	Flags0.DEMAG_DETECTED, ($+5)	; Do not accept correct comparator output if it is demag
-	ajmp	wait_for_comp_out_start
-
-	djnz	Temp1, comp_read_ok_jmp		; Decrement readings counter - repeat comparator reading if not zero
-	sjmp	($+4)
-
-comp_read_ok_jmp:
-	sjmp	comp_check_timeout
-
-	clr	Flags0.COMP_TIMED_OUT
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
