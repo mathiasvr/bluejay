@@ -123,10 +123,10 @@ DEFAULT_PGM_BEACON_STRENGTH			EQU 80	; Beacon strength
 DEFAULT_PGM_BEACON_DELAY				EQU 4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
 
 ; COMMON
-_DEFAULT_PGM_ENABLE_TX_PROGRAM			EQU 1	; 1=Enabled	0=Disabled
-_DEFAULT_PGM_MIN_THROTTLE				EQU 37	; 4*37+1000=1148
-_DEFAULT_PGM_MAX_THROTTLE				EQU 208	; 4*208+1000=1832
-_DEFAULT_PGM_CENTER_THROTTLE			EQU 122	; 4*122+1000=1488 (used in bidirectional mode)
+;DEFAULT_PGM_ENABLE_TX_PROGRAM		EQU 1	; 1=Enabled	0=Disabled
+;DEFAULT_PGM_MIN_THROTTLE			EQU 37	; 4*37+1000=1148
+;DEFAULT_PGM_MAX_THROTTLE			EQU 208	; 4*208+1000=1832
+;DEFAULT_PGM_CENTER_THROTTLE			EQU 122	; 4*122+1000=1488 (used in bidirectional mode)
 DEFAULT_PGM_ENABLE_TEMP_PROT			EQU 7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
 DEFAULT_PGM_ENABLE_POWER_PROT			EQU 1	; 1=Enabled	0=Disabled
 DEFAULT_PGM_BRAKE_ON_STOP			EQU 0	; 1=Enabled	0=Disabled
@@ -294,10 +294,10 @@ _Pgm_Motor_Idle:			DS	1		; Programmed motor idle speed
 Pgm_Startup_Pwr:			DS	1		; Programmed startup power
 _Pgm_Pwm_Freq:				DS	1		; Programmed pwm frequency
 Pgm_Direction:				DS	1		; Programmed rotation direction
-Pgm_Input_Pol:				DS	1		; Programmed input pwm polarity
+_Pgm_Input_Pol:			DS	1		; Programmed input pwm polarity
 Initialized_L_Dummy:		DS	1		; Place holder
 Initialized_H_Dummy:		DS	1		; Place holder
-Pgm_Enable_TX_Program:		DS	1		; Programmed enable/disable value for TX programming
+_Pgm_Enable_TX_Program:		DS	1		; Programmed enable/disable value for TX programming
 _Pgm_Main_Rearm_Start:		DS	1		; Programmed enable/disable re-arming main every start
 _Pgm_Gov_Setup_Target:		DS	1		; Programmed main governor setup target
 _Pgm_Startup_Rpm:			DS	1		; Programmed startup rpm (unused - place holder)
@@ -315,7 +315,7 @@ Pgm_Beacon_Delay:			DS	1		; Programmed beacon delay
 _Pgm_Throttle_Rate:			DS	1		; Programmed throttle rate (unused - place holder)
 Pgm_Demag_Comp:			DS	1		; Programmed demag compensation
 _Pgm_BEC_Voltage_High:		DS	1		; Programmed BEC voltage
-Pgm_Center_Throttle:		DS	1		; Programmed throttle center (in bidirectional mode)
+_Pgm_Center_Throttle:		DS	1		; Programmed throttle center (in bidirectional mode)
 _Pgm_Main_Spoolup_Time:		DS	1		; Programmed main spoolup time
 Pgm_Enable_Temp_Prot:		DS	1		; Programmed temperature protection enable
 Pgm_Enable_Power_Prot:		DS	1		; Programmed low rpm power protection enable
@@ -351,10 +351,10 @@ _Eep_Pgm_Motor_Idle:		DB	0FFh
 Eep_Pgm_Startup_Pwr:		DB	DEFAULT_PGM_STARTUP_PWR			; EEPROM copy of programmed startup power
 _Eep_Pgm_Pwm_Freq:			DB	0FFh
 Eep_Pgm_Direction:			DB	DEFAULT_PGM_DIRECTION			; EEPROM copy of programmed rotation direction
-_Eep_Pgm_Input_Pol:			DB	0FFh
+_Eep__Pgm_Input_Pol:		DB	0FFh
 Eep_Initialized_L:			DB	055h							; EEPROM initialized signature low byte
 Eep_Initialized_H:			DB	0AAh							; EEPROM initialized signature high byte
-Eep_Enable_TX_Program:		DB	_DEFAULT_PGM_ENABLE_TX_PROGRAM		; EEPROM TX programming enable
+_Eep_Enable_TX_Program:		DB	0FFh							; EEPROM TX programming enable
 _Eep_Main_Rearm_Start:		DB	0FFh
 _Eep_Pgm_Gov_Setup_Target:	DB	0FFh
 _Eep_Pgm_Startup_Rpm:		DB	0FFh
@@ -364,15 +364,15 @@ Eep_Pgm_Comm_Timing:		DB	DEFAULT_PGM_COMM_TIMING			; EEPROM copy of programmed c
 _Eep_Pgm_Damping_Force:		DB	0FFh
 _Eep_Pgm_Gov_Range:			DB	0FFh
 _Eep_Pgm_Startup_Method:		DB	0FFh
-_Eep_Pgm_Min_Throttle:		DB	_DEFAULT_PGM_MIN_THROTTLE			; EEPROM copy of programmed minimum throttle
-_Eep_Pgm_Max_Throttle:		DB	_DEFAULT_PGM_MAX_THROTTLE			; EEPROM copy of programmed minimum throttle
+_Eep_Pgm_Min_Throttle:		DB	0FFh							; EEPROM copy of programmed minimum throttle
+_Eep_Pgm_Max_Throttle:		DB	0FFh							; EEPROM copy of programmed minimum throttle
 Eep_Pgm_Beep_Strength:		DB	DEFAULT_PGM_BEEP_STRENGTH		; EEPROM copy of programmed beep strength
 Eep_Pgm_Beacon_Strength:		DB	DEFAULT_PGM_BEACON_STRENGTH		; EEPROM copy of programmed beacon strength
 Eep_Pgm_Beacon_Delay:		DB	DEFAULT_PGM_BEACON_DELAY			; EEPROM copy of programmed beacon delay
 _Eep_Pgm_Throttle_Rate:		DB	0FFh
 Eep_Pgm_Demag_Comp:			DB	DEFAULT_PGM_DEMAG_COMP			; EEPROM copy of programmed demag compensation
 _Eep_Pgm_BEC_Voltage_High:	DB	0FFh
-_Eep_Pgm_Center_Throttle:		DB	_DEFAULT_PGM_CENTER_THROTTLE		; EEPROM copy of programmed center throttle
+_Eep_Pgm_Center_Throttle:	DB	0FFh							; EEPROM copy of programmed center throttle
 _Eep_Pgm_Main_Spoolup_Time:	DB	0FFh
 Eep_Pgm_Temp_Prot_Enable:	DB	DEFAULT_PGM_ENABLE_TEMP_PROT		; EEPROM copy of programmed temperature protection enable
 Eep_Pgm_Enable_Power_Prot:	DB	DEFAULT_PGM_ENABLE_POWER_PROT		; EEPROM copy of programmed low rpm power protection enable
@@ -2765,9 +2765,14 @@ set_default_parameters:
 	mov	@Temp1, #0FFh	; Pwm freq
 	inc	Temp1
 	mov	@Temp1, #DEFAULT_PGM_DIRECTION
+	inc	Temp1
+	mov	@Temp1, #0FFh	; Input polarity
 
-	mov	Temp1, #Pgm_Enable_TX_Program
-	mov	@Temp1, #_DEFAULT_PGM_ENABLE_TX_PROGRAM
+	inc	Temp1		; Eep_Initialized_L
+	inc	Temp1		; Eep_Initialized_H
+
+	inc	Temp1
+	mov	@Temp1, #0FFh	; Enable tx programming
 	inc	Temp1
 	mov	@Temp1, #0FFh	; Main rearm start
 	inc	Temp1
@@ -2787,9 +2792,9 @@ set_default_parameters:
 	inc	Temp1
 	mov	@Temp1, #0FFh	; Startup method
 	inc	Temp1
-	mov	@Temp1, #_DEFAULT_PGM_MIN_THROTTLE
+	mov	@Temp1, #0FFh	; Minimum throttle
 	inc	Temp1
-	mov	@Temp1, #_DEFAULT_PGM_MAX_THROTTLE
+	mov	@Temp1, #0FFh	; Maximum throttle
 	inc	Temp1
 	mov	@Temp1, #DEFAULT_PGM_BEEP_STRENGTH
 	inc	Temp1
@@ -2803,7 +2808,7 @@ set_default_parameters:
 	inc	Temp1
 	mov	@Temp1, #0FFh	; Bec voltage high
 	inc	Temp1
-	mov	@Temp1, #_DEFAULT_PGM_CENTER_THROTTLE
+	mov	@Temp1, #0FFh	; Center throttle
 	inc	Temp1
 	mov	@Temp1, #0FFh
 	inc	Temp1
