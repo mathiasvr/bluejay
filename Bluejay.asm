@@ -3126,7 +3126,7 @@ IF MCU_48MHZ == 0
 	subb	A, #10
 	mov	Dshot_Cmd, #0
 	mov	Dshot_Cmd_Cnt, #0
-	jc	validate_rcp_start
+	jc	arming_begin
 ENDIF
 
 	mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot300/600)
@@ -3152,7 +3152,7 @@ ENDIF
 	subb	A, #10
 	mov	Dshot_Cmd, #0
 	mov	Dshot_Cmd_Cnt, #0
-	jc	validate_rcp_start
+	jc	arming_begin
 
 	; Setup variables for DShot600
 IF MCU_48MHZ == 1
@@ -3175,11 +3175,11 @@ ENDIF
 	subb	A, #10
 	mov	Dshot_Cmd, #0
 	mov	Dshot_Cmd_Cnt, #0
-	jc	validate_rcp_start
+	jc	arming_begin
 
 	ajmp	init_no_signal
 
-validate_rcp_start:
+arming_begin:
 	; Beep arm sequence start signal
 	clr	IE_EA					; Disable all interrupts
 	call	beep_f1					; Signal that RC pulse is ready
@@ -3189,11 +3189,11 @@ validate_rcp_start:
 	call	wait200ms
 
 	; Arming sequence start
-arming_start:
+arming_wait:
 	call	wait100ms				; Wait for new throttle value
 
 	mov	A, New_Rcp			; Load new RC pulse value
-	jnz	arming_start			; Start over if not below stop
+	jnz	arming_wait			; Start over if not below stop
 
 	; Beep arm sequence end signal
 	clr	IE_EA				; Disable all interrupts
