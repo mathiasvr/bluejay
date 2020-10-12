@@ -1190,23 +1190,14 @@ dshot_gcr_encode_F_01111:
 ; <e e e m m m m m m m m m> where M SHL E ~ e-period [us]
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-dshot_12bit_encode:
-	jb	Tlm_Data_H.7, dshot_12bit_7
-	jb	Tlm_Data_H.6, dshot_12bit_6
-	jb	Tlm_Data_H.5, dshot_12bit_5
-	jb	Tlm_Data_H.4, dshot_12bit_4
-	jb	Tlm_Data_H.3, dshot_12bit_3
-	jb	Tlm_Data_H.2, dshot_12bit_2
-	jb	Tlm_Data_H.1, dshot_12bit_1
-	mov	A, Tlm_Data_L				; Already 12-bit (E=0)
-	ret
 dshot_12bit_7:
 	mov	A, Tlm_Data_H
 	mov	C, Tlm_Data_L.7
 	rlc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#0fh
-	ret
+	ajmp dshot_tlm_12bit_encoded
+
 dshot_12bit_6:
 	mov	A, Tlm_Data_H
 	mov	C, Tlm_Data_L.7
@@ -1215,7 +1206,8 @@ dshot_12bit_6:
 	rlc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#0dh
-	ret
+	ajmp dshot_tlm_12bit_encoded
+
 dshot_12bit_5:
 	mov	A, Tlm_Data_H
 	mov	C, Tlm_Data_L.7
@@ -1226,7 +1218,8 @@ dshot_12bit_5:
 	rlc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#0bh
-	ret
+	ajmp dshot_tlm_12bit_encoded
+
 dshot_12bit_4:
 	mov	A, Tlm_Data_L
 	anl	A,#0f0h
@@ -1235,7 +1228,8 @@ dshot_12bit_4:
 	swap	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#09h
-	ret
+	ajmp dshot_tlm_12bit_encoded
+
 dshot_12bit_3:
 	mov	A, Tlm_Data_L
 	mov	C, Tlm_Data_H.0
@@ -1246,7 +1240,8 @@ dshot_12bit_3:
 	rrc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#07h
-	ret
+	ajmp dshot_tlm_12bit_encoded
+
 dshot_12bit_2:
 	mov	A, Tlm_Data_L
 	mov	C, Tlm_Data_H.0
@@ -1255,14 +1250,27 @@ dshot_12bit_2:
 	rrc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#05h
-	ret
+	ajmp dshot_tlm_12bit_encoded
+
 dshot_12bit_1:
 	mov	A, Tlm_Data_L
 	mov	C, Tlm_Data_H.0
 	rrc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#03h
-	ret
+	ajmp dshot_tlm_12bit_encoded
+
+dshot_12bit_encode:
+	; Encode 16-bit e-period as a 12-bit value
+	jb	ACC.7, dshot_12bit_7		; ACC = Tlm_Data_H
+	jb	ACC.6, dshot_12bit_6
+	jb	ACC.5, dshot_12bit_5
+	jb	ACC.4, dshot_12bit_4
+	jb	ACC.3, dshot_12bit_3
+	jb	ACC.2, dshot_12bit_2
+	jb	ACC.1, dshot_12bit_1
+	mov	A, Tlm_Data_L				; Already 12-bit (E=0)
+	ajmp dshot_tlm_12bit_encoded
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1283,18 +1291,6 @@ dshot_tlm_create_packet:
 	mov	Tlm_Data_L, Comm_Period4x_L
 	setb	IE_EA
 
-	; if period is zero then reset to FFFFh
-	mov	A, Tlm_Data_H
-	jnz	dshot_tlm_scale_period
-	mov	A, Tlm_Data_L
-	jnz	dshot_tlm_scale_period
-
-	; 12-bit encode FFFFh as 0FFFh directly
-	mov	Tlm_Data_H, #0Fh
-	mov	Tlm_Data_L, #0FFh
-	jmp	dshot_tlm_12bit_encoded
-
-dshot_tlm_scale_period:
 	; Multiply period by 3/4 (1/2 + 1/4)
 	mov	A, Tlm_Data_L
 	mov	C, Tlm_Data_H.0
@@ -1314,8 +1310,16 @@ dshot_tlm_scale_period:
 	addc	A, Tlm_Data_H
 	mov	Tlm_Data_H, A
 
-	; Encode 16-bit e-period as a 12-bit value
-	call	dshot_12bit_encode
+	; 12-bit encode telemetry data
+	mov	A, Tlm_Data_H
+	jnz	dshot_12bit_encode
+	mov	A, Tlm_Data_L				; Already 12-bit
+	jnz	dshot_tlm_12bit_encoded
+
+	; If period is zero then reset to FFFFh (FFFh for 12-bit)
+	mov	Tlm_Data_H, #0Fh
+	mov	A, #0FFh
+	mov	Tlm_Data_L, A
 
 dshot_tlm_12bit_encoded:
 	; Compute inverted xor checksum (4-bit)
