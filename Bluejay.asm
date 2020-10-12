@@ -201,7 +201,7 @@ Tlm_Data_H:			DS	1			; DShot telemetry data high byte
 ;**** **** **** **** ****
 ; RAM definitions
 DSEG AT 30h							; Ram data segment, direct addressing
-Initial_Arm:				DS	1		; Variable that is set during the first arm sequence after power on
+;Initial_Arm:				DS	1		; Variable that is set during the first arm sequence after power on
 
 ;Min_Throttle_L:			DS	1		; Minimum throttle scaled (lo byte)
 ;Min_Throttle_H:			DS	1		; Minimum throttle scaled (hi byte)
@@ -3016,8 +3016,6 @@ pgm_start:
 	; Set beep strength
 	mov	Temp1, #Pgm_Beep_Strength
 	mov	Beep_Strength, @Temp1
-	; Set initial arm variable
-	mov	Initial_Arm, #1
 	; Initializing beep
 	clr	IE_EA			; Disable interrupts explicitly
 	call	wait200ms
@@ -3204,9 +3202,6 @@ arming_start:
 	call	beep_f4
 	setb	IE_EA				; Enable all interrupts
 	call	wait200ms
-
-	; Clear initial arm variable
-	mov	Initial_Arm, #0
 
 	; Armed and waiting for power on
 wait_for_power_on:
