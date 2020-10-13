@@ -2516,7 +2516,7 @@ comm1comm2:
 	Set_Pwm_C					; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_B			; Set comparator phase
-	jmp	comm_exit
+	ret
 
 comm12_rev:
 	clr	IE_EA				; Disable all interrupts
@@ -2525,7 +2525,7 @@ comm12_rev:
 	Set_Pwm_A					; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_B			; Set comparator phase
-	jmp	comm_exit
+	ret
 
 
 ; Comm phase 2 to comm phase 3
@@ -2539,7 +2539,7 @@ comm2comm3:
 	AcomFET_on
 	setb	IE_EA
 	Set_Comp_Phase_C			; Set comparator phase
-	ajmp	comm_exit
+	ret
 
 comm23_rev:
 	clr	IE_EA				; Disable all interrupts
@@ -2548,7 +2548,7 @@ comm23_rev:
 	CcomFET_on
 	setb	IE_EA
 	Set_Comp_Phase_A			; Set comparator phase (reverse)
-	ajmp	comm_exit
+	ret
 
 
 ; Comm phase 3 to comm phase 4
@@ -2562,7 +2562,7 @@ comm3comm4:
 	Set_Pwm_B					; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_A			; Set comparator phase
-	jmp	comm_exit
+	ret
 
 comm34_rev:
 	clr	IE_EA				; Disable all interrupts
@@ -2571,7 +2571,7 @@ comm34_rev:
 	Set_Pwm_B					; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_C			; Set comparator phase (reverse)
-	jmp	comm_exit
+	ret
 
 
 ; Comm phase 4 to comm phase 5
@@ -2585,7 +2585,7 @@ comm4comm5:
 	CcomFET_on
 	setb	IE_EA
 	Set_Comp_Phase_B			; Set comparator phase
-	jmp	comm_exit
+	ret
 
 comm45_rev:
 	clr	IE_EA				; Disable all interrupts
@@ -2594,7 +2594,7 @@ comm45_rev:
 	AcomFET_on				; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_B			; Set comparator phase
-	jmp	comm_exit
+	ret
 
 
 ; Comm phase 5 to comm phase 6
@@ -2608,7 +2608,7 @@ comm5comm6:
 	Set_Pwm_A					; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_C			; Set comparator phase
-	jmp	comm_exit
+	ret
 
 comm56_rev:
 	clr	IE_EA				; Disable all interrupts
@@ -2617,7 +2617,7 @@ comm56_rev:
 	Set_Pwm_C					; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_A			; Set comparator phase (reverse)
-	jmp	comm_exit
+	ret
 
 
 ; Comm phase 6 to comm phase 1
@@ -2631,7 +2631,7 @@ comm6comm1:
 	BcomFET_on				; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_A			; Set comparator phase
-	jmp	comm_exit
+	ret
 
 comm61_rev:
 	clr	IE_EA				; Disable all interrupts
@@ -2640,8 +2640,6 @@ comm61_rev:
 	BcomFET_on				; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_C			; Set comparator phase (reverse)
-
-comm_exit:
 	ret
 
 
