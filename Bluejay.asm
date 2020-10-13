@@ -533,10 +533,10 @@ t1_int:
 	; Decode DShot data Msb. Use more code space to save time (by not using loop)
 	Decode_DShot_2Bit	Temp4, t1_int_frame_fail
 	Decode_DShot_2Bit	Temp4, t1_int_frame_fail
-	ajmp	t1_int_decode_lsb
+	sjmp	t1_int_decode_lsb
 
 t1_int_frame_fail:
-	ajmp	t1_int_outside_range
+	sjmp	t1_int_outside_range
 
 t1_int_decode_lsb:
 	; Decode DShot data Lsb
@@ -544,7 +544,7 @@ t1_int_decode_lsb:
 	Decode_DShot_2Bit	Temp3, t1_int_outside_range
 	Decode_DShot_2Bit	Temp3, t1_int_outside_range
 	Decode_DShot_2Bit	Temp3, t1_int_outside_range
-	ajmp	t1_int_decode_checksum
+	sjmp	t1_int_decode_checksum
 
 t1_int_outside_range:
 	inc	Rcp_Outside_Range_Cnt
@@ -563,11 +563,11 @@ t1_int_outside_range:
 	mov	Dshot_Cmd, A				; Clear DShot command
 	mov	Dshot_Cmd_Cnt, A			; Clear DShot command count
 
-	jmp	t1_int_dshot_no_tlm			; Exit without reseting timeout
+	ajmp	t1_int_dshot_no_tlm			; Exit without reseting timeout
 
 t1_int_exit_timeout:
 	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
-	jmp	t1_int_dshot_no_tlm
+	ajmp	t1_int_dshot_no_tlm
 
 t1_int_decode_checksum:
 	; Decode DShot data checksum
@@ -613,7 +613,7 @@ t1_int_decode_checksum:
 	cjne	A, Dshot_Cmd, t1_dshot_set_cmd
 
 	inc	Dshot_Cmd_Cnt
-	jmp	t1_normal_range
+	sjmp	t1_normal_range
 
 t1_dshot_set_cmd:
 	mov	Dshot_Cmd, Temp2
@@ -640,7 +640,7 @@ t1_normal_range:
 	jb	Flags2.RCP_DIR_REV, t1_int_bidir_rev_chk	; If same direction - branch
 
 	setb	Flags2.RCP_DIR_REV
-	ajmp	t1_int_bidir_rev_chk
+	sjmp	t1_int_bidir_rev_chk
 
 t1_int_bidir_fwd:
 	jnb	Flags2.RCP_DIR_REV, t1_int_bidir_rev_chk	; If same direction - branch
@@ -840,7 +840,7 @@ ELSE
 
 	Clear_COVF_Interrupt
 	Enable_COVF_Interrupt				; Generate a pca interrupt
-	jmp	t1_pca_generated
+	sjmp	t1_pca_generated
 
 t1_int_set_pca_int_hi_pwm:
 	Clear_CCF_Interrupt
@@ -855,7 +855,7 @@ IF MCU_48MHZ == 1
 ENDIF
 	jnb	Flags2.RCP_DSHOT_INVERTED, t1_int_dshot_no_tlm
 	call	dshot_tlm_create_packet
-	jmp	t1_int_exit_no_int
+	sjmp	t1_int_exit_no_int
 
 t1_int_dshot_no_tlm:
 	mov	DPTR, #0						; Set pointer to start
@@ -890,7 +890,7 @@ IF MCU_48MHZ == 1
 	jnb	Flags3.SKIP_T2_INT, t2_int_start	; Execute this interrupt
 
 	clr	Flags3.SKIP_T2_INT
-	ajmp	t2_int_exit
+	sjmp	t2_int_exit
 
 t2_int_start:
 	setb	Flags3.SKIP_T2_INT			; Skip next interrupt
@@ -908,7 +908,7 @@ ENDIF
 
 	; RC pulse higher than stop value, reset stop counter
 	mov	Rcp_Stop_Cnt, #0			; Reset rcp stop counter
-	ajmp	t2_int_exit
+	sjmp	t2_int_exit
 
 t2_int_rcp_stop:
 	; RC pulse less than stop value
@@ -1001,7 +1001,7 @@ IF FETON_DELAY != 0				; HI/LO enable style drivers
 	jb	ACC.PCA_BIT, pca_int_exit		; Power below 50%, update pca in the 0x00-0x0F range
 	jb	ACC.(PCA_BIT-1), pca_int_exit
 
-	ajmp	pca_int_set_pwm
+	sjmp	pca_int_set_pwm
 
 pca_int_hi_pwm:
 	mov	A, PCA0H
@@ -1370,27 +1370,27 @@ dshot_tlm_12bit_encoded:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait1ms:
 	mov	Temp2, #1
-	jmp	waitxms_o
+	sjmp	waitxms_o
 
 wait3ms:
 	mov	Temp2, #3
-	jmp	waitxms_o
+	sjmp	waitxms_o
 
 wait10ms:
 	mov	Temp2, #10
-	jmp	waitxms_o
+	sjmp	waitxms_o
 
 wait30ms:
 	mov	Temp2, #30
-	jmp	waitxms_o
+	sjmp	waitxms_o
 
 wait100ms:
 	mov	Temp2, #100
-	jmp	waitxms_o
+	sjmp	waitxms_o
 
 wait200ms:
 	mov	Temp2, #200
-	jmp	waitxms_o
+	sjmp	waitxms_o
 
 waitxms_o:		; Outer loop
 	mov	Temp1, #23
@@ -1475,7 +1475,7 @@ ENDIF
 	jnc	set_pwm_limit_high_rpm_inc_limit
 
 	dec	A
-	ajmp	set_pwm_limit_high_rpm_store
+	sjmp	set_pwm_limit_high_rpm_store
 
 set_pwm_limit_high_rpm_inc_limit:
 	inc	A
@@ -1537,7 +1537,7 @@ check_temp_voltage_and_limit_power:
 
 	mov	A, Current_Average_Temp		; Yes - decrement average
 	jz	temp_average_updated		; Already zero - no change
-	jmp	temp_average_dec			; Decrement
+	sjmp	temp_average_dec			; Decrement
 
 temp_average_inc_dec:
 	clr	C
@@ -1551,12 +1551,12 @@ temp_average_inc_dec:
 	jz	temp_average_updated		; Below - decrement average if average is not already zero
 temp_average_dec:
 	dec	A						; Decrement average
-	jmp	temp_average_updated
+	sjmp	temp_average_updated
 
 temp_average_inc:
 	inc	A						; Increment average
 	jz	temp_average_dec
-	jmp	temp_average_updated
+	sjmp	temp_average_updated
 
 temp_average_updated_load_acc:
 	mov	A, Current_Average_Temp
@@ -1692,7 +1692,7 @@ ENDIF
 	jnb	Flags1.HIGH_RPM, ($+5)	; Branch if high rpm
 	ajmp	calc_next_comm_timing_fast
 
-	ajmp	calc_next_comm_normal
+	sjmp	calc_next_comm_normal
 
 calc_next_comm_startup:
 	mov	Temp6, Prev_Comm_X
@@ -1708,7 +1708,7 @@ ENDIF
 
 	mov	Temp1, #0FFh
 	mov	Temp2, #0FFh
-	ajmp	calc_next_comm_startup_average
+	sjmp	calc_next_comm_startup_average
 
 calc_next_comm_startup_no_X:
 	mov	Temp7, Prev_Prev_Comm_L
@@ -1744,7 +1744,7 @@ calc_next_comm_startup_average:
 	mov	Comm_Period4x_L, #0FFh
 	mov	Comm_Period4x_H, #0FFh
 
-	ajmp	calc_new_wait_times_setup
+	sjmp	calc_new_wait_times_setup
 
 calc_next_comm_normal:
 	; Calculate new commutation time
@@ -1830,7 +1830,7 @@ calc_new_wait_times_setup:
 	jnb	Flags1.STARTUP_PHASE, calc_new_wait_per_startup_done	; Set dedicated timing during startup
 
 	mov	Temp8, #3
-	ajmp	calc_new_wait_per_demag_done
+	sjmp	calc_new_wait_per_demag_done
 
 calc_new_wait_per_startup_done:
 	mov	Temp1, #Pgm_Comm_Timing	; Load timing setting
@@ -1978,7 +1978,7 @@ calc_new_wait_times_fast_done:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_advance_timing:
 	jnb	Flags0.T3_PENDING, ($+5)
-	ajmp	wait_advance_timing
+	sjmp	wait_advance_timing
 
 	; Setup next wait time
 	mov	TMR3RLL, Wt_ZC_Tout_Start_L
@@ -2014,7 +2014,7 @@ IF MCU_48MHZ == 1
 	mov	Temp2, A
 ENDIF
 	jnb	Flags1.HIGH_RPM, ($+6)		; Branch if high rpm
-	ljmp	calc_new_wait_times_fast
+	sjmp	calc_new_wait_times_fast
 
 	mov	A, Temp1					; Copy values
 	mov	Temp3, A
@@ -2047,7 +2047,7 @@ ENDIF
 	mov	Temp3, A
 	mov	A, Temp6
 	mov	Temp4, A
-	jmp	store_times_up_or_down
+	sjmp	store_times_up_or_down
 
 adjust_timing_two_steps:
 	mov	A, Temp1					; Add 15deg and store in Temp1/2
@@ -2073,7 +2073,7 @@ store_times_increase:
 	mov	Wt_Adv_Start_H, Temp2
 	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 	mov	Wt_Zc_Scan_Start_H, Temp6
-	ljmp	wait_before_zc_scan
+	sjmp	wait_before_zc_scan
 
 store_times_decrease:
 	mov	Wt_Comm_Start_L, Temp1		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
@@ -2092,7 +2092,7 @@ store_times_decrease:
 	mov	Wt_Zc_Tout_Start_H, #0FFh
 
 store_times_exit:
-	ljmp	wait_before_zc_scan
+	sjmp	wait_before_zc_scan
 
 
 calc_new_wait_times_fast:
@@ -2115,7 +2115,7 @@ calc_new_wait_times_fast:
 	mov	Temp1, A
 	mov	A, Temp5					; Store 7.5deg in Temp3
 	mov	Temp3, A
-	ajmp	store_times_up_or_down_fast
+	sjmp	store_times_up_or_down_fast
 
 adjust_timing_two_steps_fast:
 	mov	A, Temp1					; Add 15deg and store in Temp1
@@ -2134,7 +2134,7 @@ store_times_increase_fast:
 	mov	Wt_Comm_Start_L, Temp3		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
 	mov	Wt_Adv_Start_L, Temp1		; New commutation advance time (~15deg nominal)
 	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
-	ljmp	wait_before_zc_scan
+	sjmp	wait_before_zc_scan
 
 store_times_decrease_fast:
 	mov	Wt_Comm_Start_L, Temp1		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
@@ -2154,7 +2154,7 @@ store_times_decrease_fast:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_before_zc_scan:
 	jnb	Flags0.T3_PENDING, ($+5)
-	ajmp	wait_before_zc_scan
+	sjmp	wait_before_zc_scan
 
 	mov	Startup_Zc_Timeout_Cntd, #2
 setup_zc_scan_timeout:
@@ -2224,7 +2224,7 @@ wait_for_comp_out_low:
 	mov	Bit_Access, #00h			; Desired comparator output
 	jnb	Flags1.DIR_CHANGE_BRAKE, ($+6)
 	mov	Bit_Access, #40h
-	ajmp	wait_for_comp_out_start
+	sjmp	wait_for_comp_out_start
 
 wait_for_comp_out_high:
 	setb	Flags0.DEMAG_DETECTED		; Set demag detected flag as default
@@ -2288,7 +2288,7 @@ comp_check_timeout:
 
 comp_check_timeout_timeout_extended:
 	setb	Flags0.COMP_TIMED_OUT
-	ajmp	setup_comm_wait
+	sjmp	setup_comm_wait
 
 comp_check_timeout_extend_timeout:
 	call	setup_zc_scan_timeout
@@ -2297,7 +2297,7 @@ comp_check_timeout_not_timed_out:
 	Read_Comp_Out					; Read comparator output
 	anl	A, #40h
 	cjne	A, Bit_Access, comp_read_wrong
-	ajmp	comp_read_ok
+	sjmp	comp_read_ok
 
 comp_read_wrong:
 	jnb	Flags1.STARTUP_PHASE, comp_read_wrong_not_startup
@@ -2309,7 +2309,7 @@ comp_read_wrong:
 	jc	($+3)
 	dec	Temp1
 
-	ajmp	comp_check_timeout			; Continue to look for good ones
+	sjmp	comp_check_timeout			; Continue to look for good ones
 
 comp_read_wrong_not_startup:
 	jb	Flags0.DEMAG_DETECTED, comp_read_wrong_extend_timeout
@@ -2319,9 +2319,9 @@ comp_read_wrong_not_startup:
 	mov	A, Temp1
 	subb	A, Temp2
 	jc	($+4)
-	ajmp	wait_for_comp_out_start		; If above initial requirement - go back and restart
+	sjmp	wait_for_comp_out_start		; If above initial requirement - go back and restart
 
-	ajmp	comp_check_timeout			; Otherwise - take another reading
+	sjmp	comp_check_timeout			; Otherwise - take another reading
 
 comp_read_wrong_extend_timeout:
 	clr	Flags0.DEMAG_DETECTED		; Clear demag detected flag
@@ -2339,7 +2339,7 @@ comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
 	setb	Flags0.T3_PENDING
 	orl	EIE1, #80h				; Enable timer 3 interrupts
-	ljmp	wait_for_comp_out_start		; If comparator output is not correct - go back and restart
+	ajmp	wait_for_comp_out_start		; If comparator output is not correct - go back and restart
 
 comp_read_wrong_low_rpm:
 	mov	A, Comm_Period4x_H			; Set timeout to ~4x comm period 4x value
@@ -2366,7 +2366,7 @@ comp_read_wrong_load_timeout:
 	subb	A, Temp7
 	mov	TMR3L, #0
 	mov	TMR3H, A
-	ajmp	comp_read_wrong_timeout_set
+	sjmp	comp_read_wrong_timeout_set
 
 comp_read_ok:
 	mov	A, Startup_Cnt				; Force a timeout for the first commutation
@@ -2377,10 +2377,10 @@ comp_read_ok:
 	ajmp	wait_for_comp_out_start
 
 	djnz	Temp1, comp_read_ok_jmp		; Decrement readings counter - repeat comparator reading if not zero
-	ajmp	($+4)
+	sjmp	($+4)
 
 comp_read_ok_jmp:
-	ajmp	comp_check_timeout
+	sjmp	comp_check_timeout
 
 	clr	Flags0.COMP_TIMED_OUT
 
@@ -2425,7 +2425,7 @@ evaluate_comparator_integrity:
 
 	jb	Flags1.INITIAL_RUN_PHASE, ($+5)		; Do not increment beyond startup phase
 	inc	Startup_Cnt						; Increment counter
-	jmp	eval_comp_exit
+	sjmp	eval_comp_exit
 
 eval_comp_check_timeout:
 	jnb	Flags0.COMP_TIMED_OUT, eval_comp_exit	; Has timeout elapsed?
@@ -2486,7 +2486,7 @@ wait_for_comm:
 
 wait_for_comm_wait:
 	jnb	Flags0.T3_PENDING, ($+5)
-	ajmp	wait_for_comm_wait
+	sjmp	wait_for_comm_wait
 
 	; Setup next wait time
 	mov	TMR3RLL, Wt_Zc_Scan_Start_L
@@ -2653,22 +2653,22 @@ comm61_rev:
 beep_f1:	; Entry point 1, load beeper frequency 1 settings
 	mov	Temp3, #20	; Off wait loop length
 	mov	Temp4, #120	; Number of beep pulses
-	jmp	beep
+	sjmp	beep
 
 beep_f2:	; Entry point 2, load beeper frequency 2 settings
 	mov	Temp3, #16
 	mov	Temp4, #140
-	jmp	beep
+	sjmp	beep
 
 beep_f3:	; Entry point 3, load beeper frequency 3 settings
 	mov	Temp3, #13
 	mov	Temp4, #180
-	jmp	beep
+	sjmp	beep
 
 beep_f4:	; Entry point 4, load beeper frequency 4 settings
 	mov	Temp3, #11
 	mov	Temp4, #200
-	jmp	beep
+	sjmp	beep
 
 beep:	; Beep loop start
 	mov	A, Beep_Strength
@@ -3257,7 +3257,7 @@ wait_for_power_on_no_beep:
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	jnz	wait_for_power_on_not_missing	; If it is not zero - proceed
 
-	jmp	init_no_signal				; If pulses missing - go back to detect input signal
+	ajmp	init_no_signal				; If pulses missing - go back to detect input signal
 
 wait_for_power_on_not_missing:
 	mov	A, New_Rcp				; Load new RC pulse value
@@ -3266,17 +3266,17 @@ wait_for_power_on_not_missing:
 	mov	A, Dshot_Cmd
 	jnz	check_dshot_cmd			; Check DShot command (if not zero)
 
-	ljmp	wait_for_power_on_loop		; If not DShot command - start over
+	sjmp	wait_for_power_on_loop		; If not DShot command - start over
 
 wait_for_power_on_nonzero:
 	lcall	wait100ms				; Wait to see if start pulse was only a glitch
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	jnz	($+5)					; If it is not zero - proceed
-	ljmp	init_no_signal				; If it is zero (pulses missing) - go back to detect input signal
+	ajmp	init_no_signal				; If it is zero (pulses missing) - go back to detect input signal
 
 	mov	Dshot_Cmd, #0
 	mov	Dshot_Cmd_Cnt, #0
-	ljmp	init_start
+	ajmp	init_start
 
 check_dshot_cmd:
 	mov	Temp1, Dshot_Cmd
@@ -3333,7 +3333,7 @@ dshot_beep_4:
 	mov	Beep_Strength, @Temp1
 	setb	IE_EA
 	call	wait100ms
-	ajmp	clear_dshot_cmd
+	sjmp	clear_dshot_cmd
 
 dshot_beep_5:
 	cjne	Temp1, #5, dshot_direction_1
@@ -3347,7 +3347,7 @@ dshot_beep_5:
 	mov	Beep_Strength, @Temp1
 	setb	IE_EA
 	call	wait100ms
-	ajmp	clear_dshot_cmd
+	sjmp	clear_dshot_cmd
 
 dshot_direction_1:
 	cjne	Temp1, #7, dshot_direction_2
@@ -3364,7 +3364,7 @@ dshot_direction_1:
 	mov	@Temp1, A
 	clr	Flags3.PGM_DIR_REV
 	clr	Flags3.PGM_BIDIR_REV
-	ajmp	clear_dshot_cmd
+	sjmp	clear_dshot_cmd
 
 dshot_direction_2:
 	cjne	Temp1, #8, dshot_direction_bidir_off
@@ -3381,7 +3381,7 @@ dshot_direction_2:
 	mov	@Temp1, A
 	setb	Flags3.PGM_DIR_REV
 	setb	Flags3.PGM_BIDIR_REV
-	ajmp	clear_dshot_cmd
+	sjmp	clear_dshot_cmd
 
 dshot_direction_bidir_off:
 	cjne	Temp1, #9, dshot_direction_bidir_on
@@ -3399,7 +3399,7 @@ dshot_direction_bidir_off:
 	subb	A, #2
 	mov	@Temp1, A
 	clr	Flags3.PGM_BIDIR
-	ajmp	clear_dshot_cmd
+	sjmp	clear_dshot_cmd
 
 dshot_direction_bidir_on:
 	cjne	Temp1, #10, dshot_direction_normal
@@ -3446,7 +3446,7 @@ dshot_direction_normal:
 	setb	Flags3.PGM_DIR_REV
 	jc	($+4)
 	setb	Flags3.PGM_BIDIR_REV
-	ajmp	clear_dshot_cmd
+	sjmp	clear_dshot_cmd
 
 dshot_direction_reverse:				; Temporary reverse
 	cjne	Temp1, #21, dshot_save_settings
@@ -3479,7 +3479,7 @@ dshot_direction_reverse:				; Temporary reverse
 	setb	Flags3.PGM_DIR_REV
 	jc	($+4)
 	setb	Flags3.PGM_BIDIR_REV
-	ajmp	clear_dshot_cmd
+	sjmp	clear_dshot_cmd
 
 dshot_save_settings:
 	cjne	Temp1, #12, clear_dshot_cmd
@@ -3683,15 +3683,15 @@ run6:
 	mov	Initial_Run_Rot_Cntd, Temp3	; Set initial run rotation count
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
-	jmp	normal_run_checks
+	sjmp	normal_run_checks
 
 direct_start_check_rcp:
 	mov	A, New_Rcp				; Load new pulse value
 	jz	($+5)					; Check if pulse is below stop value
 
-	ljmp	run1						; Continue to run
+	sjmp	run1						; Continue to run
 
-	jmp	run_to_wait_for_power_on
+	ajmp	run_to_wait_for_power_on
 
 
 normal_run_checks:
@@ -3707,7 +3707,7 @@ normal_run_checks:
 
 	clr	Flags1.INITIAL_RUN_PHASE		; Clear initial run phase flag
 	setb	Flags1.MOTOR_STARTED		; Set motor started
-	jmp	run1						; Continue with normal run
+	ajmp	run1						; Continue with normal run
 
 initial_run_check_startup_rot:
 	mov	Initial_Run_Rot_Cntd, A		; Not zero - store counter
@@ -3718,9 +3718,9 @@ initial_run_check_startup_rot:
 	jz	($+5)					; Check if pulse is below stop value
 
 initial_run_continue_run:
-	ljmp	run1						; Continue to run
+	ajmp	run1						; Continue to run
 
-	jmp	run_to_wait_for_power_on
+	sjmp	run_to_wait_for_power_on
 
 initial_run_phase_done:
 	; Reset stall count
@@ -3749,18 +3749,18 @@ run6_check_dir:
 
 	jb	Flags3.PGM_DIR_REV, run6_check_dir_rev		; Check if actual rotation direction
 	jb	Flags2.RCP_DIR_REV, run6_check_dir_change	; Matches force direction
-	jmp	run6_check_speed
+	sjmp	run6_check_speed
 
 run6_check_dir_rev:
 	jnb	Flags2.RCP_DIR_REV, run6_check_dir_change
-	jmp	run6_check_speed
+	sjmp	run6_check_speed
 
 run6_check_dir_change:
 	jb	Flags1.DIR_CHANGE_BRAKE, run6_check_speed
 
 	setb	Flags1.DIR_CHANGE_BRAKE		; Set brake flag
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking
-	jmp	run4						; Go back to run 4, thereby changing force direction
+	ajmp	run4						; Go back to run 4, thereby changing force direction
 
 run6_check_speed:
 	mov	Temp1, #0F0h				; Default minimum speed
@@ -3774,7 +3774,7 @@ run6_brake_done:
 	mov	A, Comm_Period4x_H			; Is Comm_Period4x more than 32ms (~1220 eRPM)?
 	subb	A, Temp1
 	jnc	($+5)					; Yes - stop or turn direction
-	ljmp	run1						; No - go back to run 1
+	ajmp	run1						; No - go back to run 1
 
 	jnb	Flags1.DIR_CHANGE_BRAKE, run_to_wait_for_power_on	; If it is not a direction change - stop
 
@@ -3785,13 +3785,13 @@ run6_brake_done:
 	setb	Flags1.INITIAL_RUN_PHASE
 	mov	Initial_Run_Rot_Cntd, #18
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
-	jmp	run1						; Go back to run 1
+	ajmp	run1						; Go back to run 1
 
 run_to_wait_for_power_on_fail:
 	inc	Stall_Cnt					; Increment stall count
 	mov	A, New_Rcp				; Check if RCP is zero, then it is a normal stop
 	jz	run_to_wait_for_power_on
-	ajmp	run_to_wait_for_power_on_stall_done
+	sjmp	run_to_wait_for_power_on_stall_done
 
 run_to_wait_for_power_on:
 	mov	Stall_Cnt, #0
@@ -3831,10 +3831,10 @@ run_to_wait_for_power_on_brake_done:
 	mov	A, Stall_Cnt
 	subb	A, #4
 	jc	jmp_wait_for_power_on
-	jmp	init_no_signal
+	ljmp	init_no_signal
 
 jmp_wait_for_power_on:
-	jmp	wait_for_power_on			; Go back to wait for power on
+	ljmp	wait_for_power_on			; Go back to wait for power on
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 
