@@ -203,16 +203,16 @@ Decode_DShot_2Bit MACRO dest, decode_fail
 	movx	A, @DPTR
 	mov	Temp6, A
 	clr	C
-	subb	A, Temp5					; Subtract previous timestamp
+	subb	A, Temp5				; Subtract previous timestamp
 	clr	C
 	subb	A, Temp1
-	jc	decode_fail				; Check that bit is longer than minimum
+	jc	decode_fail			; Check that bit is longer than minimum
 
-	subb	A, Temp1					; Check if bit is zero or one
-	mov	A, dest					; Shift bit into data byte
+	subb	A, Temp1				; Check if bit is zero or one
+	mov	A, dest				; Shift bit into data byte
 	rlc	A
 	mov	dest, A
-	inc	DPL						; Next bit
+	inc	DPL					; Next bit
 	movx	A, @DPTR
 	mov	Temp5, A
 	clr	C
@@ -229,38 +229,38 @@ Decode_DShot_2Bit MACRO dest, decode_fail
 ENDM
 
 Initialize_PCA MACRO
-	mov	PCA0CN0, #40h				; PCA enabled
-	mov	PCA0MD, #08h				; PCA clock is system clock
+	mov	PCA0CN0, #40h			; PCA enabled
+	mov	PCA0MD, #08h			; PCA clock is system clock
 IF FETON_DELAY == 0
 IF MCU_48MHZ == 0
-	mov	PCA0PWM, #82h				; PCA ARSEL set and 10bits pwm
+	mov	PCA0PWM, #82h			; PCA ARSEL set and 10bits pwm
 ELSE
-	mov	PCA0PWM, #83h				; PCA ARSEL set and 11bits pwm
+	mov	PCA0PWM, #83h			; PCA ARSEL set and 11bits pwm
 ENDIF
-	mov	PCA0CENT, #00h				; Edge aligned pwm
+	mov	PCA0CENT, #00h			; Edge aligned pwm
 ELSE
 IF MCU_48MHZ == 0
-	mov	PCA0PWM, #81h				; PCA ARSEL set and 9bits pwm
+	mov	PCA0PWM, #81h			; PCA ARSEL set and 9bits pwm
 ELSE
-	mov	PCA0PWM, #82h				; PCA ARSEL set and 10bits pwm
+	mov	PCA0PWM, #82h			; PCA ARSEL set and 10bits pwm
 ENDIF
-	mov	PCA0CENT, #03h				; Center aligned pwm
+	mov	PCA0CENT, #03h			; Center aligned pwm
 ENDIF
 ENDM
 
 Enable_Power_Pwm_Module MACRO
 IF FETON_DELAY == 0
-	mov	PCA0_POWER_MODULE, #4Ah		; Enable comparator of module, enable match, set pwm mode
+	mov	PCA0_POWER_MODULE, #4Ah	; Enable comparator of module, enable match, set pwm mode
 ELSE
-	mov	PCA0_POWER_MODULE, #42h		; Enable comparator of module, set pwm mode
+	mov	PCA0_POWER_MODULE, #42h	; Enable comparator of module, set pwm mode
 ENDIF
 ENDM
 
 Enable_Damp_Pwm_Module MACRO
 IF FETON_DELAY == 0
-	mov	PCA0_DAMP_MODULE, #00h		; Disable
+	mov	PCA0_DAMP_MODULE, #00h	; Disable
 ELSE
-	mov	PCA0_DAMP_MODULE, #42h		; Enable comparator of module, set pwm mode
+	mov	PCA0_DAMP_MODULE, #42h	; Enable comparator of module, set pwm mode
 ENDIF
 ENDM
 
