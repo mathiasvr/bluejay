@@ -109,7 +109,7 @@ W_			EQU 23	; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
 ;FETON_DELAY EQU 15	; 20.4ns per step
 
 
-$include (Common.inc)				; Include common source code for EFM8BBx based ESCs
+$include (Common.inc)					; Include common source code for EFM8BBx based ESCs
 
 ;**** **** **** **** ****
 ; Programming defaults
@@ -455,8 +455,8 @@ t0_int:
 
 	; If last pulse is high telemetry is finished
 	jb	RTX_PORT.RTX_PIN, t0_int_dshot_tlm_finish
-	; Otherwise wait for it to return to high
-	inc	Temp1
+
+	inc	Temp1			; Otherwise wait for it to return to high
 
 t0_int_dshot_tlm_transition:
 	cpl	RTX_PORT.RTX_PIN	; Invert signal level
@@ -992,24 +992,24 @@ reti
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 pca_int:	; Used for setting pwm registers
 	clr	IE_EA
-	push	PSW					; Preserve registers through interrupt
+	push	PSW						; Preserve registers through interrupt
 	push	ACC
-	setb	PSW.3				; Select register bank 1 for this interrupt
+	setb	PSW.3					; Select register bank 1 for this interrupt
 
-IF FETON_DELAY != 0				; HI/LO enable style drivers
-	mov	Temp1, PCA0L			; Read low byte, to transfer high byte to holding register
+IF FETON_DELAY != 0					; HI/LO enable style drivers
+	mov	Temp1, PCA0L				; Read low byte, to transfer high byte to holding register
 	mov	A, Current_Power_Pwm_Reg_H
 	jnb	ACC.PWR_H_BIT, pca_int_hi_pwm
 
 	mov	A, PCA0H
-	jb	ACC.PCA_BIT, pca_int_exit		; Power below 50%, update pca in the 0x00-0x0F range
+	jb	ACC.PCA_BIT, pca_int_exit	; Power below 50%, update pca in the 0x00-0x0F range
 	jb	ACC.(PCA_BIT-1), pca_int_exit
 
 	sjmp	pca_int_set_pwm
 
 pca_int_hi_pwm:
 	mov	A, PCA0H
-	jnb	ACC.PCA_BIT, pca_int_exit		; Power above 50%, update pca in the 0x20-0x2F range
+	jnb	ACC.PCA_BIT, pca_int_exit	; Power above 50%, update pca in the 0x20-0x2F range
 	jb	ACC.(PCA_BIT-1), pca_int_exit
 
 pca_int_set_pwm:
@@ -1018,21 +1018,20 @@ pca_int_set_pwm:
 	mov	Current_Power_Pwm_Reg_H, Power_Pwm_Reg_H
 	Disable_COVF_Interrupt
 
-ELSE							; EN/PWM style drivers
+ELSE								; EN/PWM style drivers
 	Set_Power_Pwm_Regs
 	mov	Current_Power_Pwm_Reg_H, Power_Pwm_Reg_H
 	Disable_COVF_Interrupt
 	Disable_CCF_Interrupt
 ENDIF
 
-	; Pwm updated, disable pca interrupt
-	anl	EIE1, #0EFh
+	anl	EIE1, #0EFh				; Pwm updated, disable pca interrupts
 pca_int_exit:
 	Clear_COVF_Interrupt
 IF FETON_DELAY == 0
 	Clear_CCF_Interrupt
 ENDIF
-	pop	ACC					; Restore preserved registers
+	pop	ACC						; Restore preserved registers
 	pop	PSW
 	setb	IE_EA
 	reti
@@ -1198,7 +1197,7 @@ dshot_12bit_7:
 	rlc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#0fh
-	ajmp dshot_tlm_12bit_encoded
+	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_6:
 	mov	A, Tlm_Data_H
@@ -1208,7 +1207,7 @@ dshot_12bit_6:
 	rlc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#0dh
-	ajmp dshot_tlm_12bit_encoded
+	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_5:
 	mov	A, Tlm_Data_H
@@ -1220,7 +1219,7 @@ dshot_12bit_5:
 	rlc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#0bh
-	ajmp dshot_tlm_12bit_encoded
+	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_4:
 	mov	A, Tlm_Data_L
@@ -1230,7 +1229,7 @@ dshot_12bit_4:
 	swap	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#09h
-	ajmp dshot_tlm_12bit_encoded
+	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_3:
 	mov	A, Tlm_Data_L
@@ -1242,7 +1241,7 @@ dshot_12bit_3:
 	rrc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#07h
-	ajmp dshot_tlm_12bit_encoded
+	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_2:
 	mov	A, Tlm_Data_L
@@ -1252,7 +1251,7 @@ dshot_12bit_2:
 	rrc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#05h
-	ajmp dshot_tlm_12bit_encoded
+	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_1:
 	mov	A, Tlm_Data_L
@@ -1260,7 +1259,7 @@ dshot_12bit_1:
 	rrc	A
 	mov	Tlm_Data_L, A
 	mov	Tlm_Data_H,#03h
-	ajmp dshot_tlm_12bit_encoded
+	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_encode:
 	; Encode 16-bit e-period as a 12-bit value
@@ -1272,7 +1271,7 @@ dshot_12bit_encode:
 	jb	ACC.2, dshot_12bit_2
 	jb	ACC.1, dshot_12bit_1
 	mov	A, Tlm_Data_L				; Already 12-bit (E=0)
-	ajmp dshot_tlm_12bit_encoded
+	ajmp	dshot_tlm_12bit_encoded
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1304,8 +1303,8 @@ dshot_tlm_create_packet:
 	mov	Tlm_Data_L, A
 
 	mov	A, Tlm_Data_H
-	clr C
-	rrc A
+	clr	C
+	rrc	A
 	mov	Tlm_Data_H, A
 	clr	C
 	rrc	A
@@ -2449,14 +2448,14 @@ eval_comp_exit:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_for_comm:
 	; Update demag metric
-	mov	A, Demag_Detected_Metric	; Sliding average of 8, 256 when demag and 0 when not. Limited to minimum 120
+	mov	A, Demag_Detected_Metric		; Sliding average of 8, 256 when demag and 0 when not. Limited to minimum 120
 	mov	B, #7
-	mul	AB					; Multiply by 7
+	mul	AB						; Multiply by 7
 
 	jnb	Flags0.DEMAG_DETECTED, ($+4)	; Add new value for current demag status
 	inc	B
 
-	mov	C, B.0				; Divide by 8
+	mov	C, B.0					; Divide by 8
 	rrc	A
 	mov	C, B.1
 	rrc	A
@@ -2464,14 +2463,14 @@ wait_for_comm:
 	rrc	A
 	mov	Demag_Detected_Metric, A
 	clr	C
-	subb	A, #120				; Limit to minimum 120
+	subb	A, #120					; Limit to minimum 120
 	jnc	($+5)
 	mov	Demag_Detected_Metric, #120
 
 	clr	C
-	mov	A, Demag_Detected_Metric	; Check demag metric
+	mov	A, Demag_Detected_Metric		; Check demag metric
 	subb	A, Demag_Pwr_Off_Thresh
-	jc	wait_for_comm_wait		; Cut power if many consecutive demags. This will help retain sync during hard accelerations
+	jc	wait_for_comm_wait			; Cut power if many consecutive demags. This will help retain sync during hard accelerations
 
 	All_pwmFETs_off
 	Set_Pwms_Off
@@ -2484,7 +2483,7 @@ wait_for_comm_wait:
 	mov	TMR3RLL, Wt_Zc_Scan_Start_L
 	mov	TMR3RLH, Wt_Zc_Scan_Start_H
 	setb	Flags0.T3_PENDING
-	orl	EIE1, #80h			; Enable timer 3 interrupts
+	orl	EIE1, #80h				; Enable timer 3 interrupts
 	ret
 
 
@@ -3347,7 +3346,7 @@ dshot_direction_1:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc dont_clear_dshot_cmd
+	jc	dont_clear_dshot_cmd
 
 	mov	A, #1
 	jnb	Flags3.PGM_BIDIR, ($+5)
@@ -3364,7 +3363,7 @@ dshot_direction_2:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc dont_clear_dshot_cmd
+	jc	dont_clear_dshot_cmd
 
 	mov	A, #2
 	jnb	Flags3.PGM_BIDIR, ($+5)
@@ -3381,7 +3380,7 @@ dshot_direction_bidir_off:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc dont_clear_dshot_cmd
+	jc	dont_clear_dshot_cmd
 
 	jnb	Flags3.PGM_BIDIR, clear_dshot_cmd
 
@@ -3399,7 +3398,7 @@ dshot_direction_bidir_on:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc dont_clear_dshot_cmd
+	jc	dont_clear_dshot_cmd
 
 	jb	Flags3.PGM_BIDIR, clear_dshot_cmd
 
@@ -3422,7 +3421,7 @@ dshot_direction_normal:
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc dont_clear_dshot_cmd
+	jc	dont_clear_dshot_cmd
 
 	clr	IE_EA					; DPTR used in interrupts
 	mov	DPTR, #Eep_Pgm_Direction		; Read from flash
