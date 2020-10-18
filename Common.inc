@@ -295,6 +295,24 @@ Disable_CCF_Interrupt MACRO
 	anl	PCA0CPM0,#0FEh
 ENDM
 
+Enable_PCA_Interrupt MACRO
+LOCAL pca_enabled set_pca_int_hi_pwm
+IF FETON_DELAY != 0
+	Enable_COVF_Interrupt
+ELSE
+	mov	A, Current_Power_Pwm_Reg_H
+	jnb	ACC.PWR_H_BIT, set_pca_int_hi_pwm
+
+	Enable_COVF_Interrupt
+	sjmp	pca_enabled
+
+set_pca_int_hi_pwm:
+	Enable_CCF_Interrupt
+pca_enabled:
+ENDIF
+	orl	EIE1, #10h			; Enable pca interrupts
+ENDM
+
 Set_MCU_Clk_24MHz MACRO
 	mov	CLKSEL, #13h			; Set clock to 24MHz
 	mov	SFRPAGE, #10h

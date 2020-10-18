@@ -484,7 +484,7 @@ t0_int_dshot_tlm_finish:
 	mov	DPTR, #0			; Reset data pointer
 	setb	IE_EX0			; Enable int0 interrupts
 	setb	IE_EX1			; Enable int1 interrupts
-	orl	EIE1, #10h		; Enable pca interrupts
+	Enable_PCA_Interrupt	; Enable pca interrupts
 
 	pop	PSW
 	reti
@@ -852,25 +852,6 @@ ENDIF
 
 	mov	Rcp_Timeout_Cntd, #10			; Set timeout count
 
-	anl	EIE1, #0EFh					; Disable pca interrupts
-
-IF FETON_DELAY != 0
-	Clear_COVF_Interrupt
-	Enable_COVF_Interrupt				; Generate a pca interrupt
-ELSE
-	mov	A, Current_Power_Pwm_Reg_H
-	jnb	ACC.PWR_H_BIT, t1_int_set_pca_int_hi_pwm
-
-	Clear_COVF_Interrupt
-	Enable_COVF_Interrupt				; Generate a pca interrupt
-	sjmp	t1_pca_generated
-
-t1_int_set_pca_int_hi_pwm:
-	Clear_CCF_Interrupt
-	Enable_CCF_Interrupt				; Generate pca interrupt
-ENDIF
-
-t1_pca_generated:
 	; Prepare DShot telemetry
 IF MCU_48MHZ == 1
 	; Only use telemetry for compatible clock frequency
@@ -884,7 +865,7 @@ t1_int_dshot_no_tlm:
 	mov	DPTR, #0						; Set pointer to start
 	setb	IE_EX0						; Enable int0 interrupts
 	setb	IE_EX1						; Enable int1 interrupts
-	orl	EIE1, #10h					; Enable pca interrupts
+	Enable_PCA_Interrupt				; Enable pca interrupts
 
 t1_int_exit_no_int:
 	pop	B							; Restore preserved registers
