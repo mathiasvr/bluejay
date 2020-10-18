@@ -30,9 +30,9 @@
 ; Device SiLabs EFM8BB1x/2x
 ;*********************
 IF MCU_48MHZ == 0
-$include (SI_EFM8BB1_Defs.inc)
+$include (Silabs/SI_EFM8BB1_Defs.inc)
 ELSE
-$include (SI_EFM8BB2_Defs.inc)
+$include (Silabs/SI_EFM8BB2_Defs.inc)
 ENDIF
 
 ;**** **** **** **** ****
