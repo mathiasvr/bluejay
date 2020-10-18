@@ -382,7 +382,7 @@ Eep_Pgm_LED_Control:		DB	DEFAULT_PGM_LED_CONTROL			; EEPROM copy of programmed L
 Eep_Dummy:				DB	0FFh							; EEPROM address for safety reason
 
 CSEG AT 1A60h
-Eep_Name:					DB	"                "				; Name tag (16 Bytes)
+Eep_Name:					DB	"Bluejay (BETA)  "				; Name tag (16 Bytes)
 
 ;**** **** **** **** ****
 ; DShot Telemetry Macros
