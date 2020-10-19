@@ -1692,10 +1692,8 @@ IF MCU_48MHZ == 1
 	anl	A, #7Fh
 ENDIF
 	mov	Temp2, A
-	jnb	Flags1.HIGH_RPM, ($+5)	; Branch if high rpm
-	ajmp	calc_next_comm_timing_fast
-
-	sjmp	calc_next_comm_normal
+	jnb	Flags1.HIGH_RPM, calc_next_comm_normal	; Branch normal rpm
+	ajmp	calc_next_comm_timing_fast			; Branch high rpm
 
 calc_next_comm_startup:
 	mov	Temp6, Prev_Comm_X
@@ -2332,10 +2330,8 @@ comp_read_wrong_not_startup:
 	clr	C
 	mov	A, Temp1
 	subb	A, Temp2
-	jc	($+4)
-	sjmp	wait_for_comp_out_start		; If above initial requirement - go back and restart
-
-	sjmp	comp_check_timeout			; Otherwise - take another reading
+	jc	comp_check_timeout			; If below initial requirement - take another reading
+	sjmp	wait_for_comp_out_start		; Otherwise - go back and restart
 
 comp_read_wrong_extend_timeout:
 	clr	Flags0.DEMAG_DETECTED		; Clear demag detected flag
