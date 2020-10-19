@@ -3267,7 +3267,7 @@ wait_for_power_on_nonzero:
 
 	mov	Dshot_Cmd, #0
 	mov	Dshot_Cmd_Cnt, #0
-	ajmp	init_start
+	jmp	init_start
 
 check_dshot_cmd:
 	mov	Temp1, Dshot_Cmd
@@ -3490,7 +3490,7 @@ dshot_save_settings:
 
 	setb	IE_EA
 
-	ajmp	clear_dshot_cmd
+	jmp	clear_dshot_cmd
 
 
 
