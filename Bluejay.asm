@@ -123,10 +123,6 @@ DEFAULT_PGM_BEACON_STRENGTH		EQU 80	; Beacon strength
 DEFAULT_PGM_BEACON_DELAY			EQU 4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
 
 ; COMMON
-;DEFAULT_PGM_ENABLE_TX_PROGRAM	EQU 1	; 1=Enabled	0=Disabled
-;DEFAULT_PGM_MIN_THROTTLE		EQU 37	; 4*37+1000=1148
-;DEFAULT_PGM_MAX_THROTTLE		EQU 208	; 4*208+1000=1832
-;DEFAULT_PGM_CENTER_THROTTLE		EQU 122	; 4*122+1000=1488 (used in bidirectional mode)
 DEFAULT_PGM_ENABLE_TEMP_PROT		EQU 7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
 DEFAULT_PGM_ENABLE_POWER_PROT		EQU 1	; 1=Enabled	0=Disabled
 DEFAULT_PGM_BRAKE_ON_STOP		EQU 0	; 1=Enabled	0=Disabled
@@ -175,12 +171,12 @@ HIGH_RPM					EQU	4		; Set when motor rpm is high (Comm_Period4x_H less than 2)
 
 Flags2:					DS	1		; State flags. NOT reset upon init_start
 ;RCP_UPDATED				EQU	0		; New RC pulse length value available
-;RCP_ONESHOT125				EQU	1		; RC pulse input is OneShot125 (125-250us)
-;RCP_ONESHOT42				EQU	2		; RC pulse input is OneShot42 (41.67-83us)
-;RCP_MULTISHOT				EQU	3		; RC pulse input is Multishot (5-25us)
-;RCP_DSHOT					EQU	4		; RC pulse input is digital shot
+;						EQU	1
+;						EQU	2
+;						EQU	3
+;						EQU	4
 RCP_DIR_REV				EQU	5		; RC pulse direction in bidirectional mode
-;RCP_FULL_RANGE				EQU	6		; When set full input signal range is used (1000-2000us) and stored calibration values are ignored
+;RCP_FULL_RANGE			EQU	6		; When set full input signal range is used (1000-2000us) and stored calibration values are ignored
 RCP_DSHOT_INVERTED			EQU	7		; DShot RC pulse input is inverted (and supports telemetry)
 
 Flags3:					DS	1		; State flags. NOT reset upon init_start
@@ -199,15 +195,6 @@ Tlm_Data_H:				DS	1		; DShot telemetry data high byte
 ;**** **** **** **** ****
 ; RAM definitions
 DSEG AT 30h							; Ram data segment, direct addressing
-;Initial_Arm:				DS	1		; Variable that is set during the first arm sequence after power on
-
-;Min_Throttle_L:			DS	1		; Minimum throttle scaled (lo byte)
-;Min_Throttle_H:			DS	1		; Minimum throttle scaled (hi byte)
-;Center_Throttle_L:			DS	1		; Center throttle scaled (lo byte)
-;Center_Throttle_H:			DS	1		; Center throttle scaled (hi byte)
-;Max_Throttle_L:			DS	1		; Maximum throttle scaled (lo byte)
-;Max_Throttle_H:			DS	1		; Maximum throttle scaled (hi byte)
-
 Power_On_Wait_Cnt_L:		DS	1		; Power on wait counter (lo byte)
 Power_On_Wait_Cnt_H:		DS	1		; Power on wait counter (hi byte)
 
@@ -219,7 +206,6 @@ Demag_Detected_Metric:		DS	1		; Metric used to gauge demag event frequency
 Demag_Pwr_Off_Thresh:		DS	1		; Metric threshold above which power is cut
 Low_Rpm_Pwr_Slope:			DS	1		; Sets the slope of power increase for low rpms
 
-;Timer0_X:					DS	1		; Timer 0 extended byte
 Timer2_X:					DS	1		; Timer 2 extended byte
 Prev_Comm_L:				DS	1		; Previous commutation timer 3 timestamp (lo byte)
 Prev_Comm_H:				DS	1		; Previous commutation timer 3 timestamp (hi byte)
@@ -259,10 +245,6 @@ Adc_Conversion_Cnt:			DS	1		; Adc conversion counter
 
 Current_Average_Temp:		DS	1		; Current average temperature (lo byte ADC reading, assuming hi byte is 1)
 
-;Throttle_Gain:				DS	1		; Gain to be applied to RCP value
-;Throttle_Gain_M:			DS	1		; Gain to be applied to RCP value (multiplier 0=1x, 1=2x, 2=4x etc))
-;Throttle_Gain_BD_Rev:		DS	1		; Gain to be applied to RCP value for reverse direction in bidirectional mode
-;Throttle_Gain_BD_Rev_M:		DS	1		; Gain to be applied to RCP value for reverse direction in bidirectional mode (multiplier 0=1x, 1=2x, 2=4x etc)
 Beep_Strength:				DS	1		; Strength of beeps
 
 Flash_Key_1:				DS	1		; Flash key one
