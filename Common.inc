@@ -201,27 +201,28 @@ ENDM
 
 Decode_DShot_2Bit MACRO dest, decode_fail
 	movx	A, @DPTR
-	mov	Temp6, A
+	mov	Temp7, A
 	clr	C
-	subb	A, Temp5				; Subtract previous timestamp
+	subb	A, Temp6				; Subtract previous timestamp
 	clr	C
-	subb	A, Temp1
+	subb	A, Temp2
 	jc	decode_fail			; Check that bit is longer than minimum
 
-	subb	A, Temp1				; Check if bit is zero or one
+	subb	A, Temp2				; Check if bit is zero or one
 	mov	A, dest				; Shift bit into data byte
 	rlc	A
 	mov	dest, A
+
 	inc	DPL					; Next bit
 	movx	A, @DPTR
-	mov	Temp5, A
+	mov	Temp6, A
 	clr	C
-	subb	A, Temp6
+	subb	A, Temp7
 	clr	C
-	subb	A, Temp1
+	subb	A, Temp2
 	jc	decode_fail
 
-	subb	A, Temp1
+	subb	A, Temp2
 	mov	A, dest
 	rlc	A
 	mov	dest, A

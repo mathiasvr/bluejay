@@ -492,22 +492,22 @@ t1_int:
 	push	B
 
 	clr	TMR2CN0_TR2				; Timer 2 disabled
-	mov	Temp1, TMR2L				; Read timer value
-	mov	Temp2, TMR2H
+	mov	Temp2, TMR2L				; Read timer value
+	mov	Temp3, TMR2H
 	setb	TMR2CN0_TR2				; Timer 2 enabled
 
 	mov	TL0, #0					; Reset timer 0
 	; Check frame time length
 	clr	C
-	mov	A, Temp1
-	subb	A, DShot_Frame_Start_L
-	mov	Temp1, A
 	mov	A, Temp2
+	subb	A, DShot_Frame_Start_L
+	mov	Temp2, A
+	mov	A, Temp3
 	subb	A, DShot_Frame_Start_H
 	jnz	t1_int_frame_fail			; Frame too long
 
 	clr	C
-	mov	A, Temp1
+	mov	A, Temp2
 	subb	A, DShot_Frame_Length_Thr
 	jc	t1_int_frame_fail			; Frame too short
 	subb	A, DShot_Frame_Length_Thr
@@ -518,13 +518,13 @@ t1_int:
 	cjne	A, #16, t1_int_frame_fail
 
 	; Decode transmitted data
-	mov	Temp5, #0					; Reset timestamp
+	mov	Temp6, #0					; Reset timestamp
 	mov	DPTR, #0					; Set pointer
-	mov	Temp1, DShot_Pwm_Thr		; DShot pulse width criteria
+	mov	Temp2, DShot_Pwm_Thr		; DShot pulse width criteria
 
 	; Decode DShot data Msb. Use more code space to save time (by not using loop)
-	Decode_DShot_2Bit	Temp4, t1_int_frame_fail
-	Decode_DShot_2Bit	Temp4, t1_int_frame_fail
+	Decode_DShot_2Bit	Temp5, t1_int_frame_fail
+	Decode_DShot_2Bit	Temp5, t1_int_frame_fail
 	sjmp	t1_int_decode_lsb
 
 t1_int_frame_fail:
@@ -532,10 +532,10 @@ t1_int_frame_fail:
 
 t1_int_decode_lsb:
 	; Decode DShot data Lsb
-	Decode_DShot_2Bit	Temp3, t1_int_outside_range
-	Decode_DShot_2Bit	Temp3, t1_int_outside_range
-	Decode_DShot_2Bit	Temp3, t1_int_outside_range
-	Decode_DShot_2Bit	Temp3, t1_int_outside_range
+	Decode_DShot_2Bit	Temp4, t1_int_outside_range
+	Decode_DShot_2Bit	Temp4, t1_int_outside_range
+	Decode_DShot_2Bit	Temp4, t1_int_outside_range
+	Decode_DShot_2Bit	Temp4, t1_int_outside_range
 	sjmp	t1_int_decode_checksum
 
 t1_int_outside_range:
@@ -563,15 +563,15 @@ t1_int_exit_timeout:
 
 t1_int_decode_checksum:
 	; Decode DShot data checksum
-	Decode_DShot_2Bit	Temp2, t1_int_outside_range
-	Decode_DShot_2Bit	Temp2, t1_int_outside_range
+	Decode_DShot_2Bit	Temp3, t1_int_outside_range
+	Decode_DShot_2Bit	Temp3, t1_int_outside_range
 
 	; XOR check (in inverted data, which is ok)
-	mov	A, Temp3
+	mov	A, Temp4
 	swap	A
-	xrl	A, Temp3
 	xrl	A, Temp4
-	xrl	A, Temp2
+	xrl	A, Temp5
+	xrl	A, Temp3
 	jnb	Flags2.RCP_DSHOT_INVERTED, ($+4)
 	cpl	A						; Invert checksum if using inverted DShot
 	anl	A, #0Fh
@@ -579,36 +579,36 @@ t1_int_decode_checksum:
 
 	; Invert DShot data and subtract 96 (still 12 bits)
 	clr	C
-	mov	A, Temp3
-	cpl	A
-	mov	Temp2, A
-	subb	A, #96
-	mov	Temp3, A
 	mov	A, Temp4
+	cpl	A
+	mov	Temp3, A
+	subb	A, #96
+	mov	Temp4, A
+	mov	A, Temp5
 	cpl	A
 	anl	A, #0Fh
 	subb	A, #0
-	mov	Temp4, A
+	mov	Temp5, A
 	jnc	t1_normal_range
 
-	mov	A, Temp2			; Check for 0 or DShot command
+	mov	A, Temp3			; Check for 0 or DShot command
+	mov	Temp5, #0
 	mov	Temp4, #0
-	mov	Temp3, #0
 	jz	t1_normal_range
 
-	mov	Temp2, #0
+	mov	Temp3, #0
 	clr	C				; We are in the special DShot range
 	rrc	A				; Divide by 2
-	jnc	t1_dshot_set_cmd	; Check for tlm bit set (if not telemetry, Temp2 will be zero and result in invalid command)
+	jnc	t1_dshot_set_cmd	; Check for tlm bit set (if not telemetry, Temp3 will be zero and result in invalid command)
 
-	mov	Temp2, A
+	mov	Temp3, A
 	cjne	A, Dshot_Cmd, t1_dshot_set_cmd
 
 	inc	Dshot_Cmd_Cnt
 	sjmp	t1_normal_range
 
 t1_dshot_set_cmd:
-	mov	Dshot_Cmd, Temp2
+	mov	Dshot_Cmd, Temp3
 	mov	Dshot_Cmd_Cnt, #0
 
 t1_normal_range:
@@ -617,18 +617,18 @@ t1_normal_range:
 
 	; Subtract 2000 (still 12 bits)
 	clr	C
-	mov	A, Temp3
-	subb	A, #0D0h
-	mov	Temp1, A
 	mov	A, Temp4
-	subb	A, #07h
+	subb	A, #0D0h
 	mov	Temp2, A
+	mov	A, Temp5
+	subb	A, #07h
+	mov	Temp3, A
 	jc	t1_int_bidir_fwd				; If result is negative - branch
 
-	mov	A, Temp1
-	mov	Temp3, A
 	mov	A, Temp2
 	mov	Temp4, A
+	mov	A, Temp3
+	mov	Temp5, A
 	jb	Flags2.RCP_DIR_REV, t1_int_bidir_rev_chk	; If same direction - branch
 
 	setb	Flags2.RCP_DIR_REV
@@ -645,38 +645,38 @@ t1_int_bidir_rev_chk:
 	cpl	Flags2.RCP_DIR_REV
 
 	clr	C							; Multiply throttle value by 2
-	mov	A, Temp3
-	rlc	A
-	mov	Temp3, A
 	mov	A, Temp4
 	rlc	A
 	mov	Temp4, A
+	mov	A, Temp5
+	rlc	A
+	mov	Temp5, A
 t1_int_not_bidir:
 	; Generate 4/256
-	mov	A, Temp4
-	add	A, Temp4
-	addc	A, Temp4
-	addc	A, Temp4
-	mov	Temp2, A
+	mov	A, Temp5
+	add	A, Temp5
+	addc	A, Temp5
+	addc	A, Temp5
+	mov	Temp3, A
 	; Align to 11 bits
 	clr	C
+	mov	A, Temp5
+	rrc	A
+	mov	Temp5, A
 	mov	A, Temp4
 	rrc	A
 	mov	Temp4, A
-	mov	A, Temp3
-	rrc	A
-	mov	Temp3, A
 	; Scale from 2000 to 2048
-	mov	A, Temp3
-	add	A, Temp2	; Holds 4/128
-	mov	Temp3, A
 	mov	A, Temp4
-	addc	A, #0
+	add	A, Temp3	; Holds 4/128
 	mov	Temp4, A
+	mov	A, Temp5
+	addc	A, #0
+	mov	Temp5, A
 	jnb	ACC.3, ($+7)
 
-	mov	Temp3, #0FFh
 	mov	Temp4, #0FFh
+	mov	Temp5, #0FFh
 
 	; Boost pwm during direct start
 	mov	A, Flags1
@@ -687,59 +687,59 @@ t1_int_not_bidir:
 
 	mov	A, Pwm_Limit_Beg				; Set 25% of max startup power as minimum power
 	rlc	A
-	mov	Temp2, A
-	mov	A, Temp4
+	mov	Temp3, A
+	mov	A, Temp5
 	jnz	t1_int_startup_boost_stall
 
 	clr	C
-	mov	A, Temp2
-	subb	A, Temp3
+	mov	A, Temp3
+	subb	A, Temp4
 	jc	t1_int_startup_boost_stall
 
-	mov	A, Temp2
-	mov	Temp3, A
+	mov	A, Temp3
+	mov	Temp4, A
 
 t1_int_startup_boost_stall:
 	mov	A, Stall_Cnt					; Add an extra power boost during start
 	swap	A
 	rlc	A
-	add	A, Temp3
-	mov	Temp3, A
-	mov	A, Temp4
-	addc	A, #0
+	add	A, Temp4
 	mov	Temp4, A
+	mov	A, Temp5
+	addc	A, #0
+	mov	Temp5, A
 
 t1_int_startup_boosted:
 	; Set 8bit value
 	clr	C
-	mov	A, Temp3
-	rlc	A
-	swap	A
-	anl	A, #0Fh
-	mov	Temp1, A
 	mov	A, Temp4
 	rlc	A
 	swap	A
+	anl	A, #0Fh
+	mov	Temp2, A
+	mov	A, Temp5
+	rlc	A
+	swap	A
 	anl	A, #0F0h
-	orl	A, Temp1
-	mov	Temp1, A
-	jnz	t1_int_zero_rcp_checked	; New_Rcp (Temp1) is only zero if all 11 bits are zero
+	orl	A, Temp2
+	mov	Temp2, A
+	jnz	t1_int_zero_rcp_checked	; New_Rcp (Temp2) is only zero if all 11 bits are zero
 
-	mov	A, Temp3
+	mov	A, Temp4
 	jz	t1_int_zero_rcp_checked
 
-	mov	Temp1, #1
+	mov	Temp2, #1
 
 t1_int_zero_rcp_checked:
 	; Align to 10 bits for 24MHz MCU
 IF MCU_48MHZ == 0
 	clr	C
+	mov	A, Temp5
+	rrc	A
+	mov	Temp5, A
 	mov	A, Temp4
 	rrc	A
 	mov	Temp4, A
-	mov	A, Temp3
-	rrc	A
-	mov	Temp3, A
 ENDIF
 
 	; Decrement outside range counter
@@ -748,9 +748,9 @@ ENDIF
 	dec	Rcp_Outside_Range_Cnt
 
 	; Pulse ready
-	mov	New_Rcp, Temp1					; Store new pulse length
+	mov	New_Rcp, Temp2					; Store new pulse length
 	; Check if zero
-	mov	A, Temp1						; Load new pulse value
+	mov	A, Temp2						; Load new pulse value
 	jz	($+5)						; Check if pulse is zero
 
 	mov	Rcp_Stop_Cnt, #0				; Reset rcp stop counter
@@ -758,34 +758,34 @@ ENDIF
 	; Set pwm limit
 	clr	C
 	mov	A, Pwm_Limit					; Limit to the smallest
-	mov	Temp5, A						; Store limit in Temp5
+	mov	Temp6, A						; Store limit in Temp6
 	subb	A, Pwm_Limit_By_Rpm
 	jc	($+4)
 
-	mov	Temp5, Pwm_Limit_By_Rpm
+	mov	Temp6, Pwm_Limit_By_Rpm
 
 	; Check against limit
 	clr	C
-	mov	A, Temp5
-	subb	A, Temp1	; New_Rcp
+	mov	A, Temp6
+	subb	A, Temp2	; New_Rcp
 	jnc	t1_int_set_pwm_registers
 
-	mov	A, Temp5						; Multiply limit by 4 (8 for 48MHz MCUs)
+	mov	A, Temp6						; Multiply limit by 4 (8 for 48MHz MCUs)
 IF MCU_48MHZ == 0
 	mov	B, #4
 ELSE
 	mov	B, #8
 ENDIF
 	mul	AB
-	mov	Temp3, A
-	mov	Temp4, B
+	mov	Temp4, A
+	mov	Temp5, B
 
 t1_int_set_pwm_registers:
 IF FETON_DELAY != 0
 	clr	C
 ENDIF
 
-	mov	A, Temp4
+	mov	A, Temp5
 	cpl	A
 IF MCU_48MHZ == 0
 	anl	A, #3
@@ -795,43 +795,43 @@ ENDIF
 IF FETON_DELAY != 0
 	rrc	A				; Scale to 10/9 bit pwm
 ENDIF
-	mov	Temp2, A
+	mov	Temp3, A
 
-	mov	A, Temp3
+	mov	A, Temp4
 	cpl	A
 IF FETON_DELAY != 0
 	rrc	A				; Scale to 10/9 bit pwm
 ENDIF
-	mov	Temp1, A
+	mov	Temp2, A
 
 
 IF FETON_DELAY != 0
 	clr	C
-	mov	A, Temp1						; Skew damping fet timing
+	mov	A, Temp2						; Skew damping fet timing
 IF MCU_48MHZ == 0
 	subb	A, #((FETON_DELAY+1) SHR 1)
 ELSE
 	subb	A, #(FETON_DELAY)
 ENDIF
-	mov	Temp3, A
-	mov	A, Temp2
-	subb	A, #0
 	mov	Temp4, A
+	mov	A, Temp3
+	subb	A, #0
+	mov	Temp5, A
 	jnc	t1_int_set_pwm_damp_set
 
 	clr	A
-	mov	Temp3, A
 	mov	Temp4, A
+	mov	Temp5, A
 
 t1_int_set_pwm_damp_set:
 ENDIF
 
-	mov	Power_Pwm_Reg_L, Temp1
-	mov	Power_Pwm_Reg_H, Temp2
+	mov	Power_Pwm_Reg_L, Temp2
+	mov	Power_Pwm_Reg_H, Temp3
 
 IF FETON_DELAY != 0
-	mov	Damp_Pwm_Reg_L, Temp3
-	mov	Damp_Pwm_Reg_H, Temp4
+	mov	Damp_Pwm_Reg_L, Temp4
+	mov	Damp_Pwm_Reg_H, Temp5
 ENDIF
 
 	mov	Rcp_Timeout_Cntd, #10			; Set timeout count
@@ -981,7 +981,7 @@ pca_int:	; Used for setting pwm registers
 	mov	PSW, #8h					; Select register bank 1 for this interrupt
 
 IF FETON_DELAY != 0					; HI/LO enable style drivers
-	mov	Temp1, PCA0L				; Read low byte, to transfer high byte to holding register
+	mov	Temp2, PCA0L				; Read low byte, to transfer high byte to holding register
 	mov	A, Current_Power_Pwm_Reg_H
 	jnb	ACC.PWR_H_BIT, pca_int_hi_pwm
 
