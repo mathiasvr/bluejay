@@ -465,7 +465,6 @@ t0_int_dshot_tlm_finish:
 
 	mov	TL0, #0			; Reset timer 0 count
 
-	mov	DPTR, #0			; Reset data pointer
 	setb	IE_EX0			; Enable int0 interrupts
 	setb	IE_EX1			; Enable int1 interrupts
 	Enable_PCA_Interrupt	; Enable pca interrupts
@@ -514,12 +513,11 @@ t1_int:
 	jnc	t1_int_frame_fail			; Frame too long
 
 	; Check that correct number of pulses is received
-	mov	A, DPL					; Read current pointer
-	cjne	A, #16, t1_int_frame_fail
+	cjne	Temp1, #16, t1_int_frame_fail	; Read current pointer
 
 	; Decode transmitted data
 	mov	Temp6, #0					; Reset timestamp
-	mov	DPTR, #0					; Set pointer
+	mov	Temp1, #0					; Set pointer
 	mov	Temp2, DShot_Pwm_Thr		; DShot pulse width criteria
 
 	; Decode DShot data Msb. Use more code space to save time (by not using loop)
@@ -843,10 +841,13 @@ IF MCU_48MHZ == 1
 ENDIF
 	jnb	Flags2.RCP_DSHOT_INVERTED, t1_int_dshot_no_tlm
 	call	dshot_tlm_create_packet
+	
+	mov	Temp1, #0						; Set pointer to start
+
 	sjmp	t1_int_exit_no_int
 
 t1_int_dshot_no_tlm:
-	mov	DPTR, #0						; Set pointer to start
+	mov	Temp1, #0						; Set pointer to start
 	setb	IE_EX0						; Enable int0 interrupts
 	setb	IE_EX1						; Enable int1 interrupts
 	Enable_PCA_Interrupt				; Enable pca interrupts
@@ -944,8 +945,14 @@ int0_int:	; Used for RC pulse timing
 	push	ACC
 	mov	A, TL0				; Read pwm for DShot immediately
 	mov	TL1, DShot_Timer_Preset	; Reset sync timer
-	movx	@DPTR, A				; Store pwm
-	inc	DPL
+
+	; Temp1 in register bank 1 points to pwm timings
+	push	PSW
+	mov	PSW, #8h
+	movx	@Temp1, A				; Store pwm
+	inc	Temp1
+	pop	PSW
+
 	pop	ACC
 	reti
 

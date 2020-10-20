@@ -200,7 +200,7 @@ CSEG AT 73h			; Timer3 overflow/compare interrupt
 ENDM
 
 Decode_DShot_2Bit MACRO dest, decode_fail
-	movx	A, @DPTR
+	movx	A, @Temp1
 	mov	Temp7, A
 	clr	C
 	subb	A, Temp6				; Subtract previous timestamp
@@ -213,8 +213,8 @@ Decode_DShot_2Bit MACRO dest, decode_fail
 	rlc	A
 	mov	dest, A
 
-	inc	DPL					; Next bit
-	movx	A, @DPTR
+	inc	Temp1					; Next bit
+	movx	A, @Temp1
 	mov	Temp6, A
 	clr	C
 	subb	A, Temp7
@@ -226,7 +226,7 @@ Decode_DShot_2Bit MACRO dest, decode_fail
 	mov	A, dest
 	rlc	A
 	mov	dest, A
-	inc	DPL
+	inc	Temp1
 ENDM
 
 Initialize_PCA MACRO
