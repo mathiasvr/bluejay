@@ -307,10 +307,12 @@ Pgm_LED_Control:			DS	1		; Programmed LED control
 ; The sequence of the variables below is no longer of importance
 Pgm_Startup_Pwr_Decoded:		DS	1		; Programmed startup power decoded
 
+ISEG AT 0B0h
+Stack:					DS	16		; Reserved stack space
 
 ; Indirect addressing data segment
-ISEG AT 0D0h
-Temp_Storage:				DS	48		; Temporary storage
+ISEG AT 0C0h
+Temp_Storage:				DS	64		; Temporary storage
 
 ;**** **** **** **** ****
 CSEG AT 1A00h							; "Eeprom" segment
@@ -2946,7 +2948,7 @@ pgm_start:
 	mov	WDTCN, #0DEh		; Disable watchdog
 	mov	WDTCN, #0ADh
 	; Initialize stack
-	mov	SP, #0c0h			; Stack = 64 upper bytes of RAM
+	mov	SP, #Stack		; 16 bytes of indirect RAM
 	; Initialize VDD monitor
 	orl	VDM0CN, #080h		; Enable the VDD monitor
 	mov	RSTSRC, #06h		; Set missing clock and VDD monitor as a reset source if not 1S capable
