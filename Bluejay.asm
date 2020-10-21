@@ -1301,7 +1301,6 @@ dshot_tlm_create_packet:
 	mov	Tlm_Data_H, A
 
 	; 12-bit encode telemetry data
-	mov	A, Tlm_Data_H
 	jnz	dshot_12bit_encode
 	mov	A, Tlm_Data_L				; Already 12-bit
 	jnz	dshot_tlm_12bit_encoded
