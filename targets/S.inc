@@ -34,9 +34,9 @@ TEMP_LIMIT_STEP		EQU	9	; Temperature measurement ADC value increment for another
 ; Bootloader definitions
 ;**** **** **** **** ****
 RTX_PORT		  		EQU 	P0		; Receive/Transmit port
-RTX_MDOUT				EQU	P0MDOUT	; Set to 1 for PUSHPULL				
-RTX_MDIN				EQU	P0MDIN	; Set to 1 for DIGITAL				
-RTX_SKIP				EQU	P0SKIP	; Set to 1 for SKIP				
+RTX_MDOUT				EQU	P0MDOUT	; Set to 1 for PUSHPULL
+RTX_MDIN				EQU	P0MDIN	; Set to 1 for DIGITAL
+RTX_SKIP				EQU	P0SKIP	; Set to 1 for SKIP
 RTX_PIN				EQU 	5		; RTX pin
 
 SIGNATURE_001			EQU	0E8h		; Device signature
@@ -48,11 +48,11 @@ ENDIF
 
 ;*********************
 ; PORT 0 definitions *
-;*********************  
+;*********************
 ;			EQU	7	;i
 ;			EQU	6	;i
 Rcp_In		EQU	5	;i
-;			EQU	4	;i 
+;			EQU	4	;i
 Comp_Com		EQU	3	;i
 Mux_A		EQU	2	;i
 Mux_C		EQU	1	;i
@@ -245,8 +245,8 @@ P2_PUSHPULL	EQU	(1 SHL DebugPin)
 ; MCU specific macros *
 ;**********************
 Initialize_Xbar MACRO
-	mov	XBR2, #40h	; Xbar enabled			
-	mov	XBR1, #02h	; CEX0 and CEX1 routed to pins		
+	mov	XBR2, #40h	; Xbar enabled
+	mov	XBR1, #02h	; CEX0 and CEX1 routed to pins
 ENDM
 Initialize_Comparator MACRO
 	mov	CMP0CN0, #80h	; Comparator enabled, no hysteresis
@@ -260,7 +260,7 @@ ELSE
 	mov	ADC0CF, #0B9h	; ADC clock 2MHz, PGA gain 1
 ENDIF
 	mov	ADC0MX, #10h	; Select temp sensor input
-	mov	ADC0CN0, #80h	; ADC enabled 
+	mov	ADC0CN0, #80h	; ADC enabled
 	mov	ADC0CN1, #01h	; Common mode buffer enabled
 ENDM
 Start_Adc MACRO

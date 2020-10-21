@@ -181,8 +181,8 @@ ENDIF
 Interrupt_Table_Definition MACRO
 CSEG AT 0				; Code segment start
 	jmp reset
-CSEG AT 03h			; Int0 interrupt	
-	jmp	int0_int	
+CSEG AT 03h			; Int0 interrupt
+	jmp	int0_int
 IF MCU_48MHZ == 1
 CSEG AT 0Bh			; Timer0 overflow interrupt
 	jmp	t0_int
@@ -192,11 +192,11 @@ CSEG AT 13h			; Int1 interrupt
 CSEG AT 1Bh			; Timer1 overflow interrupt
 	jmp	t1_int
 CSEG AT 2Bh			; Timer2 overflow interrupt
-	jmp	t2_int	
+	jmp	t2_int
 CSEG AT 5Bh			; Pca interrupt
 	jmp	pca_int
 CSEG AT 73h			; Timer3 overflow/compare interrupt
-	jmp	t3_int	
+	jmp	t3_int
 ENDM
 
 Decode_DShot_2Bit MACRO dest, decode_fail
