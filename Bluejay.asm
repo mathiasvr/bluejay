@@ -870,18 +870,15 @@ t1_int_exit_no_int:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t2_int:	; Happens every 32ms
-	push	PSW			; Preserve registers through interrupt
 	push	ACC
 	clr	TMR2CN0_TF2H				; Clear interrupt flag
 	inc	Timer2_X
+
 IF MCU_48MHZ == 1
 	jnb	Flag_CLOCK_SET_AT_48MHZ, t2_int_start
 
 	; Check skip variable
-	jnb	Flag_SKIP_T2_INT, t2_int_start	; Execute this interrupt
-
-	clr	Flag_SKIP_T2_INT
-	sjmp	t2_int_exit
+	jbc	Flag_SKIP_T2_INT, t2_int_exit	; Skip this interrupt
 
 t2_int_start:
 	setb	Flag_SKIP_T2_INT			; Skip next interrupt
@@ -889,30 +886,27 @@ ENDIF
 	; Update RC pulse timeout counter
 	mov	A, Rcp_Timeout_Cntd			; RC pulse timeout count zero?
 	jz	($+4)					; Yes - do not decrement
-
 	dec	Rcp_Timeout_Cntd			; No decrement
 
 	; Check RC pulse against stop value
-	clr	C
 	mov	A, New_Rcp				; Load new pulse value
 	jz	t2_int_rcp_stop			; Check if pulse is below stop value
 
 	; RC pulse higher than stop value, reset stop counter
 	mov	Rcp_Stop_Cnt, #0			; Reset rcp stop counter
+
 	sjmp	t2_int_exit
 
 t2_int_rcp_stop:
 	; RC pulse less than stop value
-	mov	A, Rcp_Stop_Cnt			; Increment stop counter
-	add	A, #1
-	mov	Rcp_Stop_Cnt, A
-	jnc	($+5)					; Branch if counter has not wrapped
+	inc	Rcp_Stop_Cnt				; Increment stop counter
 
-	mov	Rcp_Stop_Cnt, #0FFh			; Set stop counter to max
+	mov	A, Rcp_Stop_Cnt
+	jnz	($+4)					; Branch if counter has not wrapped
+	dec	Rcp_Stop_Cnt				; Set stop counter to max
 
 t2_int_exit:
 	pop	ACC						; Restore preserved registers
-	pop	PSW
 	reti
 
 
