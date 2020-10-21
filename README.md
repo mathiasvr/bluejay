@@ -23,3 +23,5 @@ A couple of important features that is planned to be implemented:
 
 ## Flashing ESCs
 The Bluejay firmware can be flashed to BLHeli_S compatible ESCs using BLHeli Configurator.
+
+All releases can be found in the [releases](https://github.com/mathiasvr/Bluejay/releases) section.
