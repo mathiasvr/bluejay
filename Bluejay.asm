@@ -627,14 +627,11 @@ t1_normal_range:
 	mov	Temp4, A
 	mov	A, Temp3
 	mov	Temp5, A
-	jb	Flags2.RCP_DIR_REV, t1_int_bidir_rev_chk	; If same direction - branch
 
 	setb	Flags2.RCP_DIR_REV
 	sjmp	t1_int_bidir_rev_chk
 
 t1_int_bidir_fwd:
-	jnb	Flags2.RCP_DIR_REV, t1_int_bidir_rev_chk	; If same direction - branch
-
 	clr	Flags2.RCP_DIR_REV
 
 t1_int_bidir_rev_chk:
