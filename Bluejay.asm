@@ -2003,8 +2003,7 @@ IF MCU_48MHZ == 1
 	rlc	A
 	mov	Temp2, A
 ENDIF
-	jnb	Flags1.HIGH_RPM, ($+6)		; Branch if high rpm
-	sjmp	calc_new_wait_times_fast
+	jb	Flags1.HIGH_RPM, calc_new_wait_times_fast	; Branch if high rpm
 
 	mov	A, Temp1					; Copy values
 	mov	Temp3, A
@@ -3665,9 +3664,7 @@ run6:
 
 direct_start_check_rcp:
 	mov	A, New_Rcp				; Load new pulse value
-	jz	($+5)					; Check if pulse is below stop value
-
-	sjmp	run1						; Continue to run
+	jnz	run1						; If pulse is above stop value - Continue to run
 
 	ajmp	run_to_wait_for_power_on
 
@@ -3693,12 +3690,10 @@ initial_run_check_startup_rot:
 	jb	Flags3.PGM_BIDIR, initial_run_continue_run	; Check if bidirectional operation
 
 	mov	A, New_Rcp				; Load new pulse value
-	jz	($+5)					; Check if pulse is below stop value
+	jz	run_to_wait_for_power_on		; Check if pulse is below stop value
 
 initial_run_continue_run:
 	ajmp	run1						; Continue to run
-
-	sjmp	run_to_wait_for_power_on
 
 initial_run_phase_done:
 	; Reset stall count
@@ -3768,8 +3763,7 @@ run6_brake_done:
 run_to_wait_for_power_on_fail:
 	inc	Stall_Cnt					; Increment stall count
 	mov	A, New_Rcp				; Check if RCP is zero, then it is a normal stop
-	jz	run_to_wait_for_power_on
-	sjmp	run_to_wait_for_power_on_stall_done
+	jnz	run_to_wait_for_power_on_stall_done
 
 run_to_wait_for_power_on:
 	mov	Stall_Cnt, #0
