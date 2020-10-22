@@ -553,11 +553,11 @@ t1_int_outside_range:
 	mov	Dshot_Cmd, A				; Clear DShot command
 	mov	Dshot_Cmd_Cnt, A			; Clear DShot command count
 
-	ajmp	t1_int_dshot_no_tlm			; Exit without reseting timeout
+	ajmp	t1_int_exit_no_tlm			; Exit without reseting timeout
 
 t1_int_exit_timeout:
 	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
-	ajmp	t1_int_dshot_no_tlm
+	ajmp	t1_int_exit_no_tlm
 
 t1_int_decode_checksum:
 	; Decode DShot data checksum
@@ -837,16 +837,16 @@ ENDIF
 	; Prepare DShot telemetry
 IF MCU_48MHZ == 1
 	; Only use telemetry for compatible clock frequency
-	jnb	Flags3.CLOCK_SET_AT_48MHZ, t1_int_dshot_no_tlm
+	jnb	Flags3.CLOCK_SET_AT_48MHZ, t1_int_exit_no_tlm
 ENDIF
-	jnb	Flags2.RCP_DSHOT_INVERTED, t1_int_dshot_no_tlm
+	jnb	Flags2.RCP_DSHOT_INVERTED, t1_int_exit_no_tlm
 	call	dshot_tlm_create_packet
 	
 	mov	Temp1, #0						; Set pointer to start
 
 	sjmp	t1_int_exit_no_int
 
-t1_int_dshot_no_tlm:
+t1_int_exit_no_tlm:
 	mov	Temp1, #0						; Set pointer to start
 	setb	IE_EX0						; Enable int0 interrupts
 	setb	IE_EX1						; Enable int1 interrupts
