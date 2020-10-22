@@ -1480,21 +1480,6 @@ set_pwm_limit_high_rpm_store:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Start ADC conversion
-;
-; No assumptions
-;
-; Start conversion used for measuring power supply voltage
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-start_adc_conversion:
-	; Start adc
-	Start_Adc
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
 ; Check temperature, power supply voltage and limit power
 ;
 ; No assumptions
@@ -3497,7 +3482,7 @@ init_start:
 	;**** **** **** **** ****
 	mov	Adc_Conversion_Cnt, #8			; Make sure a temp reading is done
 	call	wait1ms
-	call	start_adc_conversion
+	Start_Adc							; Start adc conversion
 read_initial_temp:
 	jnb	ADC0CN0_ADINT, read_initial_temp
 	Read_Adc_Result					; Read initial temperature
@@ -3629,7 +3614,7 @@ run5:
 ; Run 6 = B(p-on) + A(n-pwm) - comparator C evaluated
 ; Out_cC changes from high to low
 run6:
-	call	start_adc_conversion
+	Start_Adc	; Start adc conversion
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
