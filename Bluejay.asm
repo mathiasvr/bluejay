@@ -646,6 +646,7 @@ t1_int_bidir_rev_chk:
 	mov	A, Temp5
 	rlc	A
 	mov	Temp5, A
+
 t1_int_not_bidir:
 	; Generate 4/256
 	mov	A, Temp5
@@ -1069,77 +1070,77 @@ dshot_gcr_encode_0_11001:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B,	DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_1_11011:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B,	DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_2_10010:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
-	mov	B,	DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_3_10011:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
-	mov	B,	DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_4_11101:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	mov		B, DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_5_10101:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B,	DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_6_10110:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B,	DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_7_10111:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B,	DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_8_11010:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B,	DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_9_01001:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
-	mov	B,	DShot_GCR_Pulse_Time_2
+	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 dshot_gcr_encode_A_01010:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B,	DShot_GCR_Pulse_Time_2
+	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 dshot_gcr_encode_B_01011:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B,	DShot_GCR_Pulse_Time_2
+	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 dshot_gcr_encode_C_11110:
 	DShot_GCR_Get_Time
@@ -1147,27 +1148,27 @@ dshot_gcr_encode_C_11110:
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B,	DShot_GCR_Pulse_Time_1
+	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 dshot_gcr_encode_D_01101:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B,	DShot_GCR_Pulse_Time_2
+	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 dshot_gcr_encode_E_01110:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B,	DShot_GCR_Pulse_Time_2
+	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 dshot_gcr_encode_F_01111:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B,	DShot_GCR_Pulse_Time_2
+	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 
 
@@ -2688,8 +2689,8 @@ beep_cpwmfet_off:
 	mov	Temp1, A
 beep_off:	; Fets off loop
 	djnz	ACC, $
-	djnz	Temp1,	beep_off
-	djnz	Temp4,	beep
+	djnz	Temp1, beep_off
+	djnz	Temp4, beep
 	BcomFET_off		; BcomFET off
 	ret
 
@@ -3510,12 +3511,14 @@ read_initial_temp:
 	mov	Current_Average_Temp, Temp1		; Set initial average temperature
 	call	check_temp_voltage_and_limit_power
 	mov	Adc_Conversion_Cnt, #8			; Make sure a temp reading is done next time
+
 	; Set up start operating conditions
 	clr	IE_EA						; Disable interrupts
 	call	set_startup_pwm
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
 	setb	IE_EA
+
 	; Begin startup sequence
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_48MHz
