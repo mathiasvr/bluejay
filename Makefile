@@ -92,7 +92,8 @@ $(foreach _e,$(TARGETS), \
 $(OUTPUT_DIR)/%.OMF : $(OUTPUT_DIR)/%.OBJ
 	$(eval LOG         := $(LOG_DIR)/$(basename $(notdir $@)).log)
 	@echo "LX51 : linking $< to $@"
-	@$(LX51) "$<" TO "$@" "$(LX51_FLAGS)" >> $(LOG) 2>&1; test $$? -lt 2 || tail $(LOG)
+#	# Linking should produce exactly 1 warning
+	@$(LX51) "$<" TO "$@" "$(LX51_FLAGS)" >> $(LOG) 2>&1; test $$? -lt 2 && grep -q "1 WARNING" $(LOG) || tail $(LOG)
 
 $(OUTPUT_DIR_HEX)/%.hex : $(OUTPUT_DIR)/%.OMF
 	$(eval LOG         := $(LOG_DIR)/$(basename $(notdir $@)).log)
