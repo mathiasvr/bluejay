@@ -1290,10 +1290,11 @@ dshot_12bit_encode:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 
-dshot_tlm_create_packet:
-	push	PSW
-	mov	PSW, #10h	; Select register bank 2
+; dshot_tlm_create_packet:
+; 	push	PSW
+; 	mov	PSW, #10h	; Select register bank 2
 
+dshot_packet_stage_1:
 	; Read commutation period
 	clr	IE_EA
 	mov	Tlm_Data_H, Comm_Period4x_H
@@ -1319,6 +1320,12 @@ dshot_tlm_create_packet:
 	addc	A, Tlm_Data_H
 	mov	Tlm_Data_H, A
 
+	inc	Temp5
+	pop	PSW
+	ret
+dshot_packet_stage_2:
+	mov	A, Tlm_Data_H
+
 	; 12-bit encode telemetry data
 	jnz	dshot_12bit_encode
 	mov	A, Tlm_Data_L				; Already 12-bit
@@ -1330,6 +1337,12 @@ dshot_tlm_create_packet:
 	mov	Tlm_Data_L, A
 
 dshot_tlm_12bit_encoded:
+	inc	Temp5
+	pop	PSW
+	ret
+dshot_packet_stage_3:
+	mov	A, Tlm_Data_L
+
 	; Compute inverted xor checksum (4-bit)
 	swap	A
 	xrl	A, Tlm_Data_L
@@ -1342,20 +1355,61 @@ dshot_tlm_12bit_encoded:
 
 	call	dshot_gcr_encode			; GCR encode lowest 4-bit of A (store through Temp1)
 
+	mov	Temp6, B
+	inc	Temp5
+	pop	PSW
+	ret
+dshot_packet_stage_4:
+	mov	B, Temp6
+
 	mov	A, Tlm_Data_L
 	call	dshot_gcr_encode
+
+	mov	Temp6, B
+	inc	Temp5
+	pop	PSW
+	ret
+dshot_packet_stage_5:
+	mov	B, Temp6
 
 	mov	A, Tlm_Data_L
 	swap	A
 	call	dshot_gcr_encode
+
+	mov	Temp6, B
+	inc	Temp5
+	pop	PSW
+	ret
+dshot_packet_stage_6:
+	mov	B, Temp6
 
 	mov	A, Tlm_Data_H
 	call	dshot_gcr_encode
 
 	Push_Reg	Temp1, B				; Initial transition time
 
+	mov	Temp5, #0
+	setb	Flags0.PACKET_PENDING
+
 	pop	PSW
 	ret
+
+
+dshot_packet_factory:
+	push	PSW
+	mov	PSW, #10h	; Select register bank 2
+
+	mov	A, Temp5	; dshot_packet_stage
+	rl	A		; multiply by 2 to match jump offsets
+	mov	DPTR, #dshot_packet_stage_jump_table
+	jmp	@A+DPTR
+dshot_packet_stage_jump_table:
+	ajmp	dshot_packet_stage_1
+	ajmp	dshot_packet_stage_2
+	ajmp	dshot_packet_stage_3
+	ajmp	dshot_packet_stage_4
+	ajmp	dshot_packet_stage_5
+	ajmp	dshot_packet_stage_6
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1960,10 +2014,13 @@ wait_advance_timing:
 
 	; DShot telemetry
 	jb	Flags0.PACKET_PENDING, wait_advance_timing_loop
-	clr	Flags0.PACKET_PENDING
 	jb	Flags0.TLM_ACTIVE, wait_advance_timing_loop
-	call	dshot_tlm_create_packet
-	setb	Flags0.PACKET_PENDING
+
+wait_advance_timing_loop2:
+	call	dshot_packet_factory
+	jb	Flags0.PACKET_PENDING, wait_advance_timing_loop
+	jnb	Flags0.T3_PENDING, ($+5)
+	sjmp	wait_advance_timing_loop2
 
 wait_advance_timing_loop:
 	jnb	Flags0.T3_PENDING, ($+5)
