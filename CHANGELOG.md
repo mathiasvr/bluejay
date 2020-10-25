@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.1](https://github.com/mathiasvr/bluejay/compare/v0.2.0...v0.2.1) (2020-10-25)
+
+
+### Bug Fixes
+
+* Reduce telemetry commutation interference ([9e95239](https://github.com/mathiasvr/bluejay/commit/9e95239c4a99694a6923d3ddf24dd99d2e47dcda))
+
+
+### Performance Improvements
+
+* Optimize some jumps ([a23c3b8](https://github.com/mathiasvr/bluejay/commit/a23c3b8372bc3022ba1f00490c198a8fc85b35af))
+* Remove adc conversion call ([1d69c07](https://github.com/mathiasvr/bluejay/commit/1d69c071f74ed4459f83c6a462ef812f94e23775))
+* Remove redundant instruction in telemetry code ([753bb73](https://github.com/mathiasvr/bluejay/commit/753bb73f80c428d434a459f9397914aea385906c))
+* Remove rendundant jumps ([9bd8ffe](https://github.com/mathiasvr/bluejay/commit/9bd8ffe6cc40b5539dfe73a7b9ef6681b6e62c43))
+
 ## [0.2.0](https://github.com/mathiasvr/bluejay/compare/v0.1.0...v0.2.0) (2020-10-21)
 First version with **Bluejay** as project name.
 
