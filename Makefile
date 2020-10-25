@@ -2,7 +2,7 @@
 REVISION ?= v0.2.1
 
 # targets
-TARGETS		= A B C D E F G H I J K L M N O P Q R S T U V W
+TARGETS			= A B C D E F G H I J K L M N O P Q R S T U V W
 MCUS			= H L
 FETON_DELAYS	= 0 5 10 15 20 25 30 40 50 70 90
 
@@ -17,12 +17,12 @@ WINE_BIN		?= /usr/local/bin/wine
 KEIL_PATH		?= ~/Downloads/keil_8051/9.60/BIN
 
 # directory config
-OUTPUT_DIR	?= build
+OUTPUT_DIR		?= build
 OUTPUT_DIR_HEX	?= $(OUTPUT_DIR)/hex
-LOG_DIR		?= $(OUTPUT_DIR)/log
+LOG_DIR			?= $(OUTPUT_DIR)/log
 
 # define the assembler/linker scripts
-AX51_BIN =$(KEIL_PATH)/AX51.exe
+AX51_BIN = $(KEIL_PATH)/AX51.exe
 LX51_BIN = $(KEIL_PATH)/LX51.exe
 OX51_BIN = $(KEIL_PATH)/Ohx51.exe
 AX51 = $(WINE_BIN) $(AX51_BIN)
