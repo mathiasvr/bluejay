@@ -153,8 +153,8 @@ Flags0:					DS	1		; State flags. Reset upon init_start
 T3_PENDING				EQU	0		; Timer 3 pending flag
 DEMAG_DETECTED				EQU	1		; Set when excessive demag time is detected
 COMP_TIMED_OUT				EQU	2		; Set when comparator reading timed out
-;						EQU	3
-;						EQU	4
+TLM_ACTIVE				EQU	3		; DShot telemetry data is currently being transmitted
+PACKET_PENDING				EQU	4		; DShot telemetry data packet is ready to be sent
 ;						EQU	5
 ;						EQU	6
 ;						EQU	7
@@ -185,7 +185,7 @@ PGM_BIDIR_REV				EQU	1		; Programmed bidirectional direction. 0=normal, 1=revers
 PGM_BIDIR					EQU	2		; Programmed bidirectional operation. 0=normal, 1=bidirectional
 SKIP_T2_INT				EQU	3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
 CLOCK_SET_AT_48MHZ			EQU	4		; Set if 48MHz MCUs run at 48MHz
-;DSHOT_TLM_ACTIVE			EQU	5 		; DShot telemetry data is currently being transmitted
+;						EQU	5
 ;						EQU	6
 ;						EQU	7
 
@@ -457,7 +457,9 @@ t0_int_dshot_tlm_finish:
 
 	clr	IE_ET0			; Disable timer 0 interrupts
 
-	mov	CKCON0, Temp2		; Restore normal DShot timer 0/1 clock settings
+	; todo: dshot150
+	;mov	CKCON0, Temp2		; Restore normal DShot timer 0/1 clock settings
+	mov	CKCON0, #0Ch
 	mov	TMOD, #0AAh		; Timer 0/1 gated by INT0/1
 
 	clr	TCON_IE0			; Clear int0 pending flag
@@ -468,6 +470,9 @@ t0_int_dshot_tlm_finish:
 	setb	IE_EX0			; Enable int0 interrupts
 	setb	IE_EX1			; Enable int1 interrupts
 	Enable_PCA_Interrupt	; Enable pca interrupts
+
+	clr	Flags0.TLM_ACTIVE
+	clr	Flags0.PACKET_PENDING
 
 	pop	PSW
 	reti
@@ -838,8 +843,22 @@ IF MCU_48MHZ == 1
 	jnb	Flags3.CLOCK_SET_AT_48MHZ, t1_int_exit_no_tlm
 ENDIF
 	jnb	Flags2.RCP_DSHOT_INVERTED, t1_int_exit_no_tlm
-	call	dshot_tlm_create_packet
-	
+	jnb	Flags0.PACKET_PENDING, t1_int_exit_no_tlm
+	setb	Flags0.TLM_ACTIVE
+	;Prepare timer 0 for sending telemetry data
+	mov	TL0, #DSHOT_TLM_START_DELAY		; Timer 0 will start tlm after this delay
+	; todo: dshot150
+	;mov	Temp2, CKCON0					; Save value to restore later
+	mov	CKCON0, #01h					; Timer 0 is system clock divided by 4
+	mov	TMOD, #0A2h					; Timer 0 runs free not gated by INT0
+
+	clr	TCON_TF0						; Clear timer 0 overflow flag
+	setb	IE_ET0						; Enable timer 0 interrupts
+
+	; Configure RTX_PIN for digital output
+	setb	RTX_PORT.RTX_PIN				; Default to high level
+	orl	RTX_MDOUT, #(1 SHL RTX_PIN)		; Set output mode to push-pull
+
 	mov	Temp1, #0						; Set pointer to start
 
 	sjmp	t1_int_exit_no_int
@@ -1334,19 +1353,6 @@ dshot_tlm_12bit_encoded:
 	call	dshot_gcr_encode
 
 	Push_Reg	Temp1, B				; Initial transition time
-
-	; Prepare timer 0 for sending telemetry data
-	mov	TL0, #DSHOT_TLM_START_DELAY	; Timer 0 will start tlm after this delay
-	mov	Temp2, CKCON0				; Save value to restore later
-	mov	CKCON0, #01h				; Timer 0 is system clock divided by 4
-	mov	TMOD, #0A2h				; Timer 0 runs free not gated by INT0
-
-	clr	TCON_TF0					; Clear timer 0 overflow flag
-	setb	IE_ET0					; Enable timer 0 interrupts
-
-	; Configure RTX_PIN for digital output
-	setb	RTX_PORT.RTX_PIN			; Default to high level
-	orl	RTX_MDOUT, #(1 SHL RTX_PIN)	; Set output mode to push-pull
 
 	pop	PSW
 	ret
@@ -1951,8 +1957,17 @@ calc_new_wait_times_fast_done:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_advance_timing:
+
+	; DShot telemetry
+	jb	Flags0.PACKET_PENDING, wait_advance_timing_loop
+	clr	Flags0.PACKET_PENDING
+	jb	Flags0.TLM_ACTIVE, wait_advance_timing_loop
+	call	dshot_tlm_create_packet
+	setb	Flags0.PACKET_PENDING
+
+wait_advance_timing_loop:
 	jnb	Flags0.T3_PENDING, ($+5)
-	sjmp	wait_advance_timing
+	sjmp	wait_advance_timing_loop
 
 	; Setup next wait time
 	mov	TMR3RLL, Wt_ZC_Tout_Start_L
@@ -3060,29 +3075,30 @@ ENDIF
 	call	wait200ms
 
 	; Setup variables for DShot150
-IF MCU_48MHZ == 1
-	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot150)
-ELSE
-	mov	DShot_Timer_Preset, #192
-ENDIF
-	; TODO: we cannot currently support DShot150 on 48MHz (because of DShot_Frame_Length_Thr)
-IF MCU_48MHZ == 0
-	mov	DShot_Pwm_Thr, #10			; Load DShot qualification pwm threshold (for DShot150)
-	mov	DShot_Frame_Length_Thr, #160	; Load DShot frame length criteria
+	; TODO: dshot150 not supported for now
+; IF MCU_48MHZ == 1
+; 	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot150)
+; ELSE
+; 	mov	DShot_Timer_Preset, #192
+; ENDIF
+; 	; TODO: we cannot currently support DShot150 on 48MHz (because of DShot_Frame_Length_Thr)
+; IF MCU_48MHZ == 0
+; 	mov	DShot_Pwm_Thr, #10			; Load DShot qualification pwm threshold (for DShot150)
+; 	mov	DShot_Frame_Length_Thr, #160	; Load DShot frame length criteria
 
-	Set_DShot_Tlm_Bitrate	187500	; = 5/4 * 150000
+; 	Set_DShot_Tlm_Bitrate	187500	; = 5/4 * 150000
 
-	; Test whether signal is DShot150
-	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
-	call	wait100ms					; Wait for new RC pulse
-	mov	DShot_Pwm_Thr, #8			; Load DShot regular pwm threshold
-	clr	C
-	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
-	subb	A, #10
-	mov	Dshot_Cmd, #0
-	mov	Dshot_Cmd_Cnt, #0
-	jc	arming_begin
-ENDIF
+; 	; Test whether signal is DShot150
+; 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
+; 	call	wait100ms					; Wait for new RC pulse
+; 	mov	DShot_Pwm_Thr, #8			; Load DShot regular pwm threshold
+; 	clr	C
+; 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
+; 	subb	A, #10
+; 	mov	Dshot_Cmd, #0
+; 	mov	Dshot_Cmd_Cnt, #0
+; 	jc	arming_begin
+; ENDIF
 
 	mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot300/600)
 
