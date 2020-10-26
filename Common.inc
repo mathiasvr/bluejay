@@ -43,96 +43,51 @@ ENDIF
 ; ESC selection statements
 IF ESCNO == A_
 $include (targets/A.inc)	; Select pinout A
-ENDIF
-
-IF ESCNO == B_
+ELSEIF ESCNO == B_
 $include (targets/B.inc)	; Select pinout B
-ENDIF
-
-IF ESCNO == C_
+ELSEIF ESCNO == C_
 $include (targets/C.inc)	; Select pinout C
-ENDIF
-
-IF ESCNO == D_
+ELSEIF ESCNO == D_
 $include (targets/D.inc)	; Select pinout D
-ENDIF
-
-IF ESCNO == E_
+ELSEIF ESCNO == E_
 $include (targets/E.inc)	; Select pinout E
-ENDIF
-
-IF ESCNO == F_
+ELSEIF ESCNO == F_
 $include (targets/F.inc)	; Select pinout F
-ENDIF
-
-IF ESCNO == G_
+ELSEIF ESCNO == G_
 $include (targets/G.inc)	; Select pinout G
-ENDIF
-
-IF ESCNO == H_
+ELSEIF ESCNO == H_
 $include (targets/H.inc)	; Select pinout H
-ENDIF
-
-IF ESCNO == I_
+ELSEIF ESCNO == I_
 $include (targets/I.inc)	; Select pinout I
-ENDIF
-
-IF ESCNO == J_
+ELSEIF ESCNO == J_
 $include (targets/J.inc)	; Select pinout J
-ENDIF
-
-IF ESCNO == K_
+ELSEIF ESCNO == K_
 $include (targets/K.inc)	; Select pinout K
-ENDIF
-
-IF ESCNO == L_
+ELSEIF ESCNO == L_
 $include (targets/L.inc)	; Select pinout L
-ENDIF
-
-IF ESCNO == M_
+ELSEIF ESCNO == M_
 $include (targets/M.inc)	; Select pinout M
-ENDIF
-
-IF ESCNO == N_
+ELSEIF ESCNO == N_
 $include (targets/N.inc)	; Select pinout N
-ENDIF
-
-IF ESCNO == O_
+ELSEIF ESCNO == O_
 $include (targets/O.inc)	; Select pinout O
-ENDIF
-
-IF ESCNO == P_
+ELSEIF ESCNO == P_
 $include (targets/P.inc)	; Select pinout P
-ENDIF
-
-IF ESCNO == Q_
+ELSEIF ESCNO == Q_
 $include (targets/Q.inc)	; Select pinout Q
-ENDIF
-
-IF ESCNO == R_
+ELSEIF ESCNO == R_
 $include (targets/R.inc)	; Select pinout R
-ENDIF
-
-IF ESCNO == S_
+ELSEIF ESCNO == S_
 $include (targets/S.inc)	; Select pinout S
-ENDIF
-
-IF ESCNO == T_
+ELSEIF ESCNO == T_
 $include (targets/T.inc)	; Select pinout T
-ENDIF
-
-IF ESCNO == U_
+ELSEIF ESCNO == U_
 $include (targets/U.inc)	; Select pinout U
-ENDIF
-
-IF ESCNO == V_
+ELSEIF ESCNO == V_
 $include (targets/V.inc)	; Select pinout V
-ENDIF
-
-IF ESCNO == W_
+ELSEIF ESCNO == W_
 $include (targets/W.inc)	; Select pinout W
 ENDIF
-
 
 ;**** **** **** **** ****
 ; Constant definitions
