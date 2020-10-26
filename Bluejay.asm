@@ -1020,19 +1020,27 @@ pca_int_hi_pwm:
 	jb	ACC.(PCA_BIT-1), pca_int_exit
 
 pca_int_set_pwm:
-	Set_Power_Pwm_Regs
-	Set_Damp_Pwm_Regs
-	mov	Current_Power_Pwm_Reg_H, Power_Pwm_Reg_H
-	Disable_COVF_Interrupt
+ENDIF
 
-ELSE								; EN/PWM style drivers
-	Set_Power_Pwm_Regs
+	; Set power pwm registers
+	mov	PCA0_POWER_L, Power_Pwm_Reg_L
+	mov	PCA0_POWER_H, Power_Pwm_Reg_H
+
+IF FETON_DELAY != 0
+	; Set damp pwm registers
+	mov	PCA0_DAMP_L, Damp_Pwm_Reg_L
+	mov	PCA0_DAMP_H, Damp_Pwm_Reg_H
+ENDIF
+
 	mov	Current_Power_Pwm_Reg_H, Power_Pwm_Reg_H
+
 	Disable_COVF_Interrupt
+IF FETON_DELAY == 0					; EN/PWM style drivers
 	Disable_CCF_Interrupt
 ENDIF
 
 	anl	EIE1, #0EFh				; Pwm updated, disable pca interrupts
+
 pca_int_exit:
 	Clear_COVF_Interrupt
 IF FETON_DELAY == 0
