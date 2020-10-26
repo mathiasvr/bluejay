@@ -466,7 +466,6 @@ t0_int_dshot_tlm_finish:
 	clr	TCON_IE1			; Clear int1 pending flag
 
 	mov	TL0, #0			; Reset timer 0 count
-
 	setb	IE_EX0			; Enable int0 interrupts
 	setb	IE_EX1			; Enable int1 interrupts
 	Enable_PCA_Interrupt	; Enable pca interrupts
@@ -500,7 +499,6 @@ t1_int:
 	mov	Temp3, TMR2H
 	setb	TMR2CN0_TR2				; Timer 2 enabled
 
-	mov	TL0, #0					; Reset timer 0
 	; Check frame time length
 	clr	C
 	mov	A, Temp2
@@ -521,9 +519,9 @@ t1_int:
 	cjne	Temp1, #16, t1_int_frame_fail	; Read current pointer
 
 	; Decode transmitted data
-	mov	Temp6, #0					; Reset timestamp
 	mov	Temp1, #0					; Set pointer
 	mov	Temp2, DShot_Pwm_Thr		; DShot pulse width criteria
+	mov	Temp6, #0					; Reset timestamp
 
 	; Decode DShot data Msb. Use more code space to save time (by not using loop)
 	Decode_DShot_2Bit	Temp5, t1_int_frame_fail
@@ -865,6 +863,7 @@ ENDIF
 
 t1_int_exit_no_tlm:
 	mov	Temp1, #0						; Set pointer to start
+	mov	TL0, #0						; Reset timer 0
 	setb	IE_EX0						; Enable int0 interrupts
 	setb	IE_EX1						; Enable int1 interrupts
 	Enable_PCA_Interrupt				; Enable pca interrupts
