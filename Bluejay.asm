@@ -1199,7 +1199,7 @@ dshot_gcr_encode_F_01111:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 dshot_12bit_7:
-	mov	A, Tlm_Data_H
+	;mov	A, Tlm_Data_H
 	mov	C, Tlm_Data_L.7
 	rlc	A
 	mov	Tlm_Data_L, A
@@ -1207,7 +1207,7 @@ dshot_12bit_7:
 	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_6:
-	mov	A, Tlm_Data_H
+	;mov	A, Tlm_Data_H
 	mov	C, Tlm_Data_L.7
 	rlc	A
 	mov	C, Tlm_Data_L.6
@@ -1217,7 +1217,7 @@ dshot_12bit_6:
 	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_5:
-	mov	A, Tlm_Data_H
+	;mov	A, Tlm_Data_H
 	mov	C, Tlm_Data_L.7
 	rlc	A
 	mov	C, Tlm_Data_L.6
@@ -1304,19 +1304,19 @@ dshot_packet_stage_1:
 	mov	A, Tlm_Data_L
 	mov	C, Tlm_Data_H.0
 	rrc	A
-	mov	Tlm_Data_L, A
+	mov	Temp2, A
 	mov	C, Tlm_Data_H.1
 	rrc	A
-	add	A, Tlm_Data_L
+	add	A, Temp2
 	mov	Tlm_Data_L, A
 
 	mov	A, Tlm_Data_H
 	clr	C
 	rrc	A
-	mov	Tlm_Data_H, A
+	mov	Temp2, A
 	clr	C
 	rrc	A
-	addc	A, Tlm_Data_H
+	addc	A, Temp2
 	mov	Tlm_Data_H, A
 
 	inc	Temp5
