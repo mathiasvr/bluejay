@@ -7,9 +7,9 @@ MCUS			= H L
 FETON_DELAYS	= 0 5 10 15 20 25 30 40 50 70 90
 
 # example single target
-VARIANT		?= F
-MCU			?= H
-FETON_DELAY	?= 40
+TARGET			?= F
+MCU				?= H
+FETON_DELAY		?= 40
 
 WINE_BIN		?= /usr/local/bin/wine
 
@@ -31,6 +31,7 @@ OX51 = $(WINE_BIN) $(OX51_BIN)
 
 # set up flags
 AX51_FLAGS = DEBUG NOMOD51
+#AX51_FLAGS = NOMOD51 NOLIST
 LX51_FLAGS =
 
 # set up sources
@@ -40,8 +41,8 @@ ASM_INC = $(TARGETS:%=targets/%.inc) Common.inc BLHeliBootLoad.inc BLHeliPgm.inc
 # check that wine/simplicity studio is available
 EXECUTABLES = $(WINE_BIN) $(AX51_BIN) $(LX51_BIN) $(OX51_BIN)
 DUMMYVAR := $(foreach exec, $(EXECUTABLES), \
-			$(if $(wildcard $(exec)),found, \
-			$(error "Could not find $(exec). Make sure to set the correct paths to the simplicity install location")))
+				$(if $(wildcard $(exec)),found, \
+				$(error "Could not find $(exec). Make sure to set the correct paths to the simplicity install location")))
 
 # make sure the list of obj files is expanded twice
 .SECONDEXPANSION:
@@ -64,7 +65,8 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(REVISION).OBJ : $(ASM_SRC) $(ASM_INC)
 		"DEFINE(MCU_48MHZ=$(_MCU_48MHZ)) "\
 		"DEFINE(FETON_DELAY=$(_FETON_DELAY)) "\
 		"OBJECT($$@) "\
-		"$(AX51_FLAGS)" > $(_LOG) 2>&1; test $$$$? -lt 2 || tail $(_LOG)
+		"$(AX51_FLAGS)" > $(_LOG) 2>&1; test $$$$? -lt 2 || (mv ./Bluejay.LST $(OUTPUT_DIR)/; tail $(_LOG); exit 1)
+	@mv ./Bluejay.LST $(OUTPUT_DIR)/
 
 endef
 
@@ -74,13 +76,12 @@ EFM8_LOAD_BIN  ?= efm8load.py
 EFM8_LOAD_PORT ?= /dev/ttyUSB0
 EFM8_LOAD_BAUD ?= 57600
 
-SINGLE_TARGET_HEX = $(OUTPUT_DIR_HEX)/$(VARIANT)_$(MCU)_$(FETON_DELAY)_$(REVISION).hex
+SINGLE_TARGET_HEX = $(OUTPUT_DIR_HEX)/$(TARGET)_$(MCU)_$(FETON_DELAY)_$(REVISION).hex
 
 single_target : $(SINGLE_TARGET_HEX)
 
 all : $$(HEX_TARGETS)
 	@echo "\nbuild finished. built $(shell ls -l $(OUTPUT_DIR_HEX) | wc -l) hex targets\n"
-	@grep -q "\*\*\* ERROR" build/log/*.log; test $$? -ne 0
 
 # create all obj targets using macro expansion
 $(foreach _e,$(TARGETS), \
@@ -90,28 +91,27 @@ $(foreach _e,$(TARGETS), \
 
 
 $(OUTPUT_DIR)/%.OMF : $(OUTPUT_DIR)/%.OBJ
-	$(eval LOG         := $(LOG_DIR)/$(basename $(notdir $@)).log)
+	$(eval LOG := $(LOG_DIR)/$(basename $(notdir $@)).log)
 	@echo "LX51 : linking $< to $@"
 #	# Linking should produce exactly 1 warning
-	@$(LX51) "$<" TO "$@" "$(LX51_FLAGS)" >> $(LOG) 2>&1; test $$? -lt 2 && grep -q "1 WARNING" $(LOG) || tail $(LOG)
+	@$(LX51) "$<" TO "$@" "$(LX51_FLAGS)" >> $(LOG) 2>&1; test $$? -lt 2 && grep -q "1 WARNING" $(LOG) || (tail $(LOG); exit 1)
 
 $(OUTPUT_DIR_HEX)/%.hex : $(OUTPUT_DIR)/%.OMF
-	$(eval LOG         := $(LOG_DIR)/$(basename $(notdir $@)).log)
+	$(eval LOG := $(LOG_DIR)/$(basename $(notdir $@)).log)
 	@mkdir -p $(OUTPUT_DIR_HEX)
 	@echo "OHX  : generating hex file $@"
-	@$(OX51) "$<" "HEXFILE ($@)" >> $(LOG) 2>&1; test $$? -lt 2 || tail $(LOG)
-	@mv ./Bluejay.LST $(OUTPUT_DIR)/
+	@$(OX51) "$<" "HEXFILE ($@)" >> $(LOG) 2>&1; test $$? -lt 2 || (tail $(LOG); exit 1)
 
 help:
 	@echo ""
 	@echo "usage examples:"
-	@echo "================================================================="
+	@echo "================================================================"
 	@echo "make all                              # build all targets"
-	@echo "make VARIANT=A MCU=H FETON_DELAY=5    # to build a single target"
+	@echo "make TARGET=A MCU=H FETON_DELAY=5     # to build a single target"
 	@echo
 
 clean:
-	@rm -f $(OUTPUT_DIR)/*.{OBJ,MAP,LST}
+	@rm -f $(OUTPUT_DIR)/*.{OBJ,MAP,OMF,LST}
 
 efm8load: single_target
 	$(EFM8_LOAD_BIN) -p $(EFM8_LOAD_PORT) -b $(EFM8_LOAD_BAUD) -w $(SINGLE_TARGET_HEX)
