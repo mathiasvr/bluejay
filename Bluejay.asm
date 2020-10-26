@@ -72,41 +72,41 @@ $NOMOD51
 ;
 ;**** **** **** **** ****
 ; List of enumerated supported ESCs
-A_			EQU 1	; X  X  RC X  MC MB MA CC	X  X  Cc Cp Bc Bp Ac Ap
-B_			EQU 2	; X  X  RC X  MC MB MA CC	X  X  Ap Ac Bp Bc Cp Cc
-C_			EQU 3	; Ac Ap MC MB MA CC X  RC	X  X  X  X  Cc Cp Bc Bp
-D_			EQU 4	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Com fets inverted
-E_			EQU 5	; L1 L0 RC X  MC MB MA CC	X  L2 Cc Cp Bc Bp Ac Ap	A with LEDs
-F_			EQU 6	; X  X  RC X  MA MB MC CC	X  X  Cc Cp Bc Bp Ac Ap
-G_			EQU 7	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like D, but noninverted com fets
-H_			EQU 8	; RC X  X  X  MA MB CC MC	X  Ap Bp Cp X  Ac Bc Cc
-I_			EQU 9	; X  X  RC X  MC MB MA CC	X  X  Ac Bc Cc Ap Bp Cp
-J_			EQU 10	; L2 L1 L0 RC CC MB MC MA	X  X  Cc Bc Ac Cp Bp Ap	LEDs
-K_			EQU 11	; X  X  MC X  MB CC MA RC	X  X  Ap Bp Cp Cc Bc Ac	Com fets inverted
-L_			EQU 12	; X  X  RC X  CC MA MB MC	X  X  Ac Bc Cc Ap Bp Cp
-M_			EQU 13	; MA MC CC MB RC L0 X  X 	X  Cc Bc Ac Cp Bp Ap X	LED
-N_			EQU 14	; X  X  RC X  MC MB MA CC	X  X  Cp Cc Bp Bc Ap Ac
-O_			EQU 15	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like D, but low side pwm
-P_			EQU 16	; X  X  RC MA CC MB MC X 	X  Cc Bc Ac Cp Bp Ap X
-Q_			EQU 17	; Cp Bp Ap L1 L0 X  RC X 	X  MA MB MC CC Cc Bc Ac	LEDs
-R_			EQU 18	; X  X  RC X  MC MB MA CC	X  X  Ac Bc Cc Ap Bp Cp
-S_			EQU 19	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like O, but com fets inverted
-T_			EQU 20	; RC X  MA X  MB CC MC X 	X  X  Cp Bp Ap Ac Bc Cc
-U_			EQU 21	; MA MC CC MB RC L0 L1 L2	X  Cc Bc Ac Cp Bp Ap X	Like M, but with 3 LEDs
-V_			EQU 22	; Cc X  RC X  MC CC MB MA	X  Ap Ac Bp X  X  Bc Cp
-W_			EQU 23	; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
+A_			EQU	1	; X  X  RC X  MC MB MA CC	X  X  Cc Cp Bc Bp Ac Ap
+B_			EQU	2	; X  X  RC X  MC MB MA CC	X  X  Ap Ac Bp Bc Cp Cc
+C_			EQU	3	; Ac Ap MC MB MA CC X  RC	X  X  X  X  Cc Cp Bc Bp
+D_			EQU	4	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Com fets inverted
+E_			EQU	5	; L1 L0 RC X  MC MB MA CC	X  L2 Cc Cp Bc Bp Ac Ap	A with LEDs
+F_			EQU	6	; X  X  RC X  MA MB MC CC	X  X  Cc Cp Bc Bp Ac Ap
+G_			EQU	7	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like D, but noninverted com fets
+H_			EQU	8	; RC X  X  X  MA MB CC MC	X  Ap Bp Cp X  Ac Bc Cc
+I_			EQU	9	; X  X  RC X  MC MB MA CC	X  X  Ac Bc Cc Ap Bp Cp
+J_			EQU	10	; L2 L1 L0 RC CC MB MC MA	X  X  Cc Bc Ac Cp Bp Ap	LEDs
+K_			EQU	11	; X  X  MC X  MB CC MA RC	X  X  Ap Bp Cp Cc Bc Ac	Com fets inverted
+L_			EQU	12	; X  X  RC X  CC MA MB MC	X  X  Ac Bc Cc Ap Bp Cp
+M_			EQU	13	; MA MC CC MB RC L0 X  X 	X  Cc Bc Ac Cp Bp Ap X	LED
+N_			EQU	14	; X  X  RC X  MC MB MA CC	X  X  Cp Cc Bp Bc Ap Ac
+O_			EQU	15	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like D, but low side pwm
+P_			EQU	16	; X  X  RC MA CC MB MC X 	X  Cc Bc Ac Cp Bp Ap X
+Q_			EQU	17	; Cp Bp Ap L1 L0 X  RC X 	X  MA MB MC CC Cc Bc Ac	LEDs
+R_			EQU	18	; X  X  RC X  MC MB MA CC	X  X  Ac Bc Cc Ap Bp Cp
+S_			EQU	19	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like O, but com fets inverted
+T_			EQU	20	; RC X  MA X  MB CC MC X 	X  X  Cp Bp Ap Ac Bc Cc
+U_			EQU	21	; MA MC CC MB RC L0 L1 L2	X  Cc Bc Ac Cp Bp Ap X	Like M, but with 3 LEDs
+V_			EQU	22	; Cc X  RC X  MC CC MB MA	X  Ap Ac Bp X  X  Bc Cp
+W_			EQU	23	; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
 
 ;**** **** **** **** ****
 ; Select the port mapping to use (or unselect all for use with external batch compile file)
-;ESCNO EQU A_
+;ESCNO			EQU	A_
 
 ;**** **** **** **** ****
 ; Select the MCU type (or unselect for use with external batch compile file)
-;MCU_48MHZ EQU	0
+;MCU_48MHZ		EQU	0
 
 ;**** **** **** **** ****
 ; Select the fet deadtime (or unselect for use with external batch compile file)
-;FETON_DELAY EQU 15	; 20.4ns per step
+;FETON_DELAY		EQU	15	; 20.4ns per step
 
 
 $include (Common.inc)					; Include common source code for EFM8BBx based ESCs
@@ -114,19 +114,19 @@ $include (Common.inc)					; Include common source code for EFM8BBx based ESCs
 ;**** **** **** **** ****
 ; Programming defaults
 ;
-DEFAULT_PGM_STARTUP_PWR			EQU 9	; 1=0.031 2=0.047 3=0.063 4=0.094 5=0.125 6=0.188 7=0.25 8=0.38 9=0.50 10=0.75 11=1.00 12=1.25 13=1.50
-DEFAULT_PGM_COMM_TIMING			EQU 3	; 1=Low		2=MediumLow	3=Medium		4=MediumHigh	5=High
-DEFAULT_PGM_DEMAG_COMP			EQU 2	; 1=Disabled	2=Low		3=High
-DEFAULT_PGM_DIRECTION			EQU 1	; 1=Normal	2=Reversed	3=Bidir		4=Bidir rev
-DEFAULT_PGM_BEEP_STRENGTH		EQU 40	; Beep strength
-DEFAULT_PGM_BEACON_STRENGTH		EQU 80	; Beacon strength
-DEFAULT_PGM_BEACON_DELAY			EQU 4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
+DEFAULT_PGM_STARTUP_PWR			EQU	9	; 1=0.031 2=0.047 3=0.063 4=0.094 5=0.125 6=0.188 7=0.25 8=0.38 9=0.50 10=0.75 11=1.00 12=1.25 13=1.50
+DEFAULT_PGM_COMM_TIMING			EQU	3	; 1=Low		2=MediumLow	3=Medium		4=MediumHigh	5=High
+DEFAULT_PGM_DEMAG_COMP			EQU	2	; 1=Disabled	2=Low		3=High
+DEFAULT_PGM_DIRECTION			EQU	1	; 1=Normal	2=Reversed	3=Bidir		4=Bidir rev
+DEFAULT_PGM_BEEP_STRENGTH		EQU	40	; Beep strength
+DEFAULT_PGM_BEACON_STRENGTH		EQU	80	; Beacon strength
+DEFAULT_PGM_BEACON_DELAY			EQU	4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
 
 ; COMMON
-DEFAULT_PGM_ENABLE_TEMP_PROT		EQU 7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
-DEFAULT_PGM_ENABLE_POWER_PROT		EQU 1	; 1=Enabled	0=Disabled
-DEFAULT_PGM_BRAKE_ON_STOP		EQU 0	; 1=Enabled	0=Disabled
-DEFAULT_PGM_LED_CONTROL			EQU 0	; Byte for LED control. 2bits per LED, 0=Off, 1=On
+DEFAULT_PGM_ENABLE_TEMP_PROT		EQU	7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
+DEFAULT_PGM_ENABLE_POWER_PROT		EQU	1	; 1=Enabled	0=Disabled
+DEFAULT_PGM_BRAKE_ON_STOP		EQU	0	; 1=Enabled	0=Disabled
+DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2bits per LED, 0=Off, 1=On
 
 ;**** **** **** **** ****
 ; Temporary register definitions
@@ -140,9 +140,8 @@ Temp7		EQU	R6
 Temp8		EQU	R7
 
 ;**** **** **** **** ****
-; Register definitions
-DSEG AT 20h							; Variables segment
-
+; RAM definitions
+DSEG AT 20h							; Ram data segment, bit-addressable
 Bit_Access:				DS	1		; MUST BE AT THIS ADDRESS. Variable at bit accessible address (for non interrupt routines)
 Bit_Access_Int:			DS	1		; Variable at bit accessible address (for interrupts)
 
@@ -192,8 +191,6 @@ CLOCK_SET_AT_48MHZ			EQU	4		; Set if 48MHz MCUs run at 48MHz
 Tlm_Data_L:				DS	1		; DShot telemetry data low byte
 Tlm_Data_H:				DS	1		; DShot telemetry data high byte
 
-;**** **** **** **** ****
-; RAM definitions
 DSEG AT 30h							; Ram data segment, direct addressing
 Power_On_Wait_Cnt_L:		DS	1		; Power on wait counter (lo byte)
 Power_On_Wait_Cnt_H:		DS	1		; Power on wait counter (hi byte)
@@ -1008,15 +1005,15 @@ IF FETON_DELAY != 0					; HI/LO enable style drivers
 	mov	A, Current_Power_Pwm_Reg_H
 	jnb	ACC.PWR_H_BIT, pca_int_hi_pwm
 
-	mov	A, PCA0H
-	jb	ACC.PCA_BIT, pca_int_exit	; Power below 50%, update pca in the 0x00-0x0F range
+	mov	A, PCA0H					; Power below 50%, update pca in the 0x00-0x0F range
+	jb	ACC.PCA_BIT, pca_int_exit	; PWM edge selection bit (continue if up edge)
 	jb	ACC.(PCA_BIT-1), pca_int_exit
 
 	sjmp	pca_int_set_pwm
 
 pca_int_hi_pwm:
-	mov	A, PCA0H
-	jnb	ACC.PCA_BIT, pca_int_exit	; Power above 50%, update pca in the 0x20-0x2F range
+	mov	A, PCA0H					; Power above 50%, update pca in the 0x20-0x2F range
+	jnb	ACC.PCA_BIT, pca_int_exit	; PWM edge selection bit (continue if down edge)
 	jb	ACC.(PCA_BIT-1), pca_int_exit
 
 pca_int_set_pwm:
@@ -1098,6 +1095,7 @@ dshot_gcr_encode_0_11001:
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_1_11011:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
@@ -1105,18 +1103,21 @@ dshot_gcr_encode_1_11011:
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_2_10010:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_3_10011:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_4_11101:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
@@ -1124,12 +1125,14 @@ dshot_gcr_encode_4_11101:
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_5_10101:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_6_10110:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
@@ -1137,6 +1140,7 @@ dshot_gcr_encode_6_10110:
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_7_10111:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
@@ -1144,6 +1148,7 @@ dshot_gcr_encode_7_10111:
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_8_11010:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
@@ -1151,23 +1156,27 @@ dshot_gcr_encode_8_11010:
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_9_01001:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
+
 dshot_gcr_encode_A_01010:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
+
 dshot_gcr_encode_B_01011:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
+
 dshot_gcr_encode_C_11110:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
@@ -1176,12 +1185,14 @@ dshot_gcr_encode_C_11110:
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
+
 dshot_gcr_encode_D_01101:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
+
 dshot_gcr_encode_E_01110:
 	DShot_GCR_Get_Time
 	Push_Reg	Temp1, A
@@ -1189,6 +1200,7 @@ dshot_gcr_encode_E_01110:
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
+
 dshot_gcr_encode_F_01111:
 	Push_Reg	Temp1, B
 	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
@@ -1211,7 +1223,7 @@ dshot_12bit_7:
 	mov	C, Tlm_Data_L.7
 	rlc	A
 	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H,#0fh
+	mov	Tlm_Data_H, #0fh
 	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_6:
@@ -1221,7 +1233,7 @@ dshot_12bit_6:
 	mov	C, Tlm_Data_L.6
 	rlc	A
 	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H,#0dh
+	mov	Tlm_Data_H, #0dh
 	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_5:
@@ -1233,17 +1245,17 @@ dshot_12bit_5:
 	mov	C, Tlm_Data_L.5
 	rlc	A
 	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H,#0bh
+	mov	Tlm_Data_H, #0bh
 	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_4:
 	mov	A, Tlm_Data_L
-	anl	A,#0f0h
+	anl	A, #0f0h
 	clr	Tlm_Data_H.4
 	orl	A, Tlm_Data_H
 	swap	A
 	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H,#09h
+	mov	Tlm_Data_H, #09h
 	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_3:
@@ -1255,7 +1267,7 @@ dshot_12bit_3:
 	mov	C, Tlm_Data_H.2
 	rrc	A
 	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H,#07h
+	mov	Tlm_Data_H, #07h
 	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_2:
@@ -1265,7 +1277,7 @@ dshot_12bit_2:
 	mov	C, Tlm_Data_H.1
 	rrc	A
 	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H,#05h
+	mov	Tlm_Data_H, #05h
 	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_1:
@@ -1273,7 +1285,7 @@ dshot_12bit_1:
 	mov	C, Tlm_Data_H.0
 	rrc	A
 	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H,#03h
+	mov	Tlm_Data_H, #03h
 	ajmp	dshot_tlm_12bit_encoded
 
 dshot_12bit_encode:
@@ -1304,8 +1316,8 @@ dshot_12bit_encode:
 dshot_packet_stage_1:
 	; Read commutation period
 	clr	IE_EA
-	mov	Tlm_Data_H, Comm_Period4x_H
 	mov	Tlm_Data_L, Comm_Period4x_L
+	mov	Tlm_Data_H, Comm_Period4x_H
 	setb	IE_EA
 
 	; Multiply period by 3/4 (1/2 + 1/4)
@@ -3135,7 +3147,7 @@ ENDIF
 	mov	EIE1, #90h			; Enable timer 3 and PCA0 interrupts
 	mov	IP, #03h				; High priority to timer 0 and INT0 interrupts
 
-	setb	IE_EA			; Enable all interrupts
+	setb	IE_EA				; Enable all interrupts
 	call	wait200ms
 
 	; Setup variables for DShot150

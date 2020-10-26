@@ -51,12 +51,12 @@ OBJS =
 define MAKE_OBJ
 OBJS += $(1)_$(2)_$(3)_$(REVISION).OBJ
 $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(REVISION).OBJ : $(ASM_SRC) $(ASM_INC)
-	$(eval _ESC         := $(1))
-	$(eval _ESC_INT     := $(shell printf "%d" "'${_ESC}"))
-	$(eval _ESCNO       := $(shell echo $$(( $(_ESC_INT) - 65 + 1))))
-	$(eval _MCU_48MHZ   := $(subst L,0,$(subst H,1,$(2))))
-	$(eval _FETON_DELAY := $(3))
-	$(eval _LOG         := $(LOG_DIR)/$(1)_$(2)_$(3)_$(REVISION).log)
+	$(eval _ESC			:= $(1))
+	$(eval _ESC_INT		:= $(shell printf "%d" "'${_ESC}"))
+	$(eval _ESCNO		:= $(shell echo $$(( $(_ESC_INT) - 65 + 1))))
+	$(eval _MCU_48MHZ	:= $(subst L,0,$(subst H,1,$(2))))
+	$(eval _FETON_DELAY	:= $(3))
+	$(eval _LOG			:= $(LOG_DIR)/$(1)_$(2)_$(3)_$(REVISION).log)
 	@mkdir -p $(OUTPUT_DIR)
 	@mkdir -p $(LOG_DIR)
 	@echo "AX51 : $$@"

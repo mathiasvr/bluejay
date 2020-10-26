@@ -167,8 +167,8 @@ Decode_DShot_2Bit MACRO dest, decode_fail
 	mov	A, dest				; Shift bit into data byte
 	rlc	A
 	mov	dest, A
+	inc	Temp1				; Next bit
 
-	inc	Temp1					; Next bit
 	movx	A, @Temp1
 	mov	Temp6, A
 	clr	C
