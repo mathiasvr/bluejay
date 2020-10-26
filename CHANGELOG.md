@@ -49,9 +49,9 @@ First version with **Bluejay** as project name.
 * Remove legacy (non-DShot) protocols ([efde8c4](https://github.com/mathiasvr/bluejay/commit/efde8c430d5d256451af9b92b7fb4b5c73d8b9a4))
 
 ## [0.1.0](https://github.com/mathiasvr/bluejay/compare/b2a7afbfb86c67aafa7ce7f9fe54047175a1d50a...v0.1.0) (2020-10-18)
-Initial version adding DShot telemetry to BLHeli_S and a couple of DShot decoding optimizations.
+Initial version based on BLHeli_S revision 16.7.
 
-Telemetry encoding method credits to [JazzMaverick](https://github.com/JazzMaverick).
+- Telemetry encoding method credits to [JazzMaverick](https://github.com/JazzMaverick).
 
 ### Features
 
