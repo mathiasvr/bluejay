@@ -996,12 +996,10 @@ reti
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 pca_int:	; Used for setting pwm registers
 	clr	IE_EA
-	push	PSW						; Preserve registers through interrupt
 	push	ACC
-	mov	PSW, #8h					; Select register bank 1 for this interrupt
 
 IF FETON_DELAY != 0					; HI/LO enable style drivers
-	mov	Temp2, PCA0L				; Read low byte, to transfer high byte to holding register
+	mov	A, PCA0L					; Read low byte, to transfer high byte to holding register
 	mov	A, Current_Power_Pwm_Reg_H
 	jnb	ACC.PWR_H_BIT, pca_int_hi_pwm
 
@@ -1044,7 +1042,6 @@ IF FETON_DELAY == 0
 	Clear_CCF_Interrupt
 ENDIF
 	pop	ACC						; Restore preserved registers
-	pop	PSW
 	setb	IE_EA
 	reti
 
