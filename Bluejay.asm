@@ -396,17 +396,15 @@ ENDM
 
 IF FETON_DELAY != 0
 	IF MCU_48MHZ == 0
-		PCA_BIT	EQU	1
-		PWR_H_BIT	EQU	0
+		PWM_BITS_H	EQU	1
 	ELSE
-		PCA_BIT	EQU	2
-		PWR_H_BIT	EQU	1
+		PWM_BITS_H	EQU	2
 	ENDIF
 ELSE
 	IF MCU_48MHZ == 0
-		PWR_H_BIT	EQU	1
+		PWM_BITS_H	EQU	2
 	ELSE
-		PWR_H_BIT	EQU	2
+		PWM_BITS_H	EQU	3
 	ENDIF
 ENDIF
 
@@ -782,22 +780,18 @@ IF FETON_DELAY != 0
 ENDIF
 
 	mov	A, Temp5
-	cpl	A
-IF MCU_48MHZ == 0
-	anl	A, #3
-ELSE
-	anl	A, #7
-ENDIF
 IF FETON_DELAY != 0
 	rrc	A				; Scale to 10/9 bit pwm
 ENDIF
+	cpl	A
+	anl	A, #((1 SHL PWM_BITS_H) - 1)
 	mov	Temp3, A
 
 	mov	A, Temp4
-	cpl	A
 IF FETON_DELAY != 0
 	rrc	A				; Scale to 10/9 bit pwm
 ENDIF
+	cpl	A
 	mov	Temp2, A
 
 
@@ -1001,18 +995,18 @@ pca_int:	; Used for setting pwm registers
 IF FETON_DELAY != 0					; HI/LO enable style drivers
 	mov	A, PCA0L					; Read low byte, to transfer high byte to holding register
 	mov	A, Current_Power_Pwm_Reg_H
-	jnb	ACC.PWR_H_BIT, pca_int_hi_pwm
+	jnb	ACC.(PWM_BITS_H-1), pca_int_hi_pwm
 
 	mov	A, PCA0H					; Power below 50%, update pca in the 0x00-0x0F range
-	jb	ACC.PCA_BIT, pca_int_exit	; PWM edge selection bit (continue if up edge)
-	jb	ACC.(PCA_BIT-1), pca_int_exit
+	jb	ACC.PWM_BITS_H, pca_int_exit	; PWM edge selection bit (continue if up edge)
+	jb	ACC.(PWM_BITS_H-1), pca_int_exit
 
 	sjmp	pca_int_set_pwm
 
 pca_int_hi_pwm:
 	mov	A, PCA0H					; Power above 50%, update pca in the 0x20-0x2F range
-	jnb	ACC.PCA_BIT, pca_int_exit	; PWM edge selection bit (continue if down edge)
-	jb	ACC.(PCA_BIT-1), pca_int_exit
+	jnb	ACC.PWM_BITS_H, pca_int_exit	; PWM edge selection bit (continue if down edge)
+	jb	ACC.(PWM_BITS_H-1), pca_int_exit
 
 pca_int_set_pwm:
 ENDIF

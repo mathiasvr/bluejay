@@ -187,19 +187,11 @@ ENDM
 Initialize_PCA MACRO
 	mov	PCA0CN0, #40h			; PCA enabled
 	mov	PCA0MD, #08h			; PCA clock is system clock
+
+	mov	PCA0PWM, #(80h + PWM_BITS_H)	; PCA ARSEL set and 8/9/10/11 bits pwm
 IF FETON_DELAY == 0
-IF MCU_48MHZ == 0
-	mov	PCA0PWM, #82h			; PCA ARSEL set and 10bits pwm
-ELSE
-	mov	PCA0PWM, #83h			; PCA ARSEL set and 11bits pwm
-ENDIF
 	mov	PCA0CENT, #00h			; Edge aligned pwm
 ELSE
-IF MCU_48MHZ == 0
-	mov	PCA0PWM, #81h			; PCA ARSEL set and 9bits pwm
-ELSE
-	mov	PCA0PWM, #82h			; PCA ARSEL set and 10bits pwm
-ENDIF
 	mov	PCA0CENT, #03h			; Center aligned pwm
 ENDIF
 ENDM
@@ -247,7 +239,7 @@ IF FETON_DELAY != 0
 	Enable_COVF_Interrupt
 ELSE
 	mov	A, Current_Power_Pwm_Reg_H
-	jnb	ACC.PWR_H_BIT, set_pca_int_hi_pwm
+	jnb	ACC.(PWM_BITS_H-1), set_pca_int_hi_pwm
 
 	Enable_COVF_Interrupt
 	sjmp	pca_enabled
