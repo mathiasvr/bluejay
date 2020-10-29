@@ -372,7 +372,7 @@ Eep_Name:					DB	"Bluejay (BETA)  "				; Name tag (16 Bytes)
 ; DShot Telemetry Macros
 IF MCU_48MHZ == 1
 	DSHOT_TLM_CLOCK		EQU	49000000				; 49MHz
-	DSHOT_TLM_START_DELAY	EQU	-(8 * 49 / 4)			; Start telemetry after 8us (~30us after receiving DShot cmd)
+	DSHOT_TLM_START_DELAY	EQU	-(14 * 49 / 4)			; Start telemetry after 8us (~30us after receiving DShot cmd)
 	DSHOT_TLM_PREDELAY		EQU	8					; 8 timer 0 ticks inherent delay
 ELSE
 	DSHOT_TLM_CLOCK		EQU	24500000				; 24.5MHz
