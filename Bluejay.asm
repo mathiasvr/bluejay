@@ -108,6 +108,9 @@ W_			EQU	23	; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
 ; Select the fet deadtime (or unselect for use with external batch compile file)
 ;FETON_DELAY		EQU	15	; 20.4ns per step
 
+;**** **** **** **** ****
+; Select the pwm frequency (or unselect for use with external batch compile file)
+;PWM_48KHZ		EQU	0
 
 $include (Common.inc)					; Include common source code for EFM8BBx based ESCs
 
@@ -394,18 +397,15 @@ DShot_GCR_Get_Time MACRO
 	mov	A, DShot_GCR_Pulse_Time_3
 ENDM
 
-IF FETON_DELAY != 0
-	IF MCU_48MHZ == 0
-		PWM_BITS_H	EQU	1
-	ELSE
-		PWM_BITS_H	EQU	2
-	ENDIF
+IF FETON_DELAY == 0
+	PWM_CENTERED	EQU	0
 ELSE
-	IF MCU_48MHZ == 0
-		PWM_BITS_H	EQU	2
-	ELSE
-		PWM_BITS_H	EQU	3
-	ENDIF
+	PWM_CENTERED	EQU	1
+ENDIF
+
+IF MCU_48MHZ < 2 AND PWM_48KHZ < 2
+	; Number of bits in pwm high byte
+	PWM_BITS_H	EQU	(2 + MCU_48MHZ - PWM_CENTERED - PWM_48KHZ)
 ENDIF
 
 ;**** **** **** **** ****
@@ -775,13 +775,25 @@ ENDIF
 	mov	Temp5, B
 
 t1_int_set_pwm_registers:
+IF PWM_48KHZ != 0
+	; Scale down pwm resolution
+	clr	C
+	mov	A, Temp5
+	rrc	A
+	mov	Temp5, A
+	mov	A, Temp4
+	rrc	A
+	mov	Temp4, A
+ENDIF
+
+
 IF FETON_DELAY != 0
 	clr	C
 ENDIF
 
 	mov	A, Temp5
 IF FETON_DELAY != 0
-	rrc	A				; Scale to 10/9 bit pwm
+	rrc	A				; Scale down pwm resolution
 ENDIF
 	cpl	A
 	anl	A, #((1 SHL PWM_BITS_H) - 1)
@@ -789,7 +801,7 @@ ENDIF
 
 	mov	A, Temp4
 IF FETON_DELAY != 0
-	rrc	A				; Scale to 10/9 bit pwm
+	rrc	A				; Scale down pwm resolution
 ENDIF
 	cpl	A
 	mov	Temp2, A

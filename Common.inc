@@ -189,10 +189,11 @@ Initialize_PCA MACRO
 	mov	PCA0MD, #08h			; PCA clock is system clock
 
 	mov	PCA0PWM, #(80h + PWM_BITS_H)	; PCA ARSEL set and 8/9/10/11 bits pwm
-IF FETON_DELAY == 0
-	mov	PCA0CENT, #00h			; Edge aligned pwm
-ELSE
+
+IF PWM_CENTERED == 1
 	mov	PCA0CENT, #03h			; Center aligned pwm
+ELSE
+	mov	PCA0CENT, #00h			; Edge aligned pwm
 ENDIF
 ENDM
 
