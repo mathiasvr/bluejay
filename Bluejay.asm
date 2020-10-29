@@ -1334,11 +1334,11 @@ dshot_packet_stage_1:
 	mov	Tlm_Data_L, A
 
 	mov	A, Tlm_Data_H
-	clr	C
-	rrc	A
+	rr	A
+	clr	ACC.7
 	mov	Temp2, A
-	clr	C
-	rrc	A
+	rr	A
+	clr	ACC.7
 	addc	A, Temp2
 	mov	Tlm_Data_H, A
 
