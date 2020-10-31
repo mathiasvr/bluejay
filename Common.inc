@@ -239,7 +239,7 @@ LOCAL pca_enabled set_pca_int_hi_pwm
 IF FETON_DELAY != 0
 	Enable_COVF_Interrupt
 ELSE
-	jnb	Flags1.LOW_PWM_POWER, set_pca_int_hi_pwm
+	jnb	Flag_LOW_PWM_POWER, set_pca_int_hi_pwm
 
 	Enable_COVF_Interrupt
 	sjmp	pca_enabled
@@ -256,7 +256,7 @@ Set_MCU_Clk_24MHz MACRO
 	mov	SFRPAGE, #10h
 	mov	PFE0CN, #00h			; Set flash timing for 24MHz
 	mov	SFRPAGE, #00h
-	clr	Flags3.CLOCK_SET_AT_48MHZ
+	clr	Flag_CLOCK_SET_AT_48MHZ
 ENDM
 
 Set_MCU_Clk_48MHz MACRO
@@ -264,5 +264,5 @@ Set_MCU_Clk_48MHz MACRO
 	mov	PFE0CN, #30h			; Set flash timing for 48MHz
 	mov	SFRPAGE, #00h
 	mov	CLKSEL, #03h			; Set clock to 48MHz
-	setb	Flags3.CLOCK_SET_AT_48MHZ
+	setb	Flag_CLOCK_SET_AT_48MHZ
 ENDM

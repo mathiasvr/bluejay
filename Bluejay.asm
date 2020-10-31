@@ -152,44 +152,33 @@ Rcp_Outside_Range_Cnt:		DS	1		; RC pulse outside range counter (incrementing)
 Rcp_Timeout_Cntd:			DS	1		; RC pulse timeout counter (decrementing)
 
 Flags0:					DS	1		; State flags. Reset upon init_start
-T3_PENDING				EQU	0		; Timer 3 pending flag
-DEMAG_DETECTED				EQU	1		; Set when excessive demag time is detected
-COMP_TIMED_OUT				EQU	2		; Set when comparator reading timed out
-TLM_ACTIVE				EQU	3		; DShot telemetry data is currently being transmitted
-PACKET_PENDING				EQU	4		; DShot telemetry data packet is ready to be sent
-;						EQU	5
-;						EQU	6
-;						EQU	7
+Flag_T3_PENDING			BIT	Flags0.0	; Timer 3 pending flag
+Flag_DEMAG_DETECTED			BIT	Flags0.1	; Set when excessive demag time is detected
+Flag_COMP_TIMED_OUT			BIT	Flags0.2	; Set when comparator reading timed out
+Flag_TLM_ACTIVE			BIT	Flags0.3	; DShot telemetry data is currently being transmitted
+Flag_PACKET_PENDING			BIT	Flags0.4	; DShot telemetry data packet is ready to be sent
 
 Flags1:					DS	1		; State flags. Reset upon init_start
-STARTUP_PHASE				EQU	0		; Set when in startup phase
-INITIAL_RUN_PHASE			EQU	1		; Set when in initial run phase, before synchronized run is achieved
-MOTOR_STARTED				EQU	2		; Set when motor is started
-DIR_CHANGE_BRAKE			EQU	3		; Set when braking before direction change
-HIGH_RPM					EQU	4		; Set when motor rpm is high (Comm_Period4x_H less than 2)
-LOW_PWM_POWER				EQU	5		; Set when pwm duty cycle is below 50%
-;						EQU	6
-;						EQU	7
+Flag_MOTOR_STARTED			BIT	Flags1.2	; Set when motor is started
+Flag_DIR_CHANGE_BRAKE		BIT	Flags1.3	; Set when braking before direction change
+Flag_HIGH_RPM				BIT	Flags1.4	; Set when motor rpm is high (Comm_Period4x_H less than 2)
+Flag_LOW_PWM_POWER			BIT	Flags1.5	; Set when pwm duty cycle is below 50%
+
+Flags_Startup:				DS	1		; State flags. Reset upon init_start
+Flag_STARTUP_PHASE			BIT	Flags_Startup.0	; Set when in startup phase
+Flag_INITIAL_RUN_PHASE		BIT	Flags_Startup.1	; Set when in initial run phase, before synchronized run is achieved
+; Remaining bits must be cleared
 
 Flags2:					DS	1		; State flags. NOT reset upon init_start
-;RCP_UPDATED				EQU	0		; New RC pulse length value available
-;						EQU	1
-;						EQU	2
-;						EQU	3
-;						EQU	4
-RCP_DIR_REV				EQU	5		; RC pulse direction in bidirectional mode
-;RCP_FULL_RANGE			EQU	6		; When set full input signal range is used (1000-2000us) and stored calibration values are ignored
-RCP_DSHOT_INVERTED			EQU	7		; DShot RC pulse input is inverted (and supports telemetry)
+Flag_RCP_DIR_REV			BIT	Flags2.5	; RC pulse direction in bidirectional mode
+Flag_RCP_DSHOT_INVERTED		BIT	Flags2.7	; DShot RC pulse input is inverted (and supports telemetry)
 
 Flags3:					DS	1		; State flags. NOT reset upon init_start
-PGM_DIR_REV				EQU	0		; Programmed direction. 0=normal, 1=reversed
-PGM_BIDIR_REV				EQU	1		; Programmed bidirectional direction. 0=normal, 1=reversed
-PGM_BIDIR					EQU	2		; Programmed bidirectional operation. 0=normal, 1=bidirectional
-SKIP_T2_INT				EQU	3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
-CLOCK_SET_AT_48MHZ			EQU	4		; Set if 48MHz MCUs run at 48MHz
-;						EQU	5
-;						EQU	6
-;						EQU	7
+Flag_PGM_DIR_REV			BIT	Flags3.0	; Programmed direction. 0=normal, 1=reversed
+Flag_PGM_BIDIR_REV			BIT	Flags3.1	; Programmed bidirectional direction. 0=normal, 1=reversed
+Flag_PGM_BIDIR				BIT	Flags3.2	; Programmed bidirectional operation. 0=normal, 1=bidirectional
+Flag_SKIP_T2_INT			BIT	Flags3.3	; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
+Flag_CLOCK_SET_AT_48MHZ		BIT	Flags3.4	; Set if 48MHz MCUs run at 48MHz
 
 Tlm_Data_L:				DS	1		; DShot telemetry data low byte
 Tlm_Data_H:				DS	1		; DShot telemetry data high byte
@@ -464,8 +453,8 @@ t0_int_dshot_tlm_finish:
 	setb	IE_EX1			; Enable int1 interrupts
 	Enable_PCA_Interrupt	; Enable pca interrupts
 
-	clr	Flags0.TLM_ACTIVE
-	clr	Flags0.PACKET_PENDING
+	clr	Flag_TLM_ACTIVE
+	clr	Flag_PACKET_PENDING
 
 	pop	PSW
 	reti
@@ -567,7 +556,7 @@ t1_int_decode_checksum:
 	xrl	A, Temp4
 	xrl	A, Temp5
 	xrl	A, Temp3
-	jnb	Flags2.RCP_DSHOT_INVERTED, ($+4)
+	jnb	Flag_RCP_DSHOT_INVERTED, ($+4)
 	cpl	A						; Invert checksum if using inverted DShot
 	anl	A, #0Fh
 	jnz	t1_int_outside_range		; XOR check
@@ -608,7 +597,7 @@ t1_dshot_set_cmd:
 
 t1_normal_range:
 	; Check for bidirectional operation (0=stop, 96-2095->fwd, 2096-4095->rev)
-	jnb	Flags3.PGM_BIDIR, t1_int_not_bidir	; If not bidirectional operation - branch
+	jnb	Flag_PGM_BIDIR, t1_int_not_bidir	; If not bidirectional operation - branch
 
 	; Subtract 2000 (still 12 bits)
 	clr	C
@@ -625,16 +614,16 @@ t1_normal_range:
 	mov	A, Temp3
 	mov	Temp5, A
 
-	setb	Flags2.RCP_DIR_REV
+	setb	Flag_RCP_DIR_REV
 	sjmp	t1_int_bidir_rev_chk
 
 t1_int_bidir_fwd:
-	clr	Flags2.RCP_DIR_REV
+	clr	Flag_RCP_DIR_REV
 
 t1_int_bidir_rev_chk:
-	jb	Flags3.PGM_BIDIR_REV, ($+5)
+	jb	Flag_PGM_BIDIR_REV, ($+5)
 
-	cpl	Flags2.RCP_DIR_REV
+	cpl	Flag_RCP_DIR_REV
 
 	clr	C							; Multiply throttle value by 2
 	mov	A, Temp4
@@ -672,11 +661,10 @@ t1_int_not_bidir:
 	mov	Temp5, #0FFh
 
 	; Boost pwm during direct start
-	mov	A, Flags1
-	anl	A, #((1 SHL STARTUP_PHASE)+(1 SHL INITIAL_RUN_PHASE))
+	mov	A, Flags_Startup
 	jz	t1_int_startup_boosted
 
-	jb	Flags1.MOTOR_STARTED, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
+	jb	Flag_MOTOR_STARTED, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
 
 	mov	A, Pwm_Limit_Beg				; Set 25% of max startup power as minimum power
 	rlc	A
@@ -840,11 +828,11 @@ ENDIF
 	; Prepare DShot telemetry
 IF MCU_48MHZ == 1
 	; Only use telemetry for compatible clock frequency
-	jnb	Flags3.CLOCK_SET_AT_48MHZ, t1_int_exit_no_tlm
+	jnb	Flag_CLOCK_SET_AT_48MHZ, t1_int_exit_no_tlm
 ENDIF
-	jnb	Flags2.RCP_DSHOT_INVERTED, t1_int_exit_no_tlm
-	jnb	Flags0.PACKET_PENDING, t1_int_exit_no_tlm
-	setb	Flags0.TLM_ACTIVE
+	jnb	Flag_RCP_DSHOT_INVERTED, t1_int_exit_no_tlm
+	jnb	Flag_PACKET_PENDING, t1_int_exit_no_tlm
+	setb	Flag_TLM_ACTIVE
 	;Prepare timer 0 for sending telemetry data
 	mov	TL0, #DSHOT_TLM_START_DELAY		; Timer 0 will start tlm after this delay
 	; todo: dshot150
@@ -891,16 +879,16 @@ t2_int:	; Happens every 32ms
 	clr	TMR2CN0_TF2H				; Clear interrupt flag
 	inc	Timer2_X
 IF MCU_48MHZ == 1
-	jnb	Flags3.CLOCK_SET_AT_48MHZ, t2_int_start
+	jnb	Flag_CLOCK_SET_AT_48MHZ, t2_int_start
 
 	; Check skip variable
-	jnb	Flags3.SKIP_T2_INT, t2_int_start	; Execute this interrupt
+	jnb	Flag_SKIP_T2_INT, t2_int_start	; Execute this interrupt
 
-	clr	Flags3.SKIP_T2_INT
+	clr	Flag_SKIP_T2_INT
 	sjmp	t2_int_exit
 
 t2_int_start:
-	setb	Flags3.SKIP_T2_INT			; Skip next interrupt
+	setb	Flag_SKIP_T2_INT			; Skip next interrupt
 ENDIF
 	; Update RC pulse timeout counter
 	mov	A, Rcp_Timeout_Cntd			; RC pulse timeout count zero?
@@ -947,7 +935,7 @@ t3_int:	; Used for commutation timing
 	anl	TMR3CN0, #07Fh		; Clear timer 3 interrupt flag
 	mov	TMR3RLL, #0FAh		; Set a short delay before next interrupt
 	mov	TMR3RLH, #0FFh
-	clr	Flags0.T3_PENDING	; Flag that timer has wrapped
+	clr	Flag_T3_PENDING	; Flag that timer has wrapped
 	setb	IE_EA			; Enable all interrupts
 	reti
 
@@ -1007,7 +995,7 @@ IF FETON_DELAY != 0					; HI/LO enable style drivers
 	mov	A, PCA0L					; Read low byte first, to transfer high byte to holding register
 	mov	A, PCA0H
 
-	jnb	Flags1.LOW_PWM_POWER, pca_int_hi_pwm
+	jnb	Flag_LOW_PWM_POWER, pca_int_hi_pwm
 
 	; Power below 50%, update pca in the 0x00-0x0F range
 	jb	ACC.PWM_BITS_H, pca_int_exit	; PWM edge selection bit (continue if up edge)
@@ -1045,7 +1033,7 @@ IF FETON_DELAY != 0
 	ENDIF
 ENDIF
 
-	setb	Flags1.LOW_PWM_POWER
+	setb	Flag_LOW_PWM_POWER
 IF PWM_BITS_H != 0
 	mov	A, Power_Pwm_Reg_H
 	jb	ACC.(PWM_BITS_H-1), ($+5)
@@ -1053,7 +1041,7 @@ ELSE
 	mov	A, Power_Pwm_Reg_L
 	jb	ACC.7, ($+5)
 ENDIF
-	clr	Flags1.LOW_PWM_POWER
+	clr	Flag_LOW_PWM_POWER
 
 	Disable_COVF_Interrupt
 IF FETON_DELAY == 0					; EN/PWM style drivers
@@ -1432,7 +1420,7 @@ dshot_packet_stage_6:
 	Push_Reg	Temp1, B				; Initial transition time
 
 	mov	Temp5, #0
-	setb	Flags0.PACKET_PENDING
+	setb	Flag_PACKET_PENDING
 
 	pop	PSW
 	ret
@@ -1508,7 +1496,7 @@ waitxms_m:		; Middle loop
 set_pwm_limit_low_rpm:
 	; Set pwm limit
 	mov	Temp1, #0FFh					; Default full power
-	jb	Flags1.STARTUP_PHASE, set_pwm_limit_low_rpm_exit	; Exit if startup phase set
+	jb	Flag_STARTUP_PHASE, set_pwm_limit_low_rpm_exit	; Exit if startup phase set
 
 	mov	Temp2, #Pgm_Enable_Power_Prot		; Check if low RPM power protection is enabled
 	mov	A, @Temp2
@@ -1521,7 +1509,7 @@ set_pwm_limit_low_rpm:
 	mov	B, Comm_Period4x_H
 	div	AB
 	mov	B, Low_Rpm_Pwr_Slope			; Multiply by slope
-	jnb	Flags1.INITIAL_RUN_PHASE, ($+6)	; More protection for initial run phase
+	jnb	Flag_INITIAL_RUN_PHASE, ($+6)		; More protection for initial run phase
 	mov	B, #5
 	mul	AB
 	mov	Temp1, A						; Set new limit
@@ -1762,13 +1750,13 @@ ENDIF
 	mov	Temp1, A
 	mov	A, Temp2
 	subb	A, Temp5
-	jb	Flags1.STARTUP_PHASE, calc_next_comm_startup
+	jb	Flag_STARTUP_PHASE, calc_next_comm_startup
 
 IF MCU_48MHZ == 1
 	anl	A, #7Fh
 ENDIF
 	mov	Temp2, A
-	jnb	Flags1.HIGH_RPM, calc_next_comm_normal	; Branch normal rpm
+	jnb	Flag_HIGH_RPM, calc_next_comm_normal	; Branch normal rpm
 	ajmp	calc_next_comm_timing_fast			; Branch high rpm
 
 calc_next_comm_startup:
@@ -1844,7 +1832,7 @@ calc_next_comm_normal:
 	subb	A, #08h
 	jc	calc_next_comm_avg_period_div
 
-	jb	Flags1.INITIAL_RUN_PHASE, calc_next_comm_avg_period_div	; Do not average very fast during initial run
+	jb	Flag_INITIAL_RUN_PHASE, calc_next_comm_avg_period_div	; Do not average very fast during initial run
 
 	dec	Temp7				; Reduce averaging time constant more for even lower speeds
 	dec	Temp8
@@ -1901,10 +1889,10 @@ calc_new_wait_times_setup:
 	subb	A, #2
 	jnc	($+4)
 
-	setb	Flags1.HIGH_RPM		; Set high rpm bit
+	setb	Flag_HIGH_RPM			; Set high rpm bit
 
 	; Load programmed commutation timing
-	jnb	Flags1.STARTUP_PHASE, calc_new_wait_per_startup_done	; Set dedicated timing during startup
+	jnb	Flag_STARTUP_PHASE, calc_new_wait_per_startup_done	; Set dedicated timing during startup
 
 	mov	Temp8, #3
 	sjmp	calc_new_wait_per_demag_done
@@ -2014,7 +2002,7 @@ calc_next_comm_timing_fast:
 	subb	A, #2				; If erpm below 156k - go to normal case
 	jc	($+4)
 
-	clr	Flags1.HIGH_RPM		; Clear high rpm bit
+	clr	Flag_HIGH_RPM			; Clear high rpm bit
 
 	; Set timing reduction
 	mov	Temp1, #2
@@ -2056,23 +2044,23 @@ calc_new_wait_times_fast_done:
 wait_advance_timing:
 
 	; DShot telemetry
-	jb	Flags0.PACKET_PENDING, wait_advance_timing_loop
-	jb	Flags0.TLM_ACTIVE, wait_advance_timing_loop
+	jb	Flag_PACKET_PENDING, wait_advance_timing_loop
+	jb	Flag_TLM_ACTIVE, wait_advance_timing_loop
 
 wait_advance_timing_loop2:
 	call	dshot_packet_factory
-	jb	Flags0.PACKET_PENDING, wait_advance_timing_loop
-	jnb	Flags0.T3_PENDING, ($+5)
+	jb	Flag_PACKET_PENDING, wait_advance_timing_loop
+	jnb	Flag_T3_PENDING, ($+5)
 	sjmp	wait_advance_timing_loop2
 
 wait_advance_timing_loop:
-	jnb	Flags0.T3_PENDING, ($+5)
+	jnb	Flag_T3_PENDING, ($+5)
 	sjmp	wait_advance_timing_loop
 
 	; Setup next wait time
 	mov	TMR3RLL, Wt_ZC_Tout_Start_L
 	mov	TMR3RLH, Wt_ZC_Tout_Start_H
-	setb	Flags0.T3_PENDING
+	setb	Flag_T3_PENDING
 	orl	EIE1, #80h	; Enable timer 3 interrupts
 
 
@@ -2102,7 +2090,7 @@ IF MCU_48MHZ == 1
 	rlc	A
 	mov	Temp2, A
 ENDIF
-	jb	Flags1.HIGH_RPM, calc_new_wait_times_fast	; Branch if high rpm
+	jb	Flag_HIGH_RPM, calc_new_wait_times_fast	; Branch if high rpm
 
 	mov	A, Temp1					; Copy values
 	mov	Temp3, A
@@ -2170,7 +2158,7 @@ store_times_decrease:
 	mov	Wt_Adv_Start_H, Temp4
 	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 	mov	Wt_Zc_Scan_Start_H, Temp6
-	jnb	Flags1.STARTUP_PHASE, store_times_exit
+	jnb	Flag_STARTUP_PHASE, store_times_exit
 
 	mov	Wt_Comm_Start_L, #0F0h		; Set very short delays for all but advance time during startup, in order to widen zero cross capture range
 	mov	Wt_Comm_Start_H, #0FFh
@@ -2241,15 +2229,14 @@ store_times_decrease_fast:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_before_zc_scan:
-	jnb	Flags0.T3_PENDING, ($+5)
+	jnb	Flag_T3_PENDING, ($+5)
 	sjmp	wait_before_zc_scan
 
 	mov	Startup_Zc_Timeout_Cntd, #2
 setup_zc_scan_timeout:
-	setb	Flags0.T3_PENDING
+	setb	Flag_T3_PENDING
 	orl	EIE1, #80h			; Enable timer 3 interrupts
-	mov	A, Flags1
-	anl	A, #((1 SHL STARTUP_PHASE)+(1 SHL INITIAL_RUN_PHASE))
+	mov	A, Flags_Startup
 	jz	wait_before_zc_scan_exit
 
 	mov	Temp1, Comm_Period4x_L	; Set long timeout when starting
@@ -2270,7 +2257,7 @@ IF MCU_48MHZ == 0
 	rrc	A
 	mov	Temp1, A
 ENDIF
-	jnb	Flags1.STARTUP_PHASE, setup_zc_scan_timeout_startup_done
+	jnb	Flag_STARTUP_PHASE, setup_zc_scan_timeout_startup_done
 
 	mov	A, Temp2
 	add	A, #40h				; Increase timeout somewhat to avoid false wind up
@@ -2288,7 +2275,7 @@ setup_zc_scan_timeout_startup_done:
 	subb	A, Temp2
 	mov	TMR3H, A
 	mov	TMR3CN0, #04h			; Timer 3 enabled and interrupt flag cleared
-	setb	Flags0.T3_PENDING
+	setb	Flag_T3_PENDING
 	orl	EIE1, #80h			; Enable timer 3 interrupts
 	setb	IE_EA
 
@@ -2307,31 +2294,30 @@ wait_before_zc_scan_exit:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_for_comp_out_low:
-	setb	Flags0.DEMAG_DETECTED		; Set demag detected flag as default
+	setb	Flag_DEMAG_DETECTED			; Set demag detected flag as default
 	mov	Comparator_Read_Cnt, #0		; Reset number of comparator reads
 	mov	Bit_Access, #00h			; Desired comparator output
-	jnb	Flags1.DIR_CHANGE_BRAKE, ($+6)
+	jnb	Flag_DIR_CHANGE_BRAKE, ($+6)
 	mov	Bit_Access, #40h
 	sjmp	wait_for_comp_out_start
 
 wait_for_comp_out_high:
-	setb	Flags0.DEMAG_DETECTED		; Set demag detected flag as default
+	setb	Flag_DEMAG_DETECTED			; Set demag detected flag as default
 	mov	Comparator_Read_Cnt, #0		; Reset number of comparator reads
 	mov	Bit_Access, #40h			; Desired comparator output
-	jnb	Flags1.DIR_CHANGE_BRAKE, ($+6)
+	jnb	Flag_DIR_CHANGE_BRAKE, ($+6)
 	mov	Bit_Access, #00h
 
 wait_for_comp_out_start:
 	; Set number of comparator readings
 	mov	Temp1, #1					; Number of OK readings required
 	mov	Temp2, #1					; Max number of readings required
-	jb	Flags1.HIGH_RPM, comp_scale_samples	; Branch if high rpm
+	jb	Flag_HIGH_RPM, comp_scale_samples	; Branch if high rpm
 
-	mov	A, Flags1					; Clear demag detected flag if start phases
-	anl	A, #((1 SHL STARTUP_PHASE)+(1 SHL INITIAL_RUN_PHASE))
+	mov	A, Flags_Startup			; Clear demag detected flag if start phases
 	jz	($+4)
 
-	clr	Flags0.DEMAG_DETECTED
+	clr	Flag_DEMAG_DETECTED
 
 	; Too low value (~<15) causes rough running at pwm harmonics.
 	; Too high a value (~>35) causes the RCT4215 630 to run rough on full throttle
@@ -2348,7 +2334,7 @@ wait_for_comp_out_start:
 
 	mov	Temp1, #20
 
-	jnb	Flags1.STARTUP_PHASE, comp_scale_samples
+	jnb	Flag_STARTUP_PHASE, comp_scale_samples
 
 	mov	Temp1, #27				; Set many samples during startup, approximately one pwm period
 	mov	Temp2, #27
@@ -2365,17 +2351,17 @@ IF MCU_48MHZ == 1
 	mov	Temp2, A
 ENDIF
 comp_check_timeout:
-	jb	Flags0.T3_PENDING, comp_check_timeout_not_timed_out	; Has zero cross scan timeout elapsed?
+	jb	Flag_T3_PENDING, comp_check_timeout_not_timed_out	; Has zero cross scan timeout elapsed?
 
 	mov	A, Comparator_Read_Cnt			; Check that comparator has been read
 	jz	comp_check_timeout_not_timed_out	; If not read - branch
 
-	jnb	Flags1.STARTUP_PHASE, comp_check_timeout_timeout_extended	; Extend timeout during startup
+	jnb	Flag_STARTUP_PHASE, comp_check_timeout_timeout_extended	; Extend timeout during startup
 
 	djnz	Startup_Zc_Timeout_Cntd, comp_check_timeout_extend_timeout
 
 comp_check_timeout_timeout_extended:
-	setb	Flags0.COMP_TIMED_OUT
+	setb	Flag_COMP_TIMED_OUT
 	sjmp	setup_comm_wait
 
 comp_check_timeout_extend_timeout:
@@ -2390,16 +2376,16 @@ comp_check_timeout_not_timed_out:
 	mov	A, Startup_Cnt				; Force a timeout for the first commutation
 	jz	wait_for_comp_out_start
 
-	jb	Flags0.DEMAG_DETECTED, wait_for_comp_out_start	; Do not accept correct comparator output if it is demag
+	jb	Flag_DEMAG_DETECTED, wait_for_comp_out_start	; Do not accept correct comparator output if it is demag
 
 	djnz	Temp1, comp_check_timeout	; Decrement readings counter - repeat comparator reading if not zero
 
-	clr	Flags0.COMP_TIMED_OUT
+	clr	Flag_COMP_TIMED_OUT
 
 	sjmp	setup_comm_wait
 
 comp_read_wrong:
-	jnb	Flags1.STARTUP_PHASE, comp_read_wrong_not_startup
+	jnb	Flag_STARTUP_PHASE, comp_read_wrong_not_startup
 
 	inc	Temp1					; Increment number of OK readings required
 	clr	C
@@ -2411,7 +2397,7 @@ comp_read_wrong:
 	sjmp	comp_check_timeout			; Continue to look for good ones
 
 comp_read_wrong_not_startup:
-	jb	Flags0.DEMAG_DETECTED, comp_read_wrong_extend_timeout
+	jb	Flag_DEMAG_DETECTED, comp_read_wrong_extend_timeout
 
 	inc	Temp1					; Increment number of OK readings required
 	clr	C
@@ -2421,10 +2407,10 @@ comp_read_wrong_not_startup:
 	sjmp	wait_for_comp_out_start		; Otherwise - go back and restart
 
 comp_read_wrong_extend_timeout:
-	clr	Flags0.DEMAG_DETECTED		; Clear demag detected flag
+	clr	Flag_DEMAG_DETECTED			; Clear demag detected flag
 	anl	EIE1, #7Fh				; Disable timer 3 interrupts
 	mov	TMR3CN0, #00h				; Timer 3 disabled and interrupt flag cleared
-	jnb	Flags1.HIGH_RPM, comp_read_wrong_low_rpm	; Branch if not high rpm
+	jnb	Flag_HIGH_RPM, comp_read_wrong_low_rpm	; Branch if not high rpm
 
 	mov	TMR3L, #00h				; Set timeout to ~1ms
 IF MCU_48MHZ == 1
@@ -2434,7 +2420,7 @@ ELSE
 ENDIF
 comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
-	setb	Flags0.T3_PENDING
+	setb	Flag_T3_PENDING
 	orl	EIE1, #80h				; Enable timer 3 interrupts
 	ajmp	wait_for_comp_out_start		; If comparator output is not correct - go back and restart
 
@@ -2485,7 +2471,7 @@ setup_comm_wait:
 	; Setup next wait time
 	mov	TMR3RLL, Wt_Adv_Start_L
 	mov	TMR3RLH, Wt_Adv_Start_H
-	setb	Flags0.T3_PENDING
+	setb	Flag_T3_PENDING
 	orl	EIE1, #80h			; Enable timer 3 interrupts
 	setb	IE_EA				; Enable interrupts again
 
@@ -2500,18 +2486,17 @@ setup_comm_wait:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 evaluate_comparator_integrity:
-	mov	A, Flags1
-	anl	A, #((1 SHL STARTUP_PHASE)+(1 SHL INITIAL_RUN_PHASE))
+	mov	A, Flags_Startup
 	jz	eval_comp_check_timeout
 
-	jb	Flags1.INITIAL_RUN_PHASE, ($+5)		; Do not increment beyond startup phase
+	jb	Flag_INITIAL_RUN_PHASE, ($+5)			; Do not increment beyond startup phase
 	inc	Startup_Cnt						; Increment counter
 	sjmp	eval_comp_exit
 
 eval_comp_check_timeout:
-	jnb	Flags0.COMP_TIMED_OUT, eval_comp_exit	; Has timeout elapsed?
-	jb	Flags1.DIR_CHANGE_BRAKE, eval_comp_exit	; Do not exit run mode if it is braking
-	jb	Flags0.DEMAG_DETECTED, eval_comp_exit	; Do not exit run mode if it is a demag situation
+	jnb	Flag_COMP_TIMED_OUT, eval_comp_exit	; Has timeout elapsed?
+	jb	Flag_DIR_CHANGE_BRAKE, eval_comp_exit	; Do not exit run mode if it is braking
+	jb	Flag_DEMAG_DETECTED, eval_comp_exit	; Do not exit run mode if it is a demag situation
 	dec	SP								; Routine exit without "ret" command
 	dec	SP
 	ljmp	run_to_wait_for_power_on_fail			; Yes - exit run mode
@@ -2535,7 +2520,7 @@ wait_for_comm:
 	mov	B, #7
 	mul	AB						; Multiply by 7
 
-	jnb	Flags0.DEMAG_DETECTED, ($+4)	; Add new value for current demag status
+	jnb	Flag_DEMAG_DETECTED, ($+4)	; Add new value for current demag status
 	inc	B
 
 	mov	C, B.0					; Divide by 8
@@ -2559,13 +2544,13 @@ wait_for_comm:
 	Set_Pwms_Off
 
 wait_for_comm_wait:
-	jnb	Flags0.T3_PENDING, ($+5)
+	jnb	Flag_T3_PENDING, ($+5)
 	sjmp	wait_for_comm_wait
 
 	; Setup next wait time
 	mov	TMR3RLL, Wt_Zc_Scan_Start_L
 	mov	TMR3RLH, Wt_Zc_Scan_Start_H
-	setb	Flags0.T3_PENDING
+	setb	Flag_T3_PENDING
 	orl	EIE1, #80h				; Enable timer 3 interrupts
 	ret
 
@@ -2582,7 +2567,7 @@ wait_for_comm_wait:
 ; Comm phase 1 to comm phase 2
 comm1comm2:
 	Set_RPM_Out
-	jb	Flags3.PGM_DIR_REV, comm12_rev
+	jb	Flag_PGM_DIR_REV, comm12_rev
 
 	clr	IE_EA				; Disable all interrupts
 	BcomFET_off				; Turn off comfet
@@ -2605,7 +2590,7 @@ comm12_rev:
 ; Comm phase 2 to comm phase 3
 comm2comm3:
 	Clear_RPM_Out
-	jb	Flags3.PGM_DIR_REV, comm23_rev
+	jb	Flag_PGM_DIR_REV, comm23_rev
 
 	clr	IE_EA				; Disable all interrupts
 	CpwmFET_off				; Turn off pwmfet
@@ -2628,7 +2613,7 @@ comm23_rev:
 ; Comm phase 3 to comm phase 4
 comm3comm4:
 	Set_RPM_Out
-	jb	Flags3.PGM_DIR_REV, comm34_rev
+	jb	Flag_PGM_DIR_REV, comm34_rev
 
 	clr	IE_EA				; Disable all interrupts
 	AcomFET_off				; Turn off comfet
@@ -2651,7 +2636,7 @@ comm34_rev:
 ; Comm phase 4 to comm phase 5
 comm4comm5:
 	Clear_RPM_Out
-	jb	Flags3.PGM_DIR_REV, comm45_rev
+	jb	Flag_PGM_DIR_REV, comm45_rev
 
 	clr	IE_EA				; Disable all interrupts
 	BpwmFET_off				; Turn off pwmfet
@@ -2674,7 +2659,7 @@ comm45_rev:
 ; Comm phase 5 to comm phase 6
 comm5comm6:
 	Set_RPM_Out
-	jb	Flags3.PGM_DIR_REV, comm56_rev
+	jb	Flag_PGM_DIR_REV, comm56_rev
 
 	clr	IE_EA				; Disable all interrupts
 	CcomFET_off				; Turn off comfet
@@ -2697,7 +2682,7 @@ comm56_rev:
 ; Comm phase 6 to comm phase 1
 comm6comm1:
 	Clear_RPM_Out
-	jb	Flags3.PGM_DIR_REV, comm61_rev
+	jb	Flag_PGM_DIR_REV, comm61_rev
 
 	clr	IE_EA				; Disable all interrupts
 	ApwmFET_off				; Turn off pwmfet
@@ -2913,17 +2898,17 @@ decode_settings:
 	mov	A, @Temp1
 	clr	C
 	subb	A, #3
-	setb	Flags3.PGM_BIDIR
+	setb	Flag_PGM_BIDIR
 	jnc	($+4)
 
-	clr	Flags3.PGM_BIDIR
+	clr	Flag_PGM_BIDIR
 
-	clr	Flags3.PGM_DIR_REV
+	clr	Flag_PGM_DIR_REV
 	mov	A, @Temp1
 	jnb	ACC.1, ($+5)
-	setb	Flags3.PGM_DIR_REV
-	mov	C, Flags3.PGM_DIR_REV
-	mov	Flags3.PGM_BIDIR_REV, C
+	setb	Flag_PGM_DIR_REV
+	mov	C, Flag_PGM_DIR_REV
+	mov	Flag_PGM_BIDIR_REV, C
 	; Decode startup power
 	mov	Temp1, #Pgm_Startup_Pwr
 	mov	A, @Temp1
@@ -2989,7 +2974,7 @@ detect_rcp_level_read:
 	jnb	RTX_PORT.RTX_PIN, detect_rcp_level
 	djnz	ACC, detect_rcp_level_read
 
-	mov	Flags2.RCP_DSHOT_INVERTED, C
+	mov	Flag_RCP_DSHOT_INVERTED, C
 	ret
 
 
@@ -3163,7 +3148,7 @@ ENDIF
 
 	; Route RCP according to detected DShot signal (normal or inverted)
 	mov	IT01CF, #(80h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to INT0/1, with INT1 inverted
-	jnb	Flags2.RCP_DSHOT_INVERTED, ($+6)
+	jnb	Flag_RCP_DSHOT_INVERTED, ($+6)
 	mov	IT01CF, #(08h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to INT0/1, with INT0 inverted
 
 	; Setup interrupts for DShot
@@ -3433,12 +3418,12 @@ dshot_direction_1:
 	jc	dont_clear_dshot_cmd
 
 	mov	A, #1
-	jnb	Flags3.PGM_BIDIR, ($+5)
+	jnb	Flag_PGM_BIDIR, ($+5)
 	mov	A, #3
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
-	clr	Flags3.PGM_DIR_REV
-	clr	Flags3.PGM_BIDIR_REV
+	clr	Flag_PGM_DIR_REV
+	clr	Flag_PGM_BIDIR_REV
 	sjmp	clear_dshot_cmd
 
 dshot_direction_2:
@@ -3450,12 +3435,12 @@ dshot_direction_2:
 	jc	dont_clear_dshot_cmd
 
 	mov	A, #2
-	jnb	Flags3.PGM_BIDIR, ($+5)
+	jnb	Flag_PGM_BIDIR, ($+5)
 	mov	A, #4
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
-	setb	Flags3.PGM_DIR_REV
-	setb	Flags3.PGM_BIDIR_REV
+	setb	Flag_PGM_DIR_REV
+	setb	Flag_PGM_BIDIR_REV
 	sjmp	clear_dshot_cmd
 
 dshot_direction_bidir_off:
@@ -3466,14 +3451,14 @@ dshot_direction_bidir_off:
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dont_clear_dshot_cmd
 
-	jnb	Flags3.PGM_BIDIR, clear_dshot_cmd
+	jnb	Flag_PGM_BIDIR, clear_dshot_cmd
 
 	clr	C
 	mov	Temp1, #Pgm_Direction
 	mov	A, @Temp1
 	subb	A, #2
 	mov	@Temp1, A
-	clr	Flags3.PGM_BIDIR
+	clr	Flag_PGM_BIDIR
 	sjmp	clear_dshot_cmd
 
 dshot_direction_bidir_on:
@@ -3484,13 +3469,13 @@ dshot_direction_bidir_on:
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dont_clear_dshot_cmd
 
-	jb	Flags3.PGM_BIDIR, clear_dshot_cmd
+	jb	Flag_PGM_BIDIR, clear_dshot_cmd
 
 	mov	Temp1, #Pgm_Direction
 	mov	A, @Temp1
 	add	A, #2
 	mov	@Temp1, A
-	setb	Flags3.PGM_BIDIR
+	setb	Flag_PGM_BIDIR
 
 clear_dshot_cmd:
 	mov	Dshot_Cmd, #0
@@ -3515,12 +3500,12 @@ dshot_direction_normal:
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
 	rrc	A						; Lsb to carry
-	clr	Flags3.PGM_DIR_REV
-	clr	Flags3.PGM_BIDIR_REV
+	clr	Flag_PGM_DIR_REV
+	clr	Flag_PGM_BIDIR_REV
 	jc	($+4)
-	setb	Flags3.PGM_DIR_REV
+	setb	Flag_PGM_DIR_REV
 	jc	($+4)
-	setb	Flags3.PGM_BIDIR_REV
+	setb	Flag_PGM_BIDIR_REV
 	sjmp	clear_dshot_cmd
 
 dshot_direction_reverse:				; Temporary reverse
@@ -3548,12 +3533,12 @@ dshot_direction_reverse:				; Temporary reverse
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
 	rrc	A						; Lsb to carry
-	clr	Flags3.PGM_DIR_REV
-	clr	Flags3.PGM_BIDIR_REV
+	clr	Flag_PGM_DIR_REV
+	clr	Flag_PGM_BIDIR_REV
 	jc	($+4)
-	setb	Flags3.PGM_DIR_REV
+	setb	Flag_PGM_DIR_REV
 	jc	($+4)
-	setb	Flags3.PGM_BIDIR_REV
+	setb	Flag_PGM_BIDIR_REV
 	sjmp	clear_dshot_cmd
 
 dshot_save_settings:
@@ -3592,6 +3577,7 @@ init_start:
 	mov	Adc_Conversion_Cnt, A
 	mov	Flags0, A						; Clear flags0
 	mov	Flags1, A						; Clear flags1
+	mov	Flags_Startup, A				; Clear startup flags
 	mov	Demag_Detected_Metric, A			; Clear demag metric
 	;**** **** **** **** ****
 	; Motor start beginning
@@ -3633,14 +3619,14 @@ IF MCU_48MHZ == 1
 	rlc	A
 	mov	DShot_Pwm_Thr, A
 ENDIF
-	jnb	Flags3.PGM_BIDIR, init_start_bidir_done	; Check if bidirectional operation
+	jnb	Flag_PGM_BIDIR, init_start_bidir_done	; Check if bidirectional operation
 
-	clr	Flags3.PGM_DIR_REV			; Set spinning direction. Default fwd
-	jnb	Flags2.RCP_DIR_REV, ($+5)	; Check force direction
-	setb	Flags3.PGM_DIR_REV			; Set spinning direction
+	clr	Flag_PGM_DIR_REV			; Set spinning direction. Default fwd
+	jnb	Flag_RCP_DIR_REV, ($+5)		; Check force direction
+	setb	Flag_PGM_DIR_REV			; Set spinning direction
 
 init_start_bidir_done:
-	setb	Flags1.STARTUP_PHASE		; Set startup phase flag
+	setb	Flag_STARTUP_PHASE			; Set startup phase flag
 	mov	Startup_Cnt, #0			; Reset counter
 	call	comm5comm6				; Initialize commutation
 	call	comm6comm1
@@ -3677,9 +3663,9 @@ run2:
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
-	jb	Flags1.HIGH_RPM, ($+6)	; Skip if high rpm
+	jb	Flag_HIGH_RPM, ($+6)	; Skip if high rpm
 	lcall	set_pwm_limit_low_rpm
-	jnb	Flags1.HIGH_RPM, ($+6)	; Do if high rpm
+	jnb	Flag_HIGH_RPM, ($+6)	; Do if high rpm
 	lcall	set_pwm_limit_high_rpm
 	call	wait_for_comm
 	call	comm2comm3
@@ -3743,7 +3729,7 @@ run6:
 ;		wait_before_zc_scan
 
 	; Check if it is direct startup
-	jnb	Flags1.STARTUP_PHASE, normal_run_checks
+	jnb	Flag_STARTUP_PHASE, normal_run_checks
 
 	; Set spoolup power variables
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
@@ -3755,8 +3741,8 @@ run6:
 	subb	A, Temp2					; Is counter above requirement?
 	jc	direct_start_check_rcp		; No - proceed
 
-	clr	Flags1.STARTUP_PHASE		; Clear startup phase flag
-	setb	Flags1.INITIAL_RUN_PHASE		; Set initial run phase flag
+	clr	Flag_STARTUP_PHASE			; Clear startup phase flag
+	setb	Flag_INITIAL_RUN_PHASE		; Set initial run phase flag
 	mov	Initial_Run_Rot_Cntd, Temp3	; Set initial run rotation count
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
@@ -3771,8 +3757,8 @@ direct_start_check_rcp:
 
 normal_run_checks:
 	; Check if it is initial run phase
-	jnb	Flags1.INITIAL_RUN_PHASE, initial_run_phase_done	; If not initial run phase - branch
-	jb	Flags1.DIR_CHANGE_BRAKE, initial_run_phase_done	; If a direction change - branch
+	jnb	Flag_INITIAL_RUN_PHASE, initial_run_phase_done	; If not initial run phase - branch
+	jb	Flag_DIR_CHANGE_BRAKE, initial_run_phase_done	; If a direction change - branch
 
 	; Decrement startup rotaton count
 	mov	A, Initial_Run_Rot_Cntd
@@ -3780,14 +3766,14 @@ normal_run_checks:
 	; Check number of initial rotations
 	jnz	initial_run_check_startup_rot	; Branch if counter is not zero
 
-	clr	Flags1.INITIAL_RUN_PHASE		; Clear initial run phase flag
-	setb	Flags1.MOTOR_STARTED		; Set motor started
+	clr	Flag_INITIAL_RUN_PHASE		; Clear initial run phase flag
+	setb	Flag_MOTOR_STARTED			; Set motor started
 	ajmp	run1						; Continue with normal run
 
 initial_run_check_startup_rot:
 	mov	Initial_Run_Rot_Cntd, A		; Not zero - store counter
 
-	jb	Flags3.PGM_BIDIR, initial_run_continue_run	; Check if bidirectional operation
+	jb	Flag_PGM_BIDIR, initial_run_continue_run	; Check if bidirectional operation
 
 	mov	A, New_Rcp				; Load new pulse value
 	jz	run_to_wait_for_power_on		; Check if pulse is below stop value
@@ -3799,7 +3785,7 @@ initial_run_phase_done:
 	; Reset stall count
 	mov	Stall_Cnt, #0
 	; Exit run loop after a given time
-	jb	Flags3.PGM_BIDIR, run6_check_timeout	; Check if bidirectional operation
+	jb	Flag_PGM_BIDIR, run6_check_timeout	; Check if bidirectional operation
 
 	mov	Temp1, #250
 	mov	Temp2, #Pgm_Brake_On_Stop
@@ -3818,26 +3804,26 @@ run6_check_timeout:
 	jz	run_to_wait_for_power_on		; If it is zero - go back to wait for poweron
 
 run6_check_dir:
-	jnb	Flags3.PGM_BIDIR, run6_check_speed			; Check if bidirectional operation
+	jnb	Flag_PGM_BIDIR, run6_check_speed			; Check if bidirectional operation
 
-	jb	Flags3.PGM_DIR_REV, run6_check_dir_rev		; Check if actual rotation direction
-	jb	Flags2.RCP_DIR_REV, run6_check_dir_change	; Matches force direction
+	jb	Flag_PGM_DIR_REV, run6_check_dir_rev		; Check if actual rotation direction
+	jb	Flag_RCP_DIR_REV, run6_check_dir_change		; Matches force direction
 	sjmp	run6_check_speed
 
 run6_check_dir_rev:
-	jnb	Flags2.RCP_DIR_REV, run6_check_dir_change
+	jnb	Flag_RCP_DIR_REV, run6_check_dir_change
 	sjmp	run6_check_speed
 
 run6_check_dir_change:
-	jb	Flags1.DIR_CHANGE_BRAKE, run6_check_speed
+	jb	Flag_DIR_CHANGE_BRAKE, run6_check_speed
 
-	setb	Flags1.DIR_CHANGE_BRAKE		; Set brake flag
+	setb	Flag_DIR_CHANGE_BRAKE		; Set brake flag
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking
 	ajmp	run4						; Go back to run 4, thereby changing force direction
 
 run6_check_speed:
 	mov	Temp1, #0F0h				; Default minimum speed
-	jnb	Flags1.DIR_CHANGE_BRAKE, run6_brake_done; Is it a direction change?
+	jnb	Flag_DIR_CHANGE_BRAKE, run6_brake_done; Is it a direction change?
 
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking
 	mov	Temp1, #20h				; Bidirectional braking termination speed
@@ -3849,13 +3835,13 @@ run6_brake_done:
 	jnc	($+5)					; Yes - stop or turn direction
 	ajmp	run1						; No - go back to run 1
 
-	jnb	Flags1.DIR_CHANGE_BRAKE, run_to_wait_for_power_on	; If it is not a direction change - stop
+	jnb	Flag_DIR_CHANGE_BRAKE, run_to_wait_for_power_on	; If it is not a direction change - stop
 
-	clr	Flags1.DIR_CHANGE_BRAKE		; Clear brake flag
-	clr	Flags3.PGM_DIR_REV			; Set spinning direction. Default fwd
-	jnb	Flags2.RCP_DIR_REV, ($+5)	; Check force direction
-	setb	Flags3.PGM_DIR_REV			; Set spinning direction
-	setb	Flags1.INITIAL_RUN_PHASE
+	clr	Flag_DIR_CHANGE_BRAKE		; Clear brake flag
+	clr	Flag_PGM_DIR_REV			; Set spinning direction. Default fwd
+	jnb	Flag_RCP_DIR_REV, ($+5)		; Check force direction
+	setb	Flag_PGM_DIR_REV			; Set spinning direction
+	setb	Flag_INITIAL_RUN_PHASE
 	mov	Initial_Run_Rot_Cntd, #18
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
 	ajmp	run1						; Go back to run 1
@@ -3873,6 +3859,7 @@ run_to_wait_for_power_on_stall_done:
 	call	switch_power_off
 	mov	Flags0, #0				; Clear flags0
 	mov	Flags1, #0				; Clear flags1
+	mov	Flags_Startup, #0			; Clear startup flags
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz
 
