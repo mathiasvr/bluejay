@@ -21,7 +21,7 @@ KEIL_PATH		?= ~/Downloads/keil_8051/9.60/BIN
 # directory config
 OUTPUT_DIR		?= build
 OUTPUT_DIR_HEX	?= $(OUTPUT_DIR)/hex
-LOG_DIR			?= $(OUTPUT_DIR)/log
+LOG_DIR			?= $(OUTPUT_DIR)/logs
 
 # define the assembler/linker scripts
 AX51_BIN = $(KEIL_PATH)/AX51.exe
@@ -85,7 +85,7 @@ SINGLE_TARGET_HEX = $(OUTPUT_DIR_HEX)/$(TARGET)_$(MCU)_$(FETON_DELAY)_$(PWM_FREQ
 single_target : $(SINGLE_TARGET_HEX)
 
 all : $$(HEX_TARGETS)
-	@echo "\nbuild finished. built $(shell ls -l $(OUTPUT_DIR_HEX) | wc -l) hex targets\n"
+	@echo "\nbuild finished. built $(shell ls -Aq $(OUTPUT_DIR_HEX) | wc -l) hex targets\n"
 
 # create all obj targets using macro expansion
 $(foreach _t,$(TARGETS), \
