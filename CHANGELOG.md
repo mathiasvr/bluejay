@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/mathiasvr/bluejay/compare/v0.2.1...v0.3.0) (2020-10-31)
+
+
+### Features
+
+* Add 48kHz pwm option ([01642d7](https://github.com/mathiasvr/bluejay/commit/01642d718a83105b1fb22a8b12fdf5a125f5c110))
+
+
+### Bug Fixes
+
+* Fix telemetry data conversion bug ([8e56a2a](https://github.com/mathiasvr/bluejay/commit/8e56a2a3772f94acbaef8d0237dbc114ae72b14f))
+* Update telemetry start delay ([596d3be](https://github.com/mathiasvr/bluejay/commit/596d3bee2c698d775a090cf670c4d3ab69009934))
+
+
+### Performance Improvements
+
+* Micro-optimize telemetry packet creation ([c9640f9](https://github.com/mathiasvr/bluejay/commit/c9640f9e5ae6dc4f11ec2650603d30b37596ee38))
+
 ### [0.2.1](https://github.com/mathiasvr/bluejay/compare/v0.2.0...v0.2.1) (2020-10-25)
 
 
