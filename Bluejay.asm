@@ -167,7 +167,7 @@ INITIAL_RUN_PHASE			EQU	1		; Set when in initial run phase, before synchronized 
 MOTOR_STARTED				EQU	2		; Set when motor is started
 DIR_CHANGE_BRAKE			EQU	3		; Set when braking before direction change
 HIGH_RPM					EQU	4		; Set when motor rpm is high (Comm_Period4x_H less than 2)
-;						EQU	5
+LOW_PWM_POWER				EQU	5		; Set when pwm duty cycle is below 50%
 ;						EQU	6
 ;						EQU	7
 
@@ -235,7 +235,6 @@ Power_Pwm_Reg_L:			DS	1		; Power pwm register setting (lo byte)
 Power_Pwm_Reg_H:			DS	1		; Power pwm register setting (hi byte). 0x3F is minimum power
 Damp_Pwm_Reg_L:			DS	1		; Damping pwm register setting (lo byte)
 Damp_Pwm_Reg_H:			DS	1		; Damping pwm register setting (hi byte)
-Current_Power_Pwm_Reg_H:		DS	1		; Current power pwm register setting that is loaded in the PCA register (hi byte)
 
 Pwm_Limit:				DS	1		; Maximum allowed pwm
 Pwm_Limit_By_Rpm:			DS	1		; Maximum allowed pwm for low or high rpms
@@ -1005,35 +1004,56 @@ pca_int:	; Used for setting pwm registers
 	push	ACC
 
 IF FETON_DELAY != 0					; HI/LO enable style drivers
-	mov	A, PCA0L					; Read low byte, to transfer high byte to holding register
-	mov	A, Current_Power_Pwm_Reg_H
-	jnb	ACC.(PWM_BITS_H-1), pca_int_hi_pwm
+	mov	A, PCA0L					; Read low byte first, to transfer high byte to holding register
+	mov	A, PCA0H
 
-	mov	A, PCA0H					; Power below 50%, update pca in the 0x00-0x0F range
+	jnb	Flags1.LOW_PWM_POWER, pca_int_hi_pwm
+
+	; Power below 50%, update pca in the 0x00-0x0F range
 	jb	ACC.PWM_BITS_H, pca_int_exit	; PWM edge selection bit (continue if up edge)
-	jb	ACC.(PWM_BITS_H-1), pca_int_exit
 
 	sjmp	pca_int_set_pwm
 
 pca_int_hi_pwm:
-	mov	A, PCA0H					; Power above 50%, update pca in the 0x20-0x2F range
+	; Power above 50%, update pca in the 0x20-0x2F range
 	jnb	ACC.PWM_BITS_H, pca_int_exit	; PWM edge selection bit (continue if down edge)
-	jb	ACC.(PWM_BITS_H-1), pca_int_exit
 
 pca_int_set_pwm:
+	IF PWM_BITS_H != 0
+		jb	ACC.(PWM_BITS_H-1), pca_int_exit
+	ELSE
+		mov	A, PCA0L
+		jb	ACC.7, pca_int_exit
+	ENDIF
 ENDIF
 
-	; Set power pwm registers
+; Set power pwm auto-reload registers
+IF PWM_BITS_H != 0
 	mov	PCA0_POWER_L, Power_Pwm_Reg_L
 	mov	PCA0_POWER_H, Power_Pwm_Reg_H
-
-IF FETON_DELAY != 0
-	; Set damp pwm registers
-	mov	PCA0_DAMP_L, Damp_Pwm_Reg_L
-	mov	PCA0_DAMP_H, Damp_Pwm_Reg_H
+ELSE
+	mov	PCA0_POWER_H, Power_Pwm_Reg_L
 ENDIF
 
-	mov	Current_Power_Pwm_Reg_H, Power_Pwm_Reg_H
+IF FETON_DELAY != 0
+	; Set damp pwm auto-reload registers
+	IF PWM_BITS_H != 0
+		mov	PCA0_DAMP_L, Damp_Pwm_Reg_L
+		mov	PCA0_DAMP_H, Damp_Pwm_Reg_H
+	ELSE
+		mov	PCA0_DAMP_H, Damp_Pwm_Reg_L
+	ENDIF
+ENDIF
+
+	setb	Flags1.LOW_PWM_POWER
+IF PWM_BITS_H != 0
+	mov	A, Power_Pwm_Reg_H
+	jb	ACC.(PWM_BITS_H-1), ($+5)
+ELSE
+	mov	A, Power_Pwm_Reg_L
+	jb	ACC.7, ($+5)
+ENDIF
+	clr	Flags1.LOW_PWM_POWER
 
 	Disable_COVF_Interrupt
 IF FETON_DELAY == 0					; EN/PWM style drivers
@@ -1047,6 +1067,7 @@ pca_int_exit:
 IF FETON_DELAY == 0
 	Clear_CCF_Interrupt
 ENDIF
+
 	pop	ACC						; Restore preserved registers
 	setb	IE_EA
 	reti

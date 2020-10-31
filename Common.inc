@@ -239,8 +239,7 @@ LOCAL pca_enabled set_pca_int_hi_pwm
 IF FETON_DELAY != 0
 	Enable_COVF_Interrupt
 ELSE
-	mov	A, Current_Power_Pwm_Reg_H
-	jnb	ACC.(PWM_BITS_H-1), set_pca_int_hi_pwm
+	jnb	Flags1.LOW_PWM_POWER, set_pca_int_hi_pwm
 
 	Enable_COVF_Interrupt
 	sjmp	pca_enabled
