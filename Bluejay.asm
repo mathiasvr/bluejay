@@ -712,17 +712,6 @@ t1_int_startup_boosted:
 	mov	Temp2, #1
 
 t1_int_zero_rcp_checked:
-	; Align to 10 bits for 24MHz MCU
-IF MCU_48MHZ == 0
-	clr	C
-	mov	A, Temp5
-	rrc	A
-	mov	Temp5, A
-	mov	A, Temp4
-	rrc	A
-	mov	Temp4, A
-ENDIF
-
 	; Decrement outside range counter
 	mov	A, Rcp_Outside_Range_Cnt
 	jz	($+4)
@@ -752,16 +741,23 @@ ENDIF
 	jnc	t1_int_set_pwm_registers
 
 	mov	A, Temp6						; Multiply limit by 4 (8 for 48MHz MCUs)
-IF MCU_48MHZ == 0
-	mov	B, #4
-ELSE
 	mov	B, #8
-ENDIF
 	mul	AB
 	mov	Temp4, A
 	mov	Temp5, B
 
 t1_int_set_pwm_registers:
+	; Align to 10 bits for 24MHz MCU
+IF MCU_48MHZ == 0
+	clr	C
+	mov	A, Temp5
+	rrc	A
+	mov	Temp5, A
+	mov	A, Temp4
+	rrc	A
+	mov	Temp4, A
+ENDIF
+
 IF PWM_48KHZ != 0
 	; Scale down pwm resolution
 	clr	C
