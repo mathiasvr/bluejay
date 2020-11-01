@@ -1493,7 +1493,10 @@ waitxms_m:		; Middle loop
 ; Sets power limit for low rpms and disables demag for low rpms
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-set_pwm_limit_low_rpm:
+set_pwm_limit:
+	jb	Flag_HIGH_RPM, set_pwm_limit_high_rpm	; If high rpm, limit pwm by rpm instead
+
+;set_pwm_limit_low_rpm:
 	; Set pwm limit
 	mov	Temp1, #0FFh					; Default full power
 	jb	Flag_STARTUP_PHASE, set_pwm_limit_low_rpm_exit	; Exit if startup phase set
@@ -3329,7 +3332,7 @@ wait_for_power_on_not_missing:
 	sjmp	wait_for_power_on_loop		; If not DShot command - start over
 
 wait_for_power_on_nonzero:
-	lcall	wait100ms				; Wait to see if start pulse was only a glitch
+	call	wait100ms					; Wait to see if start pulse was only a glitch
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	jnz	($+5)					; If it is not zero - proceed
 	ajmp	init_no_signal				; If it is zero (pulses missing) - go back to detect input signal
@@ -3663,10 +3666,7 @@ run2:
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
-	jb	Flag_HIGH_RPM, ($+6)	; Skip if high rpm
-	lcall	set_pwm_limit_low_rpm
-	jnb	Flag_HIGH_RPM, ($+6)	; Do if high rpm
-	lcall	set_pwm_limit_high_rpm
+	call	set_pwm_limit			; Set pwm power limit for low or high rpm
 	call	wait_for_comm
 	call	comm2comm3
 	call	calc_next_comm_timing
