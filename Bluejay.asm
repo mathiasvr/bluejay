@@ -656,9 +656,8 @@ t1_int_not_bidir:
 	addc	A, #0
 	mov	Temp5, A
 	jnb	ACC.3, ($+7)
-
-	mov	Temp4, #0FFh
-	mov	Temp5, #0FFh
+	mov	Temp4, #0FFh					; Set maximum 11-bit value
+	mov	Temp5, #07h
 
 	; Boost pwm during direct start
 	mov	A, Flags_Startup
@@ -692,38 +691,34 @@ t1_int_startup_boost_stall:
 
 t1_int_startup_boosted:
 	; Set 8bit value
-	clr	C
 	mov	A, Temp4
-	rlc	A
+	anl	A, #0F8h
+	orl	A, Temp5		; Assumes Temp5 to be 3-bit (11-bit rcp)
 	swap	A
-	anl	A, #0Fh
+	rl	A
+	mov	Temp3, A
 	mov	Temp2, A
-	mov	A, Temp5
-	rlc	A
-	swap	A
-	anl	A, #0F0h
-	orl	A, Temp2
-	mov	Temp2, A
-	jnz	t1_int_zero_rcp_checked	; New_Rcp (Temp2) is only zero if all 11 bits are zero
+
+	jnz	t1_int_zero_rcp_checked	; New_Rcp (Temp3) is only zero if all 11 bits are zero
 
 	mov	A, Temp4
-	jz	t1_int_zero_rcp_checked
+	jz	t1_int_zero_rcp_checked_was_zero
 
-	mov	Temp2, #1
+	mov	Temp3, #1
 
 t1_int_zero_rcp_checked:
+	; if not zero
+	mov	Rcp_Stop_Cnt, #0				; Reset rcp stop counter
+
+t1_int_zero_rcp_checked_was_zero:
+
 	; Decrement outside range counter
 	mov	A, Rcp_Outside_Range_Cnt
 	jz	($+4)
 	dec	Rcp_Outside_Range_Cnt
 
 	; Pulse ready
-	mov	New_Rcp, Temp2					; Store new pulse length
-	; Check if zero
-	mov	A, Temp2						; Load new pulse value
-	jz	($+5)						; Check if pulse is zero
-
-	mov	Rcp_Stop_Cnt, #0				; Reset rcp stop counter
+	mov	New_Rcp, Temp3					; Store new pulse length
 
 	; Set pwm limit
 	clr	C
@@ -737,57 +732,63 @@ t1_int_zero_rcp_checked:
 	; Check against limit
 	clr	C
 	mov	A, Temp6
-	subb	A, Temp2	; New_Rcp
+	subb	A, Temp3	; New_Rcp
 	jnc	t1_int_set_pwm_registers
 
-	mov	A, Temp6						; Multiply limit by 4 (8 for 48MHz MCUs)
+IF PWM_BITS_H == 0						; 8-bit pwm
+	mov	A, Temp6
+	mov	Temp2, A
+ELSE
+	mov	A, Temp6						; Multiply limit by 8 for 11-bit pwm
 	mov	B, #8
 	mul	AB
 	mov	Temp4, A
 	mov	Temp5, B
+ENDIF
 
 t1_int_set_pwm_registers:
-	; Align to 10 bits for 24MHz MCU
-IF MCU_48MHZ == 0
-	clr	C
+
+; Scale pwm resolution and invert
+IF PWM_BITS_H == 3					; 11-bit pwm
 	mov	A, Temp5
-	rrc	A
-	mov	Temp5, A
-	mov	A, Temp4
-	rrc	A
-	mov	Temp4, A
-ENDIF
-
-IF PWM_48KHZ != 0
-	; Scale down pwm resolution
-	clr	C
-	mov	A, Temp5
-	rrc	A
-	mov	Temp5, A
-	mov	A, Temp4
-	rrc	A
-	mov	Temp4, A
-ENDIF
-
-
-IF FETON_DELAY != 0
-	clr	C
-ENDIF
-
-	mov	A, Temp5
-IF FETON_DELAY != 0
-	rrc	A				; Scale down pwm resolution
-ENDIF
 	cpl	A
-	anl	A, #((1 SHL PWM_BITS_H) - 1)
+	anl	A, #7
 	mov	Temp3, A
-
 	mov	A, Temp4
-IF FETON_DELAY != 0
-	rrc	A				; Scale down pwm resolution
-ENDIF
 	cpl	A
 	mov	Temp2, A
+ELSEIF PWM_BITS_H == 2				; 10-bit pwm
+	clr	C
+	mov	A, Temp5
+	rrc	A
+	cpl	A
+	anl	A, #3
+	mov	Temp3, A
+	mov	A, Temp4
+	rrc	A
+	cpl	A
+	mov	Temp2, A
+ELSEIF PWM_BITS_H == 1				; 9-bit pwm
+	mov	B, Temp5
+	mov	A, Temp4
+	mov	C, B.0
+	rrc	A
+	mov	C, B.1
+	rrc	A
+	cpl	A
+	mov	Temp2, A
+	mov	A, Temp5
+	rr	A
+	rr	A
+	cpl	A
+	anl	A, #1
+	mov	Temp3, A
+ELSEIF PWM_BITS_H == 0				; 8-bit pwm
+	mov	A, Temp2					; Temp2 already 8-bit
+	cpl	A
+	mov	Temp2, A
+	mov	Temp3, #0
+ENDIF
 
 
 IF FETON_DELAY != 0
