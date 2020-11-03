@@ -179,6 +179,7 @@ Flag_PGM_BIDIR_REV			BIT	Flags3.1	; Programmed bidirectional direction. 0=normal
 Flag_PGM_BIDIR				BIT	Flags3.2	; Programmed bidirectional operation. 0=normal, 1=bidirectional
 Flag_SKIP_T2_INT			BIT	Flags3.3	; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
 Flag_CLOCK_SET_AT_48MHZ		BIT	Flags3.4	; Set if 48MHz MCUs run at 48MHz
+Flag_RCP_STOP				BIT	Flags3.5	; Set if the RC pulse value is zero
 
 Tlm_Data_L:				DS	1		; DShot telemetry data low byte
 Tlm_Data_H:				DS	1		; DShot telemetry data high byte
@@ -217,7 +218,6 @@ Wt_Comm_Start_H:			DS	1		; Timer 3 start point from zero cross to commutation (h
 Dshot_Cmd:				DS	1		; DShot command
 Dshot_Cmd_Cnt:				DS	1		; DShot command count
 
-New_Rcp:					DS	1		; New RC pulse value in pca counts
 Rcp_Stop_Cnt:				DS	1		; Counter for RC pulses below stop value
 
 Power_Pwm_Reg_L:			DS	1		; Power pwm register setting (lo byte)
@@ -534,8 +534,8 @@ t1_int_outside_range:
 	subb	A, #50					; Allow a given number of outside pulses
 	jc	t1_int_exit_timeout			; If outside limits - ignore first pulses
 
+	setb	Flag_RCP_STOP				; Set pulse length to zero
 	clr	A
-	mov	New_Rcp, A				; Set pulse length to zero
 	mov	Dshot_Cmd, A				; Clear DShot command
 	mov	Dshot_Cmd_Cnt, A			; Clear DShot command count
 
@@ -696,29 +696,25 @@ t1_int_startup_boosted:
 	orl	A, Temp5		; Assumes Temp5 to be 3-bit (11-bit rcp)
 	swap	A
 	rl	A
-	mov	Temp3, A
 	mov	Temp2, A
 
-	jnz	t1_int_zero_rcp_checked	; New_Rcp (Temp3) is only zero if all 11 bits are zero
+	jnz	t1_int_rcp_not_zero
 
-	mov	A, Temp4
-	jz	t1_int_zero_rcp_checked_was_zero
+	mov	A, Temp4					; New_Rcp (Temp2) is only zero if all 11 bits are zero
+	jnz	t1_int_rcp_not_zero
 
-	mov	Temp3, #1
+	setb	Flag_RCP_STOP
+	sjmp	t1_int_zero_rcp_checked
+
+t1_int_rcp_not_zero:
+	mov	Rcp_Stop_Cnt, #0				; Reset rcp stop counter
+	clr	Flag_RCP_STOP					; Pulse ready
 
 t1_int_zero_rcp_checked:
-	; if not zero
-	mov	Rcp_Stop_Cnt, #0				; Reset rcp stop counter
-
-t1_int_zero_rcp_checked_was_zero:
-
 	; Decrement outside range counter
 	mov	A, Rcp_Outside_Range_Cnt
 	jz	($+4)
 	dec	Rcp_Outside_Range_Cnt
-
-	; Pulse ready
-	mov	New_Rcp, Temp3					; Store new pulse length
 
 	; Set pwm limit
 	clr	C
@@ -726,13 +722,12 @@ t1_int_zero_rcp_checked_was_zero:
 	mov	Temp6, A						; Store limit in Temp6
 	subb	A, Pwm_Limit_By_Rpm
 	jc	($+4)
-
 	mov	Temp6, Pwm_Limit_By_Rpm
 
 	; Check against limit
 	clr	C
 	mov	A, Temp6
-	subb	A, Temp3	; New_Rcp
+	subb	A, Temp2	; 8-bit rc pulse
 	jnc	t1_int_set_pwm_registers
 
 IF PWM_BITS_H == 0						; 8-bit pwm
@@ -890,8 +885,7 @@ ENDIF
 	dec	Rcp_Timeout_Cntd			; No decrement
 
 	; Check RC pulse against stop value
-	mov	A, New_Rcp				; Load new pulse value
-	jz	t2_int_rcp_stop			; Check if pulse is below stop value
+	jb	Flag_RCP_STOP, t2_int_rcp_stop; Check if pulse is below stop value
 
 	; RC pulse higher than stop value, reset stop counter
 	mov	Rcp_Stop_Cnt, #0			; Reset rcp stop counter
@@ -3242,8 +3236,7 @@ arming_begin:
 arming_wait:
 	call	wait100ms					; Wait for new throttle value
 
-	mov	A, New_Rcp				; Load new RC pulse value
-	jnz	arming_wait				; Start over if not below stop
+	jnb	Flag_RCP_STOP, arming_wait	; Start over if not below stop
 
 	; Beep arm sequence end signal
 	clr	IE_EA					; Disable all interrupts
@@ -3314,8 +3307,7 @@ wait_for_power_on_no_beep:
 	ajmp	init_no_signal				; If pulses missing - go back to detect input signal
 
 wait_for_power_on_not_missing:
-	mov	A, New_Rcp				; Load new RC pulse value
-	jnz	wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
+	jnb	Flag_RCP_STOP,	wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
 
 	mov	A, Dshot_Cmd
 	jnz	check_dshot_cmd			; Check DShot command (if not zero)
@@ -3740,8 +3732,7 @@ run6:
 	sjmp	normal_run_checks
 
 direct_start_check_rcp:
-	mov	A, New_Rcp				; Load new pulse value
-	jnz	run1						; If pulse is above stop value - Continue to run
+	jnb	Flag_RCP_STOP, run1			; If pulse is above stop value - Continue to run
 
 	ajmp	run_to_wait_for_power_on
 
@@ -3766,8 +3757,7 @@ initial_run_check_startup_rot:
 
 	jb	Flag_PGM_BIDIR, initial_run_continue_run	; Check if bidirectional operation
 
-	mov	A, New_Rcp				; Load new pulse value
-	jz	run_to_wait_for_power_on		; Check if pulse is below stop value
+	jb	Flag_RCP_STOP,	run_to_wait_for_power_on		; Check if pulse is below stop value
 
 initial_run_continue_run:
 	ajmp	run1						; Continue to run
@@ -3839,8 +3829,8 @@ run6_brake_done:
 
 run_to_wait_for_power_on_fail:
 	inc	Stall_Cnt					; Increment stall count
-	mov	A, New_Rcp				; Check if RCP is zero, then it is a normal stop
-	jnz	run_to_wait_for_power_on_stall_done
+	; Check if RCP is zero, then it is a normal stop
+	jnb	Flag_RCP_STOP, run_to_wait_for_power_on_stall_done
 
 run_to_wait_for_power_on:
 	mov	Stall_Cnt, #0
