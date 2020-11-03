@@ -360,11 +360,11 @@ Eep_Name:					DB	"Bluejay (BETA)  "				; Name tag (16 Bytes)
 ; DShot Telemetry Macros
 IF MCU_48MHZ == 1
 	DSHOT_TLM_CLOCK		EQU	49000000				; 49MHz
-	DSHOT_TLM_START_DELAY	EQU	-(14 * 49 / 4)			; Start telemetry after 8us (~30us after receiving DShot cmd)
+	DSHOT_TLM_START_DELAY	EQU	-(14 * 49 / 4)			; Start telemetry after 14us (~30us after receiving DShot cmd)
 	DSHOT_TLM_PREDELAY		EQU	8					; 8 timer 0 ticks inherent delay
 ELSE
 	DSHOT_TLM_CLOCK		EQU	24500000				; 24.5MHz
-	DSHOT_TLM_START_DELAY	EQU	-1					; Start telemetry after 1 tick (~37us after receiving DShot cmd)
+	DSHOT_TLM_START_DELAY	EQU	-1					; Start telemetry after 1 tick (~30us after receiving DShot cmd)
 	DSHOT_TLM_PREDELAY		EQU	6					; 6 timer 0 ticks inherent delay
 ENDIF
 
@@ -550,7 +550,7 @@ t1_int_decode_checksum:
 	Decode_DShot_2Bit	Temp3, t1_int_outside_range
 	Decode_DShot_2Bit	Temp3, t1_int_outside_range
 
-	; XOR check (in inverted data, which is ok)
+	; XOR check (in inverted data, which is ok), only low nibble is considered
 	mov	A, Temp4
 	swap	A
 	xrl	A, Temp4
@@ -575,15 +575,15 @@ t1_int_decode_checksum:
 	mov	Temp5, A
 	jnc	t1_normal_range
 
-	mov	A, Temp3			; Check for 0 or DShot command
+	mov	A, Temp3					; Check for 0 or DShot command
 	mov	Temp5, #0
 	mov	Temp4, #0
 	jz	t1_normal_range
 
 	mov	Temp3, #0
-	clr	C				; We are in the special DShot range
-	rrc	A				; Divide by 2
-	jnc	t1_dshot_set_cmd	; Check for tlm bit set (if not telemetry, Temp3 will be zero and result in invalid command)
+	clr	C						; We are in the special DShot range
+	rrc	A						; Divide by 2
+	jnc	t1_dshot_set_cmd			; Check for tlm bit set (if not telemetry, Temp3 will be zero and result in invalid command)
 
 	mov	Temp3, A
 	cjne	A, Dshot_Cmd, t1_dshot_set_cmd
@@ -607,7 +607,7 @@ t1_normal_range:
 	mov	A, Temp5
 	subb	A, #07h
 	mov	Temp3, A
-	jc	t1_int_bidir_fwd				; If result is negative - branch
+	jc	t1_int_bidir_fwd			; If result is negative - branch
 
 	mov	A, Temp2
 	mov	Temp4, A
@@ -625,7 +625,7 @@ t1_int_bidir_rev_chk:
 
 	cpl	Flag_RCP_DIR_REV
 
-	clr	C							; Multiply throttle value by 2
+	clr	C						; Multiply throttle value by 2
 	mov	A, Temp4
 	rlc	A
 	mov	Temp4, A
@@ -656,7 +656,7 @@ t1_int_not_bidir:
 	addc	A, #0
 	mov	Temp5, A
 	jnb	ACC.3, ($+7)
-	mov	Temp4, #0FFh					; Set maximum 11-bit value
+	mov	Temp4, #0FFh				; Set maximum 11-bit value
 	mov	Temp5, #07h
 
 	; Boost pwm during direct start
@@ -665,7 +665,7 @@ t1_int_not_bidir:
 
 	jb	Flag_MOTOR_STARTED, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
 
-	mov	A, Pwm_Limit_Beg				; Set 25% of max startup power as minimum power
+	mov	A, Pwm_Limit_Beg			; Set 25% of max startup power as minimum power
 	rlc	A
 	mov	Temp3, A
 	mov	A, Temp5
@@ -680,7 +680,7 @@ t1_int_not_bidir:
 	mov	Temp4, A
 
 t1_int_startup_boost_stall:
-	mov	A, Stall_Cnt					; Add an extra power boost during start
+	mov	A, Stall_Cnt				; Add an extra power boost during start
 	swap	A
 	rlc	A
 	add	A, Temp4
@@ -690,10 +690,10 @@ t1_int_startup_boost_stall:
 	mov	Temp5, A
 
 t1_int_startup_boosted:
-	; Set 8bit value
+	; Set 8-bit value
 	mov	A, Temp4
 	anl	A, #0F8h
-	orl	A, Temp5		; Assumes Temp5 to be 3-bit (11-bit rcp)
+	orl	A, Temp5					; Assumes Temp5 to be 3-bit (11-bit rcp)
 	swap	A
 	rl	A
 	mov	Temp2, A
@@ -707,8 +707,8 @@ t1_int_startup_boosted:
 	sjmp	t1_int_zero_rcp_checked
 
 t1_int_rcp_not_zero:
-	mov	Rcp_Stop_Cnt, #0				; Reset rcp stop counter
-	clr	Flag_RCP_STOP					; Pulse ready
+	mov	Rcp_Stop_Cnt, #0			; Reset rcp stop counter
+	clr	Flag_RCP_STOP				; Pulse ready
 
 t1_int_zero_rcp_checked:
 	; Decrement outside range counter
@@ -718,8 +718,8 @@ t1_int_zero_rcp_checked:
 
 	; Set pwm limit
 	clr	C
-	mov	A, Pwm_Limit					; Limit to the smallest
-	mov	Temp6, A						; Store limit in Temp6
+	mov	A, Pwm_Limit				; Limit to the smallest
+	mov	Temp6, A					; Store limit in Temp6
 	subb	A, Pwm_Limit_By_Rpm
 	jc	($+4)
 	mov	Temp6, Pwm_Limit_By_Rpm
@@ -730,11 +730,11 @@ t1_int_zero_rcp_checked:
 	subb	A, Temp2	; 8-bit rc pulse
 	jnc	t1_int_set_pwm_registers
 
-IF PWM_BITS_H == 0						; 8-bit pwm
+IF PWM_BITS_H == 0					; 8-bit pwm
 	mov	A, Temp6
 	mov	Temp2, A
 ELSE
-	mov	A, Temp6						; Multiply limit by 8 for 11-bit pwm
+	mov	A, Temp6					; Multiply limit by 8 for 11-bit pwm
 	mov	B, #8
 	mul	AB
 	mov	Temp4, A
@@ -788,7 +788,7 @@ ENDIF
 
 IF FETON_DELAY != 0
 	clr	C
-	mov	A, Temp2						; Skew damping fet timing
+	mov	A, Temp2					; Skew damping fet timing
 IF MCU_48MHZ == 0
 	subb	A, #((FETON_DELAY+1) SHR 1)
 ELSE
@@ -815,7 +815,7 @@ IF FETON_DELAY != 0
 	mov	Damp_Pwm_Reg_H, Temp5
 ENDIF
 
-	mov	Rcp_Timeout_Cntd, #10			; Set timeout count
+	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
 
 	; Prepare DShot telemetry
 IF MCU_48MHZ == 1
@@ -825,33 +825,33 @@ ENDIF
 	jnb	Flag_RCP_DSHOT_INVERTED, t1_int_exit_no_tlm
 	jnb	Flag_PACKET_PENDING, t1_int_exit_no_tlm
 	setb	Flag_TLM_ACTIVE
-	;Prepare timer 0 for sending telemetry data
-	mov	TL0, #DSHOT_TLM_START_DELAY		; Timer 0 will start tlm after this delay
+	; Prepare timer 0 for sending telemetry data
 	; todo: dshot150
-	;mov	Temp2, CKCON0					; Save value to restore later
-	mov	CKCON0, #01h					; Timer 0 is system clock divided by 4
-	mov	TMOD, #0A2h					; Timer 0 runs free not gated by INT0
+	;mov	Temp2, CKCON0				; Save value to restore later
+	mov	CKCON0, #01h				; Timer 0 is system clock divided by 4
+	mov	TMOD, #0A2h				; Timer 0 runs free not gated by INT0
 
-	clr	TCON_TF0						; Clear timer 0 overflow flag
-	setb	IE_ET0						; Enable timer 0 interrupts
+	mov	TL0, #DSHOT_TLM_START_DELAY	; Telemetry will begin after this delay
+	clr	TCON_TF0					; Clear timer 0 overflow flag
+	setb	IE_ET0					; Enable timer 0 interrupts
 
 	; Configure RTX_PIN for digital output
-	setb	RTX_PORT.RTX_PIN				; Default to high level
-	orl	RTX_MDOUT, #(1 SHL RTX_PIN)		; Set output mode to push-pull
+	setb	RTX_PORT.RTX_PIN			; Default to high level
+	orl	RTX_MDOUT, #(1 SHL RTX_PIN)	; Set output mode to push-pull
 
-	mov	Temp1, #0						; Set pointer to start
+	mov	Temp1, #0					; Set pointer to start
 
 	sjmp	t1_int_exit_no_int
 
 t1_int_exit_no_tlm:
-	mov	Temp1, #0						; Set pointer to start
-	mov	TL0, #0						; Reset timer 0
-	setb	IE_EX0						; Enable int0 interrupts
-	setb	IE_EX1						; Enable int1 interrupts
-	Enable_PCA_Interrupt				; Enable pca interrupts
+	mov	Temp1, #0					; Set pointer to start
+	mov	TL0, #0					; Reset timer 0
+	setb	IE_EX0					; Enable int0 interrupts
+	setb	IE_EX1					; Enable int1 interrupts
+	Enable_PCA_Interrupt			; Enable pca interrupts
 
 t1_int_exit_no_int:
-	pop	B							; Restore preserved registers
+	pop	B						; Restore preserved registers
 	pop	ACC
 	pop	PSW
 	reti
@@ -3020,7 +3020,7 @@ pgm_start:
 	; Initialize flash keys to invalid values
 	mov	Flash_Key_1, #0
 	mov	Flash_Key_2, #0
-	; Disable the WDT.
+	; Disable the WDT
 	mov	WDTCN, #0DEh		; Disable watchdog
 	mov	WDTCN, #0ADh
 	; Initialize stack
