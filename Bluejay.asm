@@ -2793,81 +2793,47 @@ switch_power_off:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 set_default_parameters:
 	mov	Temp1, #_Pgm_Gov_P_Gain
-	mov	@Temp1, #0FFh	; Governor P gain
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Governor I gain
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Governor mode
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Low voltage limit
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Multi gain
-	inc	Temp1
-	mov	@Temp1, #0FFh
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_STARTUP_PWR
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Pwm freq
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_DIRECTION
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Input polarity
+	PUSH_REG	Temp1, #0FFh		; Governor P gain
+	PUSH_REG	Temp1, #0FFh		; Governor I gain
+	PUSH_REG	Temp1, #0FFh		; Governor mode
+	PUSH_REG	Temp1, #0FFh		; Low voltage limit
+	PUSH_REG	Temp1, #0FFh		; Multi gain
+	PUSH_REG	Temp1, #0FFh
+	PUSH_REG	Temp1, #DEFAULT_PGM_STARTUP_PWR
+	PUSH_REG	Temp1, #0FFh		; Pwm freq
+	PUSH_REG	Temp1, #DEFAULT_PGM_DIRECTION
+	PUSH_REG	Temp1, #0FFh		; Input polarity
 
-	inc	Temp1		; Eep_Initialized_L
-	inc	Temp1		; Eep_Initialized_H
+	inc	Temp1				; Skip Eep_Initialized_L
+	inc	Temp1				; Skip Eep_Initialized_H
 
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Enable tx programming
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Main rearm start
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Governor setup target
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Startup rpm
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Startup accel
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Voltage comp
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_COMM_TIMING
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Damping force
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Governor range
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Startup method
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Minimum throttle
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Maximum throttle
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_BEEP_STRENGTH
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_BEACON_STRENGTH
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_BEACON_DELAY
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Throttle rate
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_DEMAG_COMP
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Bec voltage high
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Center throttle
-	inc	Temp1
-	mov	@Temp1, #0FFh
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Enable pwm input
-	inc	Temp1
-	mov	@Temp1, #0FFh	; Pwm dither
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_BRAKE_ON_STOP
-	inc	Temp1
-	mov	@Temp1, #DEFAULT_PGM_LED_CONTROL
+	PUSH_REG	Temp1, #0FFh		; Enable tx programming
+	PUSH_REG	Temp1, #0FFh		; Main rearm start
+	PUSH_REG	Temp1, #0FFh		; Governor setup target
+	PUSH_REG	Temp1, #0FFh		; Startup rpm
+	PUSH_REG	Temp1, #0FFh		; Startup accel
+	PUSH_REG	Temp1, #0FFh		; Voltage comp
+	PUSH_REG	Temp1, #DEFAULT_PGM_COMM_TIMING
+	PUSH_REG	Temp1, #0FFh		; Damping force
+	PUSH_REG	Temp1, #0FFh		; Governor range
+	PUSH_REG	Temp1, #0FFh		; Startup method
+	PUSH_REG	Temp1, #0FFh		; Minimum throttle
+	PUSH_REG	Temp1, #0FFh		; Maximum throttle
+	PUSH_REG	Temp1, #DEFAULT_PGM_BEEP_STRENGTH
+	PUSH_REG	Temp1, #DEFAULT_PGM_BEACON_STRENGTH
+	PUSH_REG	Temp1, #DEFAULT_PGM_BEACON_DELAY
+	PUSH_REG	Temp1, #0FFh		; Throttle rate
+	PUSH_REG	Temp1, #DEFAULT_PGM_DEMAG_COMP
+	PUSH_REG	Temp1, #0FFh		; Bec voltage high
+	PUSH_REG	Temp1, #0FFh		; Center throttle
+	PUSH_REG	Temp1, #0FFh
+	PUSH_REG	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT
+	PUSH_REG	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT
+	PUSH_REG	Temp1, #0FFh		; Enable pwm input
+	PUSH_REG	Temp1, #0FFh		; Pwm dither
+	PUSH_REG	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP
+	PUSH_REG	Temp1, #DEFAULT_PGM_LED_CONTROL
+
 	ret
 
 
