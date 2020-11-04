@@ -46,6 +46,9 @@ DUMMYVAR := $(foreach exec, $(EXECUTABLES), \
 				$(if $(wildcard $(exec)),found, \
 				$(error "Could not find $(exec). Make sure to set the correct paths to the simplicity install location")))
 
+# delete object files on error and warnings
+.DELETE_ON_ERROR:
+
 # make sure the list of obj files is expanded twice
 .SECONDEXPANSION:
 OBJS =
@@ -59,7 +62,7 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(REVISION).OBJ : $(ASM_SRC) $(ASM_INC)
 	$(eval _MCU_48MHZ	:= $(subst L,0,$(subst H,1,$(2))))
 	$(eval _FETON_DELAY	:= $(3))
 	$(eval _PWM_48KHZ	:= $(subst 24,0,$(subst 48,1,$(4))))
-	$(eval _LOG			:= $(LOG_DIR)/$(1)_$(2)_$(3)_$(REVISION).log)
+	$(eval _LOG			:= $(LOG_DIR)/$(1)_$(2)_$(3)_$(4)_$(REVISION).log)
 	@mkdir -p $(OUTPUT_DIR)
 	@mkdir -p $(LOG_DIR)
 	@echo "AX51 : $$@"
@@ -69,7 +72,7 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(REVISION).OBJ : $(ASM_SRC) $(ASM_INC)
 		"DEFINE(FETON_DELAY=$(_FETON_DELAY)) "\
 		"DEFINE(PWM_48KHZ=$(_PWM_48KHZ)) "\
 		"OBJECT($$@) "\
-		"$(AX51_FLAGS)" > $(_LOG) 2>&1; test $$$$? -lt 2 || (mv ./Bluejay.LST $(OUTPUT_DIR)/; tail $(_LOG); exit 1)
+		"$(AX51_FLAGS)" > $(_LOG) 2>&1 || (mv ./Bluejay.LST $(OUTPUT_DIR)/; tail $(_LOG); exit 1)
 	@mv ./Bluejay.LST $(OUTPUT_DIR)/
 
 endef
@@ -105,7 +108,7 @@ $(OUTPUT_DIR_HEX)/%.hex : $(OUTPUT_DIR)/%.OMF
 	$(eval LOG := $(LOG_DIR)/$(basename $(notdir $@)).log)
 	@mkdir -p $(OUTPUT_DIR_HEX)
 	@echo "OHX  : generating hex file $@"
-	@$(OX51) "$<" "HEXFILE ($@)" >> $(LOG) 2>&1; test $$? -lt 2 || (tail $(LOG); exit 1)
+	@$(OX51) "$<" "HEXFILE ($@)" >> $(LOG) 2>&1 || (tail $(LOG); exit 1)
 
 help:
 	@echo ""
