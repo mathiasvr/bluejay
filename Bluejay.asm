@@ -295,12 +295,15 @@ Pgm_LED_Control:			DS	1		; Programmed LED control
 ; The sequence of the variables below is no longer of importance
 Pgm_Startup_Pwr_Decoded:		DS	1		; Programmed startup power decoded
 
+; Indirect addressing data segments
 ISEG AT 0B0h
 Stack:					DS	16		; Reserved stack space
 
-; Indirect addressing data segment
 ISEG AT 0C0h
-Temp_Storage:				DS	64		; Temporary storage
+Dithering_Patterns:			DS	16
+
+ISEG AT 0D0h
+Temp_Storage:				DS	48		; Temporary storage
 
 ;**** **** **** **** ****
 CSEG AT 1A00h							; "Eeprom" segment
@@ -728,7 +731,7 @@ t1_int_zero_rcp_checked:
 	clr	C
 	mov	A, Temp6
 	subb	A, Temp2	; 8-bit rc pulse
-	jnc	t1_int_set_pwm_registers
+	jnc	t1_int_scale_pwm_resolution
 
 IF PWM_BITS_H == 0					; 8-bit pwm
 	mov	A, Temp6
@@ -741,8 +744,7 @@ ELSE
 	mov	Temp5, B
 ENDIF
 
-t1_int_set_pwm_registers:
-
+t1_int_scale_pwm_resolution:
 ; Scale pwm resolution and invert
 IF PWM_BITS_H == 3					; 11-bit pwm
 	mov	A, Temp5
@@ -785,7 +787,40 @@ ELSEIF PWM_BITS_H == 0				; 8-bit pwm
 	mov	Temp3, #0
 ENDIF
 
+; 10-bit effective dithering of 8/9-bit pwm
+IF PWM_BITS_H < 2
+	mov	A, Temp4					; 11-bit low byte
+	cpl	A
+	rr	A
+	anl	A, #((1 SHL (2-PWM_BITS_H))-1); Get index into dithering pattern table
 
+	add	A, #Dithering_Patterns
+	mov	Temp1, A					; Reuse DShot pwm pointer since it is not currently in use.
+	mov	A, @Temp1					; Retrieve pattern
+	rl	A						; Rotate pattern
+	mov	@Temp1, A					; Store pattern
+
+	jnb ACC.0, dithering_done
+
+	mov	A, Temp2
+	add	A, #1
+	mov	Temp2, A
+IF PWM_BITS_H != 0
+	mov	A, Temp3
+	addc	A, #0
+	mov	Temp3, A
+	jnb	ACC.PWM_BITS_H, dithering_done
+	dec	Temp2
+	dec	Temp3
+ELSE
+	jnz	dithering_done
+	dec	Temp2
+ENDIF
+
+dithering_done:
+ENDIF
+
+; Set pwm registers
 IF FETON_DELAY != 0
 	clr	C
 	mov	A, Temp2					; Skew damping fet timing
@@ -2907,6 +2942,19 @@ decode_temp_step:
 
 decode_temp_done:
 	mov	Temp_Prot_Limit, A
+
+	; Dithering
+IF PWM_BITS_H == 1
+	mov	Temp1, #Dithering_Patterns
+	Push_Reg	Temp1, #00h
+	Push_Reg	Temp1, #55h
+ELSEIF PWM_BITS_H == 0
+	mov	Temp1, #Dithering_Patterns
+	Push_Reg	Temp1, #00h
+	Push_Reg	Temp1, #11h
+	Push_Reg	Temp1, #55h
+	Push_Reg	Temp1, #77h
+ENDIF
 	ret
 
 
