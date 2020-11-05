@@ -606,26 +606,19 @@ t1_normal_range:
 	clr	C
 	mov	A, Temp4
 	subb	A, #0D0h
-	mov	Temp2, A
+	mov	B, A
 	mov	A, Temp5
 	subb	A, #07h
-	mov	Temp3, A
-	jc	t1_int_bidir_fwd			; If result is negative - branch
+	clr	Flag_RCP_DIR_REV
+	jc	t1_int_bidir_rev_chk		; If result is negative - branch
 
-	mov	A, Temp2
-	mov	Temp4, A
-	mov	A, Temp3
+	mov	Temp4, B
 	mov	Temp5, A
 
 	setb	Flag_RCP_DIR_REV
-	sjmp	t1_int_bidir_rev_chk
-
-t1_int_bidir_fwd:
-	clr	Flag_RCP_DIR_REV
 
 t1_int_bidir_rev_chk:
 	jb	Flag_PGM_BIDIR_REV, ($+5)
-
 	cpl	Flag_RCP_DIR_REV
 
 	clr	C						; Multiply throttle value by 2
