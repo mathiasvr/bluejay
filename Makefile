@@ -5,7 +5,7 @@ REVISION ?= v0.3.0
 TARGETS			= A B C D E F G H I J K L M N O P Q R S T U V W
 MCUS			= H L
 FETON_DELAYS	= 0 5 10 15 20 25 30 40 50 70 90
-PWM_FREQUENCIES	= 24 48
+PWM_FREQUENCIES	= 24 48 96
 
 # example single target
 TARGET			?= F
@@ -61,7 +61,7 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(REVISION).OBJ : $(ASM_SRC) $(ASM_INC)
 	$(eval _ESCNO		:= $(shell echo $$(( $(_ESC_INT) - 65 + 1))))
 	$(eval _MCU_48MHZ	:= $(subst L,0,$(subst H,1,$(2))))
 	$(eval _FETON_DELAY	:= $(3))
-	$(eval _PWM_48KHZ	:= $(subst 24,0,$(subst 48,1,$(4))))
+	$(eval _PWM_FREQ	:= $(subst 24,0,$(subst 48,1,$(subst 96,2,$(4)))))
 	$(eval _LOG			:= $(LOG_DIR)/$(1)_$(2)_$(3)_$(4)_$(REVISION).log)
 	@mkdir -p $(OUTPUT_DIR)
 	@mkdir -p $(LOG_DIR)
@@ -70,7 +70,7 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(REVISION).OBJ : $(ASM_SRC) $(ASM_INC)
 		"DEFINE(ESCNO=$(_ESCNO)) " \
 		"DEFINE(MCU_48MHZ=$(_MCU_48MHZ)) "\
 		"DEFINE(FETON_DELAY=$(_FETON_DELAY)) "\
-		"DEFINE(PWM_48KHZ=$(_PWM_48KHZ)) "\
+		"DEFINE(PWM_FREQ=$(_PWM_FREQ)) "\
 		"OBJECT($$@) "\
 		"$(AX51_FLAGS)" > $(_LOG) 2>&1 || (mv ./Bluejay.LST $(OUTPUT_DIR)/; tail $(_LOG); exit 1)
 	@mv ./Bluejay.LST $(OUTPUT_DIR)/

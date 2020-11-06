@@ -110,7 +110,7 @@ W_			EQU	23	; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
 
 ;**** **** **** **** ****
 ; Select the pwm frequency (or unselect for use with external batch compile file)
-;PWM_48KHZ		EQU	0
+;PWM_FREQ			EQU	0	; 0=24, 1=48, 2=96 kHz
 
 $include (Common.inc)					; Include common source code for EFM8BBx based ESCs
 
@@ -391,9 +391,9 @@ ELSE
 	PWM_CENTERED	EQU	1
 ENDIF
 
-IF MCU_48MHZ < 2 AND PWM_48KHZ < 2
+IF MCU_48MHZ < 2 AND PWM_FREQ	< 3
 	; Number of bits in pwm high byte
-	PWM_BITS_H	EQU	(2 + MCU_48MHZ - PWM_CENTERED - PWM_48KHZ)
+	PWM_BITS_H	EQU	(2 + MCU_48MHZ - PWM_CENTERED - PWM_FREQ)
 ENDIF
 
 ;**** **** **** **** ****
