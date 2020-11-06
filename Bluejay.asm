@@ -919,17 +919,8 @@ ENDIF
 	jz	($+4)					; Yes - do not decrement
 	dec	Rcp_Timeout_Cntd			; No decrement
 
-	; Check RC pulse against stop value
-	jb	Flag_RCP_STOP, t2_int_rcp_stop; Check if pulse is below stop value
-
-	; RC pulse higher than stop value, reset stop counter
-	mov	Rcp_Stop_Cnt, #0			; Reset rcp stop counter
-
-	sjmp	t2_int_exit
-
-t2_int_rcp_stop:
-	; RC pulse less than stop value
-	inc	Rcp_Stop_Cnt				; Increment stop counter
+	jnb	Flag_RCP_STOP, t2_int_exit	; Exit if pulse is above stop value
+	inc	Rcp_Stop_Cnt				; Otherwise, increment stop counter
 
 	mov	A, Rcp_Stop_Cnt
 	jnz	($+4)					; Branch if counter has not wrapped
