@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0](https://github.com/mathiasvr/bluejay/compare/v0.3.0...v0.4.0) (2020-11-07)
+
+
+### Features
+
+* Add 10-bit dithering ([240d307](https://github.com/mathiasvr/bluejay/commit/240d3078fdbbb3f8e6a538c4a1d9bae713dcbd03))
+* Add 96kHz pwm for 48MHz mcus ([8818252](https://github.com/mathiasvr/bluejay/commit/8818252485af2939bfc4339f6983537afac95923))
+
+
+### Performance Improvements
+
+* Optimize pwm scaling ([9eebccb](https://github.com/mathiasvr/bluejay/commit/9eebccb3f3e15141da84f2e71e744f6a22eb4e2f))
+* Optimize timer 2 interrupt ([70829f9](https://github.com/mathiasvr/bluejay/commit/70829f97beef91d1dd8507ac06c922cb19813d6e))
+
 ## [0.3.0](https://github.com/mathiasvr/bluejay/compare/v0.2.1...v0.3.0) (2020-10-31)
 
 
