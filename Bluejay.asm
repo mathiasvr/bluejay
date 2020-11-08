@@ -1955,13 +1955,9 @@ calc_new_wait_per_demag_done:
 	subb	A, #0
 	mov	Temp4, A
 	jc	load_min_time			; Check that result is still positive
-
-	clr	C
+	jnz	calc_new_wait_times_exit	; Check that result is still above minumum
 	mov	A, Temp3
-	subb	A, #1
-	mov	A, Temp4
-	subb	A, #0
-	jnc	calc_new_wait_times_exit	; Check that result is still above minumum
+	jnz	calc_new_wait_times_exit
 
 load_min_time:
 	mov	Temp3, #1
