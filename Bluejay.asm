@@ -661,19 +661,17 @@ t1_int_not_bidir:
 
 	jb	Flag_MOTOR_STARTED, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
 
-	mov	A, Pwm_Limit_Beg			; Set 25% of max startup power as minimum power
-	rlc	A
-	mov	Temp3, A
 	mov	A, Temp5
 	jnz	t1_int_startup_boost_stall
 
+	mov	A, Pwm_Limit_Beg			; Set 25% of max startup power as minimum power
+	rlc	A
+	mov	B, A
 	clr	C
-	mov	A, Temp3
 	subb	A, Temp4
 	jc	t1_int_startup_boost_stall
 
-	mov	A, Temp3
-	mov	Temp4, A
+	mov	Temp4, B
 
 t1_int_startup_boost_stall:
 	mov	A, Stall_Cnt				; Add an extra power boost during start
