@@ -377,9 +377,9 @@ Set_DShot_Tlm_Bitrate MACRO rate
 	mov	DShot_GCR_Pulse_Time_3, #(DSHOT_TLM_PREDELAY - (3 * DSHOT_TLM_CLOCK / 4 / rate))
 ENDM
 
-Push_Reg MACRO reg, val
-	mov	@reg, val
-	inc	reg
+Push_Mem MACRO reg, val
+	mov	@reg, val			; Write value to memory address pointed to by register
+	inc	reg				; Increment pointer
 ENDM
 
 DShot_GCR_Get_Time MACRO
@@ -1104,122 +1104,122 @@ dshot_gcr_encode_jump_table:
 ; GCR encoding is ordered by least significant bit first,
 ; and represented as pulse durations.
 dshot_gcr_encode_0_11001:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_1_11011:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_2_10010:
 	DShot_GCR_Get_Time
-	Push_Reg	Temp1, A
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_3_10011:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_4_11101:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_5_10101:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_6_10110:
 	DShot_GCR_Get_Time
-	Push_Reg	Temp1, A
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_7_10111:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_8_11010:
 	DShot_GCR_Get_Time
-	Push_Reg	Temp1, A
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_9_01001:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_3
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_A_01010:
 	DShot_GCR_Get_Time
-	Push_Reg	Temp1, A
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_B_01011:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_C_11110:
 	DShot_GCR_Get_Time
-	Push_Reg	Temp1, A
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_D_01101:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_E_01110:
 	DShot_GCR_Get_Time
-	Push_Reg	Temp1, A
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_F_01111:
-	Push_Reg	Temp1, B
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Reg	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	mov	B, DShot_GCR_Pulse_Time_2
 	ret
 
@@ -1419,7 +1419,7 @@ dshot_packet_stage_6:
 	mov	A, Tlm_Data_H
 	call	dshot_gcr_encode
 
-	Push_Reg	Temp1, B				; Initial transition time
+	Push_Mem	Temp1, B				; Initial transition time
 
 	mov	Temp5, #0
 	setb	Flag_PACKET_PENDING
@@ -2806,46 +2806,46 @@ switch_power_off:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 set_default_parameters:
 	mov	Temp1, #_Pgm_Gov_P_Gain
-	PUSH_REG	Temp1, #0FFh		; Governor P gain
-	PUSH_REG	Temp1, #0FFh		; Governor I gain
-	PUSH_REG	Temp1, #0FFh		; Governor mode
-	PUSH_REG	Temp1, #0FFh		; Low voltage limit
-	PUSH_REG	Temp1, #0FFh		; Multi gain
-	PUSH_REG	Temp1, #0FFh
-	PUSH_REG	Temp1, #DEFAULT_PGM_STARTUP_PWR
-	PUSH_REG	Temp1, #0FFh		; Pwm freq
-	PUSH_REG	Temp1, #DEFAULT_PGM_DIRECTION
-	PUSH_REG	Temp1, #0FFh		; Input polarity
+	Push_Mem	Temp1, #0FFh		; Governor P gain
+	Push_Mem	Temp1, #0FFh		; Governor I gain
+	Push_Mem	Temp1, #0FFh		; Governor mode
+	Push_Mem	Temp1, #0FFh		; Low voltage limit
+	Push_Mem	Temp1, #0FFh		; Multi gain
+	Push_Mem	Temp1, #0FFh
+	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_PWR
+	Push_Mem	Temp1, #0FFh		; Pwm freq
+	Push_Mem	Temp1, #DEFAULT_PGM_DIRECTION
+	Push_Mem	Temp1, #0FFh		; Input polarity
 
 	inc	Temp1				; Skip Eep_Initialized_L
 	inc	Temp1				; Skip Eep_Initialized_H
 
-	PUSH_REG	Temp1, #0FFh		; Enable tx programming
-	PUSH_REG	Temp1, #0FFh		; Main rearm start
-	PUSH_REG	Temp1, #0FFh		; Governor setup target
-	PUSH_REG	Temp1, #0FFh		; Startup rpm
-	PUSH_REG	Temp1, #0FFh		; Startup accel
-	PUSH_REG	Temp1, #0FFh		; Voltage comp
-	PUSH_REG	Temp1, #DEFAULT_PGM_COMM_TIMING
-	PUSH_REG	Temp1, #0FFh		; Damping force
-	PUSH_REG	Temp1, #0FFh		; Governor range
-	PUSH_REG	Temp1, #0FFh		; Startup method
-	PUSH_REG	Temp1, #0FFh		; Minimum throttle
-	PUSH_REG	Temp1, #0FFh		; Maximum throttle
-	PUSH_REG	Temp1, #DEFAULT_PGM_BEEP_STRENGTH
-	PUSH_REG	Temp1, #DEFAULT_PGM_BEACON_STRENGTH
-	PUSH_REG	Temp1, #DEFAULT_PGM_BEACON_DELAY
-	PUSH_REG	Temp1, #0FFh		; Throttle rate
-	PUSH_REG	Temp1, #DEFAULT_PGM_DEMAG_COMP
-	PUSH_REG	Temp1, #0FFh		; Bec voltage high
-	PUSH_REG	Temp1, #0FFh		; Center throttle
-	PUSH_REG	Temp1, #0FFh
-	PUSH_REG	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT
-	PUSH_REG	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT
-	PUSH_REG	Temp1, #0FFh		; Enable pwm input
-	PUSH_REG	Temp1, #0FFh		; Pwm dither
-	PUSH_REG	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP
-	PUSH_REG	Temp1, #DEFAULT_PGM_LED_CONTROL
+	Push_Mem	Temp1, #0FFh		; Enable tx programming
+	Push_Mem	Temp1, #0FFh		; Main rearm start
+	Push_Mem	Temp1, #0FFh		; Governor setup target
+	Push_Mem	Temp1, #0FFh		; Startup rpm
+	Push_Mem	Temp1, #0FFh		; Startup accel
+	Push_Mem	Temp1, #0FFh		; Voltage comp
+	Push_Mem	Temp1, #DEFAULT_PGM_COMM_TIMING
+	Push_Mem	Temp1, #0FFh		; Damping force
+	Push_Mem	Temp1, #0FFh		; Governor range
+	Push_Mem	Temp1, #0FFh		; Startup method
+	Push_Mem	Temp1, #0FFh		; Minimum throttle
+	Push_Mem	Temp1, #0FFh		; Maximum throttle
+	Push_Mem	Temp1, #DEFAULT_PGM_BEEP_STRENGTH
+	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_STRENGTH
+	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_DELAY
+	Push_Mem	Temp1, #0FFh		; Throttle rate
+	Push_Mem	Temp1, #DEFAULT_PGM_DEMAG_COMP
+	Push_Mem	Temp1, #0FFh		; Bec voltage high
+	Push_Mem	Temp1, #0FFh		; Center throttle
+	Push_Mem	Temp1, #0FFh
+	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT
+	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT
+	Push_Mem	Temp1, #0FFh		; Enable pwm input
+	Push_Mem	Temp1, #0FFh		; Pwm dither
+	Push_Mem	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP
+	Push_Mem	Temp1, #DEFAULT_PGM_LED_CONTROL
 
 	ret
 
@@ -2924,14 +2924,14 @@ decode_temp_done:
 	; Dithering
 IF PWM_BITS_H == 1
 	mov	Temp1, #Dithering_Patterns
-	Push_Reg	Temp1, #00h
-	Push_Reg	Temp1, #55h
+	Push_Mem	Temp1, #00h
+	Push_Mem	Temp1, #55h
 ELSEIF PWM_BITS_H == 0
 	mov	Temp1, #Dithering_Patterns
-	Push_Reg	Temp1, #00h
-	Push_Reg	Temp1, #11h
-	Push_Reg	Temp1, #55h
-	Push_Reg	Temp1, #77h
+	Push_Mem	Temp1, #00h
+	Push_Mem	Temp1, #11h
+	Push_Mem	Temp1, #55h
+	Push_Mem	Temp1, #77h
 ENDIF
 	ret
 
