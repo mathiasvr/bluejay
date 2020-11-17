@@ -1959,7 +1959,7 @@ load_min_time:
 	mov	Temp4, #0
 
 calc_new_wait_times_exit:
-	ljmp	wait_advance_timing
+	sjmp	wait_advance_timing
 
 
 ; Fast calculation (Comm_Period4x_H less than 2)
