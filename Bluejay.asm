@@ -1545,19 +1545,16 @@ set_pwm_limit_low_rpm_exit:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 set_pwm_limit_high_rpm:
+	clr	C
+	mov	A, Comm_Period4x_L
 IF MCU_48MHZ == 1
-	clr	C
-	mov	A, Comm_Period4x_L
 	subb	A, #0A0h				; Limit Comm_Period to 160, which is 500k erpm
-	mov	A, Comm_Period4x_H
-	subb	A, #00h
 ELSE
-	clr	C
-	mov	A, Comm_Period4x_L
 	subb	A, #0E4h				; Limit Comm_Period to 228, which is 350k erpm
+ENDIF
 	mov	A, Comm_Period4x_H
 	subb	A, #00h
-ENDIF
+
 	mov	A, Pwm_Limit_By_Rpm
 	jnc	set_pwm_limit_high_rpm_inc_limit
 
