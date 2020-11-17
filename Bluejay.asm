@@ -3243,9 +3243,10 @@ wait_for_power_on_not_missing:
 	jnb	Flag_RCP_STOP,	wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
 
 	mov	A, Dshot_Cmd
-	jnz	check_dshot_cmd			; Check DShot command (if not zero)
+	jz	wait_for_power_on_loop		; Check DShot command if not zero, otherwise wait for power
 
-	sjmp	wait_for_power_on_loop		; If not DShot command - start over
+	call	check_dshot_cmd
+	sjmp	wait_for_power_on_not_missing	; Check dshot command again, in case command needs to be received multiple times
 
 wait_for_power_on_nonzero:
 	call	wait100ms					; Wait to see if start pulse was only a glitch
@@ -3405,7 +3406,7 @@ clear_dshot_cmd:
 	mov	Dshot_Cmd_Cnt, #0
 
 dont_clear_dshot_cmd:
-	ajmp	wait_for_power_on_not_missing
+	ret
 
 dshot_direction_normal:
 	; Change programmed motor direction to that stored in eeprom
