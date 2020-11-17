@@ -120,6 +120,7 @@ help:
 
 clean:
 	@rm -f $(OUTPUT_DIR)/*.{OBJ,MAP,OMF,LST}
+	@rm -f $(LOG_DIR)/*.log
 
 efm8load: single_target
 	$(EFM8_LOAD_BIN) -p $(EFM8_LOAD_PORT) -b $(EFM8_LOAD_BAUD) -w $(SINGLE_TARGET_HEX)
