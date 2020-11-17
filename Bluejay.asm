@@ -3262,71 +3262,31 @@ check_dshot_cmd:
 	mov	Temp1, Dshot_Cmd
 	cjne	Temp1, #1, dshot_beep_2
 
-	clr	IE_EA
-	call	switch_power_off			; Switch power off in case braking is set
-	mov	Temp1, #Pgm_Beacon_Strength
-	mov	Beep_Strength, @Temp1
-	call	beep_f1
-	mov	Temp1, #Pgm_Beep_Strength
-	mov	Beep_Strength, @Temp1
-	setb	IE_EA
-	call	wait100ms
+	call beacon_beep
 	ajmp	clear_dshot_cmd
 
 dshot_beep_2:
 	cjne	Temp1, #2, dshot_beep_3
 
-	clr	IE_EA
-	call	switch_power_off			; Switch power off in case braking is set
-	mov	Temp1, #Pgm_Beacon_Strength
-	mov	Beep_Strength, @Temp1
-	call	beep_f2
-	mov	Temp1, #Pgm_Beep_Strength
-	mov	Beep_Strength, @Temp1
-	setb	IE_EA
-	call	wait100ms
+	call beacon_beep
 	ajmp	clear_dshot_cmd
 
 dshot_beep_3:
 	cjne	Temp1, #3, dshot_beep_4
 
-	clr	IE_EA
-	call	switch_power_off			; Switch power off in case braking is set
-	mov	Temp1, #Pgm_Beacon_Strength
-	mov	Beep_Strength, @Temp1
-	call	beep_f3
-	mov	Temp1, #Pgm_Beep_Strength
-	mov	Beep_Strength, @Temp1
-	setb	IE_EA
-	call	wait100ms
+	call beacon_beep
 	ajmp	clear_dshot_cmd
 
 dshot_beep_4:
 	cjne	Temp1, #4, dshot_beep_5
 
-	clr	IE_EA
-	call	switch_power_off			; Switch power off in case braking is set
-	mov	Temp1, #Pgm_Beacon_Strength
-	mov	Beep_Strength, @Temp1
-	call	beep_f4
-	mov	Temp1, #Pgm_Beep_Strength
-	mov	Beep_Strength, @Temp1
-	setb	IE_EA
-	call	wait100ms
+	call beacon_beep
 	sjmp	clear_dshot_cmd
 
 dshot_beep_5:
 	cjne	Temp1, #5, dshot_direction_1
 
-	clr	IE_EA
-	call	switch_power_off			; Switch power off in case braking is set
-	mov	Temp1, #Pgm_Beacon_Strength
-	mov	Beep_Strength, @Temp1
-	call	beep_f4
-	mov	Temp1, #Pgm_Beep_Strength
-	mov	Beep_Strength, @Temp1
-	setb	IE_EA
-	call	wait100ms
+	call beacon_beep
 	sjmp	clear_dshot_cmd
 
 dshot_direction_1:
@@ -3486,6 +3446,42 @@ dshot_save_settings:
 	setb	IE_EA
 
 	jmp	clear_dshot_cmd
+
+
+beacon_beep:
+	clr	IE_EA
+	call	switch_power_off			; Switch power off in case braking is set
+	mov	Temp2, #Pgm_Beacon_Strength
+	mov	Beep_Strength, @Temp2
+
+	cjne	Temp1, #1, beacon_beep2
+	call	beep_f1
+	sjmp	beacon_beep_exit
+
+beacon_beep2:
+	cjne	Temp1, #2, beacon_beep3
+	call	beep_f2
+	sjmp	beacon_beep_exit
+
+beacon_beep3:
+	cjne	Temp1, #3, beacon_beep4
+	call	beep_f3
+	sjmp	beacon_beep_exit
+
+beacon_beep4:
+	cjne	Temp1, #4, beacon_beep5
+	call	beep_f4
+	sjmp	beacon_beep_exit
+
+beacon_beep5:
+	call	beep_f4
+
+beacon_beep_exit:
+	mov	Temp2, #Pgm_Beep_Strength
+	mov	Beep_Strength, @Temp2
+	setb	IE_EA
+	call	wait100ms
+	ret
 
 
 
