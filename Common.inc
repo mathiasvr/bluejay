@@ -154,36 +154,6 @@ CSEG AT 73h			; Timer3 overflow/compare interrupt
 	jmp	t3_int
 ENDM
 
-Decode_DShot_2Bit MACRO dest, decode_fail
-	movx	A, @Temp1
-	mov	Temp7, A
-	clr	C
-	subb	A, Temp6				; Subtract previous timestamp
-	clr	C
-	subb	A, Temp2
-	jc	decode_fail			; Check that bit is longer than minimum
-
-	subb	A, Temp2				; Check if bit is zero or one
-	mov	A, dest				; Shift bit into data byte
-	rlc	A
-	mov	dest, A
-	inc	Temp1				; Next bit
-
-	movx	A, @Temp1
-	mov	Temp6, A
-	clr	C
-	subb	A, Temp7
-	clr	C
-	subb	A, Temp2
-	jc	decode_fail
-
-	subb	A, Temp2
-	mov	A, dest
-	rlc	A
-	mov	dest, A
-	inc	Temp1
-ENDM
-
 Initialize_PCA MACRO
 	mov	PCA0CN0, #40h			; PCA enabled
 	mov	PCA0MD, #08h			; PCA clock is system clock
