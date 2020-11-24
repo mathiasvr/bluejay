@@ -25,13 +25,9 @@ $NOMOD51
 ;
 ; Bluejay is a fork of BLHeli_S <https://github.com/bitdump/BLHeli> by Steffen Skaug.
 ;
-; The input signal can be DShot with rates: DShot150, DShot300 and DShot600. A 48MHz MCU is required for DShot600.
+; The input signal can be DShot with rates: DShot150, DShot300 and DShot600.
 ;
 ; This file is best viewed with tab width set to 5.
-;
-;**** **** **** **** ****
-; Minimum 8K Bytes of In-System Self-Programmable Flash
-; Minimum 512 Bytes Internal SRAM
 ;
 ;**** **** **** **** ****
 ; Master clock is internal 24MHz oscillator (or 48MHz, for which the times below are halved)
@@ -47,13 +43,6 @@ $NOMOD51
 ; - Commutation timeouts
 ; PCA0 (41.67ns counts) always counts up and is used for
 ; - Hardware PWM generation
-;
-;**** **** **** **** ****
-; Interrupt handling
-; The C8051 does not disable interrupts when entering an interrupt routine.
-; Also some interrupt flags need to be cleared by software
-; The code disables interrupts in some interrupt routines
-; - Interrupts are disabled during beeps, to avoid audible interference from interrupts
 ;
 ;**** **** **** **** ****
 ; Motor control:
@@ -253,44 +242,44 @@ DShot_GCR_Pulse_Time_3:		DS	1		; Encodes binary: 001
 
 ; Indirect addressing data segment. The variables below must be in this sequence
 ISEG AT 080h
-_Pgm_Gov_P_Gain:			DS	1		; Programmed governor P gain
-_Pgm_Gov_I_Gain:			DS	1		; Programmed governor I gain
-_Pgm_Gov_Mode:				DS	1		; Programmed governor mode
-_Pgm_Low_Voltage_Lim:		DS	1		; Programmed low voltage limit
-_Pgm_Motor_Gain:			DS	1		; Programmed motor gain
-_Pgm_Motor_Idle:			DS	1		; Programmed motor idle speed
-Pgm_Startup_Pwr:			DS	1		; Programmed startup power
-_Pgm_Pwm_Freq:				DS	1		; Programmed pwm frequency
-Pgm_Direction:				DS	1		; Programmed rotation direction
-_Pgm_Input_Pol:			DS	1		; Programmed input pwm polarity
+_Pgm_Gov_P_Gain:			DS	1		; Governor P gain
+_Pgm_Gov_I_Gain:			DS	1		; Governor I gain
+_Pgm_Gov_Mode:				DS	1		; Governor mode
+_Pgm_Low_Voltage_Lim:		DS	1		; Low voltage limit
+_Pgm_Motor_Gain:			DS	1		; Motor gain
+_Pgm_Motor_Idle:			DS	1		; Motor idle speed
+Pgm_Startup_Pwr:			DS	1		; Startup power
+_Pgm_Pwm_Freq:				DS	1		; PWM frequency
+Pgm_Direction:				DS	1		; Rotation direction
+_Pgm_Input_Pol:			DS	1		; Input PWM polarity
 Initialized_L_Dummy:		DS	1		; Place holder
 Initialized_H_Dummy:		DS	1		; Place holder
-_Pgm_Enable_TX_Program:		DS	1		; Programmed enable/disable value for TX programming
-_Pgm_Main_Rearm_Start:		DS	1		; Programmed enable/disable re-arming main every start
-_Pgm_Gov_Setup_Target:		DS	1		; Programmed main governor setup target
-_Pgm_Startup_Rpm:			DS	1		; Programmed startup rpm (unused - place holder)
-_Pgm_Startup_Accel:			DS	1		; Programmed startup acceleration (unused - place holder)
-_Pgm_Volt_Comp:			DS	1		; Place holder
-Pgm_Comm_Timing:			DS	1		; Programmed commutation timing
-_Pgm_Damping_Force:			DS	1		; Programmed damping force (unused - place holder)
-_Pgm_Gov_Range:			DS	1		; Programmed governor range
-_Pgm_Startup_Method:		DS	1		; Programmed startup method (unused - place holder)
-_Pgm_Min_Throttle:			DS	1		; Programmed throttle minimum
-_Pgm_Max_Throttle:			DS	1		; Programmed throttle maximum
-Pgm_Beep_Strength:			DS	1		; Programmed beep strength
-Pgm_Beacon_Strength:		DS	1		; Programmed beacon strength
-Pgm_Beacon_Delay:			DS	1		; Programmed beacon delay
-_Pgm_Throttle_Rate:			DS	1		; Programmed throttle rate (unused - place holder)
-Pgm_Demag_Comp:			DS	1		; Programmed demag compensation
-_Pgm_BEC_Voltage_High:		DS	1		; Programmed BEC voltage
-_Pgm_Center_Throttle:		DS	1		; Programmed throttle center (in bidirectional mode)
-_Pgm_Main_Spoolup_Time:		DS	1		; Programmed main spoolup time
-Pgm_Enable_Temp_Prot:		DS	1		; Programmed temperature protection enable
-Pgm_Enable_Power_Prot:		DS	1		; Programmed low rpm power protection enable
-_Pgm_Enable_Pwm_Input:		DS	1		; Programmed PWM input signal enable
-_Pgm_Pwm_Dither:			DS	1		; Programmed output PWM dither
-Pgm_Brake_On_Stop:			DS	1		; Programmed braking when throttle is zero
-Pgm_LED_Control:			DS	1		; Programmed LED control
+_Pgm_Enable_TX_Program:		DS	1		; Enable/disable value for TX programming
+_Pgm_Main_Rearm_Start:		DS	1		; Enable/disable re-arming main every start
+_Pgm_Gov_Setup_Target:		DS	1		; Main governor setup target
+_Pgm_Startup_Rpm:			DS	1		; Startup RPM
+_Pgm_Startup_Accel:			DS	1		; Startup acceleration
+_Pgm_Volt_Comp:			DS	1		; Voltage comp
+Pgm_Comm_Timing:			DS	1		; Commutation timing
+_Pgm_Damping_Force:			DS	1		; Damping force
+_Pgm_Gov_Range:			DS	1		; Governor range
+_Pgm_Startup_Method:		DS	1		; Startup method
+_Pgm_Min_Throttle:			DS	1		; Minimum throttle
+_Pgm_Max_Throttle:			DS	1		; Maximum throttle
+Pgm_Beep_Strength:			DS	1		; Beep strength
+Pgm_Beacon_Strength:		DS	1		; Beacon strength
+Pgm_Beacon_Delay:			DS	1		; Beacon delay
+_Pgm_Throttle_Rate:			DS	1		; Throttle rate
+Pgm_Demag_Comp:			DS	1		; Demag compensation
+_Pgm_BEC_Voltage_High:		DS	1		; BEC voltage
+_Pgm_Center_Throttle:		DS	1		; Center throttle (in bidirectional mode)
+_Pgm_Main_Spoolup_Time:		DS	1		; Main spoolup time
+Pgm_Enable_Temp_Prot:		DS	1		; Temperature protection enable
+Pgm_Enable_Power_Prot:		DS	1		; Low RPM power protection enable
+_Pgm_Enable_Pwm_Input:		DS	1		; Enable PWM input signal
+_Pgm_Pwm_Dither:			DS	1		; Output PWM dither
+Pgm_Brake_On_Stop:			DS	1		; Braking when throttle is zero
+Pgm_LED_Control:			DS	1		; LED control
 
 ; The sequence of the variables below is no longer of importance
 Pgm_Startup_Pwr_Decoded:		DS	1		; Programmed startup power decoded
@@ -529,7 +518,6 @@ t1_int_outside_range:
 	inc	Rcp_Outside_Range_Cnt
 	mov	A, Rcp_Outside_Range_Cnt
 	jnz	($+4)
-
 	dec	Rcp_Outside_Range_Cnt
 
 	clr	C
@@ -791,7 +779,7 @@ IF PWM_BITS_H < 2
 	rl	A						; Rotate pattern
 	mov	@Temp1, A					; Store pattern
 
-	jnb ACC.0, dithering_done
+	jnb	ACC.0, dithering_done
 
 	mov	A, Temp2
 	add	A, #1
@@ -1430,10 +1418,10 @@ dshot_packet_stage_6:
 
 dshot_packet_factory:
 	push	PSW
-	mov	PSW, #10h	; Select register bank 2
+	mov	PSW, #10h		; Select register bank 2
 
-	mov	A, Temp5	; dshot_packet_stage
-	rl	A		; multiply by 2 to match jump offsets
+	mov	A, Temp5		; dshot_packet_stage
+	rl	A			; Multiply by 2 to match jump offsets
 	mov	DPTR, #dshot_packet_stage_jump_table
 	jmp	@A+DPTR
 dshot_packet_stage_jump_table:
@@ -1563,9 +1551,9 @@ ENDIF
 
 set_pwm_limit_high_rpm_inc_limit:
 	inc	A
+
 set_pwm_limit_high_rpm_store:
 	jz	($+4)
-
 	mov	Pwm_Limit_By_Rpm, A
 
 	ret
@@ -2016,8 +2004,7 @@ calc_next_comm_timing_fast:
 	clr	C
 	subb	A, Temp1
 	mov	Temp3, A
-	jc	load_min_time_fast		; Check that result is still positive
-
+	jc	load_min_time_fast			; Check that result is still positive
 	jnz	calc_new_wait_times_fast_done	; Check that result is still above minumum
 
 load_min_time_fast:
@@ -2158,7 +2145,8 @@ store_times_decrease:
 	mov	Wt_Zc_Scan_Start_H, Temp6
 	jnb	Flag_STARTUP_PHASE, store_times_exit
 
-	mov	Wt_Comm_Start_L, #0F0h		; Set very short delays for all but advance time during startup, in order to widen zero cross capture range
+	; Set very short delays for all but advance time during startup, in order to widen zero cross capture range
+	mov	Wt_Comm_Start_L, #0F0h
 	mov	Wt_Comm_Start_H, #0FFh
 	mov	Wt_Zc_Scan_Start_L, #0F0h
 	mov	Wt_Zc_Scan_Start_H, #0FFh
@@ -2803,46 +2791,46 @@ switch_power_off:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 set_default_parameters:
 	mov	Temp1, #_Pgm_Gov_P_Gain
-	Push_Mem	Temp1, #0FFh		; Governor P gain
-	Push_Mem	Temp1, #0FFh		; Governor I gain
-	Push_Mem	Temp1, #0FFh		; Governor mode
-	Push_Mem	Temp1, #0FFh		; Low voltage limit
-	Push_Mem	Temp1, #0FFh		; Multi gain
-	Push_Mem	Temp1, #0FFh
-	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_PWR
-	Push_Mem	Temp1, #0FFh		; Pwm freq
-	Push_Mem	Temp1, #DEFAULT_PGM_DIRECTION
-	Push_Mem	Temp1, #0FFh		; Input polarity
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_P_Gain
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_I_Gain
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Mode
+	Push_Mem	Temp1, #0FFh						; _Pgm_Low_Voltage_Lim
+	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Gain
+	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Idle
+	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_PWR		; Pgm_Startup_Pwr
+	Push_Mem	Temp1, #0FFh						; _Pgm_Pwm_Freq
+	Push_Mem	Temp1, #DEFAULT_PGM_DIRECTION			; Pgm_Direction
+	Push_Mem	Temp1, #0FFh						; _Pgm_Input_Pol
 
-	inc	Temp1				; Skip Eep_Initialized_L
-	inc	Temp1				; Skip Eep_Initialized_H
+	inc	Temp1								; Skip Initialized_L_Dummy
+	inc	Temp1								; Skip Initialized_H_Dummy
 
-	Push_Mem	Temp1, #0FFh		; Enable tx programming
-	Push_Mem	Temp1, #0FFh		; Main rearm start
-	Push_Mem	Temp1, #0FFh		; Governor setup target
-	Push_Mem	Temp1, #0FFh		; Startup rpm
-	Push_Mem	Temp1, #0FFh		; Startup accel
-	Push_Mem	Temp1, #0FFh		; Voltage comp
-	Push_Mem	Temp1, #DEFAULT_PGM_COMM_TIMING
-	Push_Mem	Temp1, #0FFh		; Damping force
-	Push_Mem	Temp1, #0FFh		; Governor range
-	Push_Mem	Temp1, #0FFh		; Startup method
-	Push_Mem	Temp1, #0FFh		; Minimum throttle
-	Push_Mem	Temp1, #0FFh		; Maximum throttle
-	Push_Mem	Temp1, #DEFAULT_PGM_BEEP_STRENGTH
-	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_STRENGTH
-	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_DELAY
-	Push_Mem	Temp1, #0FFh		; Throttle rate
-	Push_Mem	Temp1, #DEFAULT_PGM_DEMAG_COMP
-	Push_Mem	Temp1, #0FFh		; Bec voltage high
-	Push_Mem	Temp1, #0FFh		; Center throttle
-	Push_Mem	Temp1, #0FFh
-	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT
-	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT
-	Push_Mem	Temp1, #0FFh		; Enable pwm input
-	Push_Mem	Temp1, #0FFh		; Pwm dither
-	Push_Mem	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP
-	Push_Mem	Temp1, #DEFAULT_PGM_LED_CONTROL
+	Push_Mem	Temp1, #0FFh						; _Pgm_Enable_TX_Program
+	Push_Mem	Temp1, #0FFh						; _Pgm_Main_Rearm_Start
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Setup_Target
+	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Rpm
+	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Accel
+	Push_Mem	Temp1, #0FFh						; _Pgm_Volt_Comp
+	Push_Mem	Temp1, #DEFAULT_PGM_COMM_TIMING		; Pgm_Comm_Timing
+	Push_Mem	Temp1, #0FFh						; _Pgm_Damping_Force
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Range
+	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Method
+	Push_Mem	Temp1, #0FFh						; _Pgm_Min_Throttle
+	Push_Mem	Temp1, #0FFh						; _Pgm_Max_Throttle
+	Push_Mem	Temp1, #DEFAULT_PGM_BEEP_STRENGTH		; Pgm_Beep_Strength
+	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_STRENGTH	; Pgm_Beacon_Strength
+	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_DELAY		; Pgm_Beacon_Delay
+	Push_Mem	Temp1, #0FFh						; _Pgm_Throttle_Rate
+	Push_Mem	Temp1, #DEFAULT_PGM_DEMAG_COMP		; Pgm_Demag_Comp
+	Push_Mem	Temp1, #0FFh						; _Pgm_BEC_Voltage_High
+	Push_Mem	Temp1, #0FFh						; _Pgm_Center_Throttle
+	Push_Mem	Temp1, #0FFh						; _Pgm_Main_Spoolup_Time
+	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT	; Pgm_Enable_Temp_Prot
+	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT	; Pgm_Enable_Power_Prot
+	Push_Mem	Temp1, #0FFh						; _Pgm_Enable_Pwm_Input
+	Push_Mem	Temp1, #0FFh						; _Pgm_Pwm_Dither
+	Push_Mem	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP		; Pgm_Brake_On_Stop
+	Push_Mem	Temp1, #DEFAULT_PGM_LED_CONTROL		; Pgm_LED_Control
 
 	ret
 
@@ -2997,14 +2985,11 @@ led_3_done:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Main program start
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-
 pgm_start:
 	; Initialize flash keys to invalid values
 	mov	Flash_Key_1, #0
@@ -3385,6 +3370,7 @@ dshot_beep_5:
 	sjmp	clear_dshot_cmd
 
 dshot_direction_1:
+	; Change programmed motor direction to normal
 	cjne	Temp1, #7, dshot_direction_2
 
 	clr	C
@@ -3402,6 +3388,7 @@ dshot_direction_1:
 	sjmp	clear_dshot_cmd
 
 dshot_direction_2:
+	; Change programmed motor direction to reversed
 	cjne	Temp1, #8, dshot_direction_bidir_off
 
 	clr	C
@@ -3419,6 +3406,7 @@ dshot_direction_2:
 	sjmp	clear_dshot_cmd
 
 dshot_direction_bidir_off:
+	; Change programmed motor mode to normal (not bidirectional)
 	cjne	Temp1, #9, dshot_direction_bidir_on
 
 	clr	C
@@ -3437,6 +3425,7 @@ dshot_direction_bidir_off:
 	sjmp	clear_dshot_cmd
 
 dshot_direction_bidir_on:
+	; Change programmed motor mode to bidirectional
 	cjne	Temp1, #10, dshot_direction_normal
 
 	clr	C
@@ -3460,6 +3449,7 @@ dont_clear_dshot_cmd:
 	ajmp	wait_for_power_on_not_missing
 
 dshot_direction_normal:
+	; Change programmed motor direction to that stored in eeprom
 	cjne	Temp1, #20, dshot_direction_reverse
 
 	clr	C
@@ -3484,6 +3474,7 @@ dshot_direction_normal:
 	sjmp	clear_dshot_cmd
 
 dshot_direction_reverse:				; Temporary reverse
+	; Change programmed motor direction to the reverse of what is stored in eeprom
 	cjne	Temp1, #21, dshot_save_settings
 
 	clr	C

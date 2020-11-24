@@ -253,16 +253,20 @@ ENDM
 
 Set_MCU_Clk_24MHz MACRO
 	mov	CLKSEL, #13h			; Set clock to 24MHz
+
 	mov	SFRPAGE, #10h
-	mov	PFE0CN, #00h			; Set flash timing for 24MHz
+	mov	PFE0CN, #00h			; Set flash timing for 24MHz and disable prefetch engine
 	mov	SFRPAGE, #00h
+
 	clr	Flag_CLOCK_SET_AT_48MHZ
 ENDM
 
 Set_MCU_Clk_48MHz MACRO
 	mov	SFRPAGE, #10h
-	mov	PFE0CN, #30h			; Set flash timing for 48MHz
+	mov	PFE0CN, #30h			; Set flash timing for 48MHz and enable prefetch engine
 	mov	SFRPAGE, #00h
+
 	mov	CLKSEL, #03h			; Set clock to 48MHz
+
 	setb	Flag_CLOCK_SET_AT_48MHZ
 ENDM
