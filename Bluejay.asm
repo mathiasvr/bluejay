@@ -144,7 +144,6 @@ Flags0:					DS	1		; State flags. Reset upon init_start
 Flag_T3_PENDING			BIT	Flags0.0	; Timer 3 pending flag
 Flag_DEMAG_DETECTED			BIT	Flags0.1	; Set when excessive demag time is detected
 Flag_COMP_TIMED_OUT			BIT	Flags0.2	; Set when comparator reading timed out
-Flag_TLM_ACTIVE			BIT	Flags0.3	; DShot telemetry data is currently being transmitted
 Flag_PACKET_PENDING			BIT	Flags0.4	; DShot telemetry data packet is ready to be sent
 
 Flags1:					DS	1		; State flags. Reset upon init_start
@@ -396,7 +395,6 @@ ENDM
 Wait_For_Timer3 MACRO
 LOCAL wait_for_t3 done_waiting
 	jb	Flag_PACKET_PENDING, wait_for_t3
-	jb	Flag_TLM_ACTIVE, wait_for_t3
 
 	jnb	Flag_T3_PENDING, done_waiting
 	call	dshot_packet_factory
@@ -514,7 +512,6 @@ t0_int_dshot_tlm_finish:
 	setb	IE_EX1			; Enable int1 interrupts
 	Enable_PCA_Interrupt	; Enable pca interrupts
 
-	clr	Flag_TLM_ACTIVE
 	clr	Flag_PACKET_PENDING
 
 	pop	PSW
@@ -901,9 +898,9 @@ ENDIF
 	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
 
 	; Prepare DShot telemetry
-	jnb	Flag_RCP_DSHOT_INVERTED, t1_int_exit_no_tlm
-	jnb	Flag_PACKET_PENDING, t1_int_exit_no_tlm
-	setb	Flag_TLM_ACTIVE
+	jnb	Flag_RCP_DSHOT_INVERTED, t1_int_exit_no_tlm	; Only send telemetry for inverted DShot
+	jnb	Flag_PACKET_PENDING, t1_int_exit_no_tlm		; Check if telemetry packet is ready
+
 	; Prepare timer 0 for sending telemetry data
 	; todo: dshot150
 	;mov	Temp2, CKCON0				; Save value to restore later
