@@ -240,6 +240,12 @@ DShot_GCR_Pulse_Time_1:		DS	1		; Encodes binary: 1
 DShot_GCR_Pulse_Time_2:		DS	1		; Encodes binary: 01
 DShot_GCR_Pulse_Time_3:		DS	1		; Encodes binary: 001
 
+DShot_GCR_Pulse_Time_1_Tmp:	DS	1
+DShot_GCR_Pulse_Time_2_Tmp:	DS	1
+DShot_GCR_Pulse_Time_3_Tmp:	DS	1
+
+DShot_GCR_Start_Delay:		DS	1
+
 ; Indirect addressing data segment. The variables below must be in this sequence
 ISEG AT 080h
 _Pgm_Gov_P_Gain:			DS	1		; Governor P gain
@@ -350,20 +356,28 @@ Eep_Name:					DB	"Bluejay (BETA)  "				; Name tag (16 Bytes)
 
 ;**** **** **** **** ****
 ; DShot Telemetry Macros
+DSHOT_TLM_CLOCK		EQU	24500000					; 24.5MHz
+DSHOT_TLM_START_DELAY	EQU	-1						; Start telemetry after 1 tick (~30us after receiving DShot cmd)
+DSHOT_TLM_PREDELAY		EQU	6						; 6 timer 0 ticks inherent delay
+
 IF MCU_48MHZ == 1
-	DSHOT_TLM_CLOCK		EQU	49000000				; 49MHz
-	DSHOT_TLM_START_DELAY	EQU	-(14 * 49 / 4)			; Start telemetry after 14us (~30us after receiving DShot cmd)
-	DSHOT_TLM_PREDELAY		EQU	8					; 8 timer 0 ticks inherent delay
-ELSE
-	DSHOT_TLM_CLOCK		EQU	24500000				; 24.5MHz
-	DSHOT_TLM_START_DELAY	EQU	-1					; Start telemetry after 1 tick (~30us after receiving DShot cmd)
-	DSHOT_TLM_PREDELAY		EQU	6					; 6 timer 0 ticks inherent delay
+	DSHOT_TLM_CLOCK_48		EQU	49000000				; 49MHz
+	DSHOT_TLM_START_DELAY_48	EQU	-(14 * 49 / 4)			; Start telemetry after 14us (~30us after receiving DShot cmd)
+	DSHOT_TLM_PREDELAY_48	EQU	8					; 8 timer 0 ticks inherent delay
 ENDIF
 
 Set_DShot_Tlm_Bitrate MACRO rate
 	mov	DShot_GCR_Pulse_Time_1, #(DSHOT_TLM_PREDELAY - (1 * DSHOT_TLM_CLOCK / 4 / rate))
 	mov	DShot_GCR_Pulse_Time_2, #(DSHOT_TLM_PREDELAY - (2 * DSHOT_TLM_CLOCK / 4 / rate))
 	mov	DShot_GCR_Pulse_Time_3, #(DSHOT_TLM_PREDELAY - (3 * DSHOT_TLM_CLOCK / 4 / rate))
+
+	mov	DShot_GCR_Start_Delay, #DSHOT_TLM_START_DELAY
+
+IF MCU_48MHZ == 1
+	mov	DShot_GCR_Pulse_Time_1_Tmp, #(DSHOT_TLM_PREDELAY_48 - (1 * DSHOT_TLM_CLOCK_48 / 4 / rate))
+	mov	DShot_GCR_Pulse_Time_2_Tmp, #(DSHOT_TLM_PREDELAY_48 - (2 * DSHOT_TLM_CLOCK_48 / 4 / rate))
+	mov	DShot_GCR_Pulse_Time_3_Tmp, #(DSHOT_TLM_PREDELAY_48 - (3 * DSHOT_TLM_CLOCK_48 / 4 / rate))
+ENDIF
 ENDM
 
 Push_Mem MACRO reg, val
@@ -862,10 +876,6 @@ ENDIF
 	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
 
 	; Prepare DShot telemetry
-IF MCU_48MHZ == 1
-	; Only use telemetry for compatible clock frequency
-	jnb	Flag_CLOCK_SET_AT_48MHZ, t1_int_exit_no_tlm
-ENDIF
 	jnb	Flag_RCP_DSHOT_INVERTED, t1_int_exit_no_tlm
 	jnb	Flag_PACKET_PENDING, t1_int_exit_no_tlm
 	setb	Flag_TLM_ACTIVE
@@ -875,7 +885,7 @@ ENDIF
 	mov	CKCON0, #01h				; Timer 0 is system clock divided by 4
 	mov	TMOD, #0A2h				; Timer 0 runs free not gated by INT0
 
-	mov	TL0, #DSHOT_TLM_START_DELAY	; Telemetry will begin after this delay
+	mov	TL0, DShot_GCR_Start_Delay	; Telemetry will begin after this delay
 	clr	TCON_TF0					; Clear timer 0 overflow flag
 	setb	IE_ET0					; Enable timer 0 interrupts
 
@@ -3614,6 +3624,19 @@ IF MCU_48MHZ == 1
 	mov	A, DShot_Pwm_Thr				; Scale pulse width criteria
 	rlc	A
 	mov	DShot_Pwm_Thr, A
+
+	; Scale DShot telemetry for 24MHz
+	mov	A, DShot_GCR_Pulse_Time_1
+	xch	A, DShot_GCR_Pulse_Time_1_Tmp
+	mov	DShot_GCR_Pulse_Time_1, A
+	mov	A, DShot_GCR_Pulse_Time_2
+	xch	A, DShot_GCR_Pulse_Time_2_Tmp
+	mov	DShot_GCR_Pulse_Time_2, A
+	mov	A, DShot_GCR_Pulse_Time_3
+	xch	A, DShot_GCR_Pulse_Time_3_Tmp
+	mov	DShot_GCR_Pulse_Time_3, A
+
+	mov	DShot_GCR_Start_Delay, #DSHOT_TLM_START_DELAY_48
 ENDIF
 	jnb	Flag_PGM_BIDIR, init_start_bidir_done	; Check if bidirectional operation
 
@@ -3864,6 +3887,19 @@ IF MCU_48MHZ == 1
 	mov	A, DShot_Pwm_Thr			; Scale pulse width criteria
 	rrc	A
 	mov	DShot_Pwm_Thr, A
+
+	; Scale DShot telemetry for 24MHz
+	mov	A, DShot_GCR_Pulse_Time_1
+	xch	A, DShot_GCR_Pulse_Time_1_Tmp
+	mov	DShot_GCR_Pulse_Time_1, A
+	mov	A, DShot_GCR_Pulse_Time_2
+	xch	A, DShot_GCR_Pulse_Time_2_Tmp
+	mov	DShot_GCR_Pulse_Time_2, A
+	mov	A, DShot_GCR_Pulse_Time_3
+	xch	A, DShot_GCR_Pulse_Time_3_Tmp
+	mov	DShot_GCR_Pulse_Time_3, A
+
+	mov	DShot_GCR_Start_Delay, #DSHOT_TLM_START_DELAY
 ENDIF
 	setb	IE_EA
 	call	wait100ms					; Wait for pwm to be stopped
