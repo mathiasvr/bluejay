@@ -172,6 +172,7 @@ Flag_RCP_STOP				BIT	Flags3.5	; Set if the RC pulse value is zero
 
 Tlm_Data_L:				DS	1		; DShot telemetry data low byte
 Tlm_Data_H:				DS	1		; DShot telemetry data high byte
+Tmp_B:					DS	1
 
 DSEG AT 30h							; Ram data segment, direct addressing
 Power_On_Wait_Cnt_L:		DS	1		; Power on wait counter (lo byte)
@@ -387,8 +388,32 @@ ENDM
 
 DShot_GCR_Get_Time MACRO
 	mov	A, DShot_GCR_Pulse_Time_2
-	cjne	A, B, ($+5)
+	cjne	A, Tmp_B, ($+5)
 	mov	A, DShot_GCR_Pulse_Time_3
+ENDM
+
+; Prepare telemetry packet while waiting for timer 3 to wrap
+Wait_For_Timer3 MACRO
+LOCAL wait_for_t3 done_waiting
+	jb	Flag_PACKET_PENDING, wait_for_t3
+	jb	Flag_TLM_ACTIVE, wait_for_t3
+
+	jnb	Flag_T3_PENDING, done_waiting
+	call	dshot_packet_factory
+
+wait_for_t3:
+    jnb Flag_T3_PENDING, done_waiting
+    sjmp    wait_for_t3
+
+done_waiting:
+ENDM
+
+Early_Return_Packet_Stage MACRO num
+	inc	Temp5
+	jb	Flag_T3_PENDING, dshot_packet_stage_&num	;; return early if timer 3 has wrapped
+	pop	PSW
+	ret
+dshot_packet_stage_&num:
 ENDM
 
 IF FETON_DELAY == 0
@@ -1132,47 +1157,47 @@ dshot_gcr_encode_jump_table:
 ; GCR encoding is ordered by least significant bit first,
 ; and represented as pulse durations.
 dshot_gcr_encode_0_11001:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_1_11011:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_2_10010:
 	DShot_GCR_Get_Time
 	Push_Mem	Temp1, A
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_3_10011:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_4_11101:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_5_10101:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_6_10110:
@@ -1180,15 +1205,15 @@ dshot_gcr_encode_6_10110:
 	Push_Mem	Temp1, A
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_7_10111:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_8_11010:
@@ -1196,27 +1221,27 @@ dshot_gcr_encode_8_11010:
 	Push_Mem	Temp1, A
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_9_01001:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	mov	B, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_A_01010:
 	DShot_GCR_Get_Time
 	Push_Mem	Temp1, A
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_B_01011:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	B, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_C_11110:
@@ -1225,14 +1250,14 @@ dshot_gcr_encode_C_11110:
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_D_01101:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_E_01110:
@@ -1240,15 +1265,15 @@ dshot_gcr_encode_E_01110:
 	Push_Mem	Temp1, A
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_F_01111:
-	Push_Mem	Temp1, B
+	Push_Mem	Temp1, Tmp_B
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
 	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	B, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
 	ret
 
 
@@ -1381,10 +1406,7 @@ dshot_packet_stage_1:
 	addc	A, Temp2
 	mov	Tlm_Data_H, A
 
-	inc	Temp5
-	pop	PSW
-	ret
-dshot_packet_stage_2:
+	Early_Return_Packet_Stage 2
 	mov	A, Tlm_Data_H
 
 	; 12-bit encode telemetry data
@@ -1394,14 +1416,10 @@ dshot_packet_stage_2:
 
 	; If period is zero then reset to FFFFh (FFFh for 12-bit)
 	mov	Tlm_Data_H, #0Fh
-	mov	A, #0FFh
-	mov	Tlm_Data_L, A
+	mov	Tlm_Data_L, #0FFh
 
 dshot_tlm_12bit_encoded:
-	inc	Temp5
-	pop	PSW
-	ret
-dshot_packet_stage_3:
+	Early_Return_Packet_Stage 3
 	mov	A, Tlm_Data_L
 
 	; Compute inverted xor checksum (4-bit)
@@ -1412,42 +1430,27 @@ dshot_packet_stage_3:
 
 	; GCR encode the telemetry data (16-bit)
 	mov	Temp1, #Temp_Storage		; Store pulse timings in Temp_Storage
-	mov	B, DShot_GCR_Pulse_Time_1	; Final transition time
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1	; Final transition time
 
 	call	dshot_gcr_encode			; GCR encode lowest 4-bit of A (store through Temp1)
 
-	mov	Temp6, B
-	inc	Temp5
-	pop	PSW
-	ret
-dshot_packet_stage_4:
-	mov	B, Temp6
+	Early_Return_Packet_Stage 4
 
 	mov	A, Tlm_Data_L
 	call	dshot_gcr_encode
 
-	mov	Temp6, B
-	inc	Temp5
-	pop	PSW
-	ret
-dshot_packet_stage_5:
-	mov	B, Temp6
+	Early_Return_Packet_Stage 5
 
 	mov	A, Tlm_Data_L
 	swap	A
 	call	dshot_gcr_encode
 
-	mov	Temp6, B
-	inc	Temp5
-	pop	PSW
-	ret
-dshot_packet_stage_6:
-	mov	B, Temp6
+	Early_Return_Packet_Stage 6
 
 	mov	A, Tlm_Data_H
 	call	dshot_gcr_encode
 
-	Push_Mem	Temp1, B				; Initial transition time
+	Push_Mem	Temp1, Tmp_B				; Initial transition time
 
 	mov	Temp5, #0
 	setb	Flag_PACKET_PENDING
@@ -2067,20 +2070,7 @@ calc_new_wait_times_fast_done:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_advance_timing:
-
-	; DShot telemetry
-	jb	Flag_PACKET_PENDING, wait_advance_timing_loop
-	jb	Flag_TLM_ACTIVE, wait_advance_timing_loop
-
-wait_advance_timing_loop2:
-	call	dshot_packet_factory
-	jb	Flag_PACKET_PENDING, wait_advance_timing_loop
-	jnb	Flag_T3_PENDING, ($+5)
-	sjmp	wait_advance_timing_loop2
-
-wait_advance_timing_loop:
-	jnb	Flag_T3_PENDING, ($+5)
-	sjmp	wait_advance_timing_loop
+	Wait_For_Timer3
 
 	; Setup next wait time
 	mov	TMR3RLL, Wt_ZC_Tout_Start_L
@@ -2255,8 +2245,7 @@ store_times_decrease_fast:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_before_zc_scan:
-	jnb	Flag_T3_PENDING, ($+5)
-	sjmp	wait_before_zc_scan
+	Wait_For_Timer3
 
 	mov	Startup_Zc_Timeout_Cntd, #2
 setup_zc_scan_timeout:
@@ -2570,8 +2559,7 @@ wait_for_comm:
 	Set_Pwms_Off
 
 wait_for_comm_wait:
-	jnb	Flag_T3_PENDING, ($+5)
-	sjmp	wait_for_comm_wait
+	Wait_For_Timer3
 
 	; Setup next wait time
 	mov	TMR3RLL, Wt_Zc_Scan_Start_L
@@ -3314,6 +3302,9 @@ beep_delay_set:
 	call	wait100ms					; Wait for new RC pulse to be measured
 
 wait_for_power_on_no_beep:
+	jb	Flag_PACKET_PENDING, ($+6)
+	lcall	dshot_packet_factory
+
 	call	wait10ms
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	jnz	wait_for_power_on_not_missing	; If it is not zero - proceed
