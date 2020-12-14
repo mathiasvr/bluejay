@@ -397,21 +397,30 @@ LOCAL wait_for_t3 done_waiting
 	jb	Flag_PACKET_PENDING, wait_for_t3
 
 	jnb	Flag_T3_PENDING, done_waiting
-	call	dshot_packet_factory
+	call	dshot_tlm_create_packet
 
 wait_for_t3:
-    jnb Flag_T3_PENDING, done_waiting
-    sjmp    wait_for_t3
+	jnb	Flag_T3_PENDING, done_waiting
+	sjmp	wait_for_t3
 
 done_waiting:
 ENDM
 
 Early_Return_Packet_Stage MACRO num
+	Early_Return_Packet_Stage_ num, %(num+1)
+ENDM
+
+Early_Return_Packet_Stage_ MACRO num next
+IF num > 0
 	inc	Temp5
 	jb	Flag_T3_PENDING, dshot_packet_stage_&num	;; return early if timer 3 has wrapped
 	pop	PSW
 	ret
 dshot_packet_stage_&num:
+ENDIF
+IF num < 5
+	cjne	Temp5, #(num), dshot_packet_stage_&next
+ENDIF
 ENDM
 
 IF FETON_DELAY == 0
@@ -1367,17 +1376,19 @@ dshot_12bit_encode:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; DShot tlm create packet
+; DShot telemetry create packet
 ;
 ; Create DShot telemetry packet and prepare it for being sent
+; The routine is divided into 6 sections that can return early
+; in order to reduce commutation interference
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
+dshot_tlm_create_packet:
+	push	PSW
+	mov	PSW, #10h		; Select register bank 2
 
-; dshot_tlm_create_packet:
-; 	push	PSW
-; 	mov	PSW, #10h	; Select register bank 2
+	Early_Return_Packet_Stage 0
 
-dshot_packet_stage_1:
 	; Read commutation period
 	clr	IE_EA
 	mov	Tlm_Data_L, Comm_Period4x_L
@@ -1403,7 +1414,7 @@ dshot_packet_stage_1:
 	addc	A, Temp2
 	mov	Tlm_Data_H, A
 
-	Early_Return_Packet_Stage 2
+	Early_Return_Packet_Stage 1
 	mov	A, Tlm_Data_H
 
 	; 12-bit encode telemetry data
@@ -1416,7 +1427,7 @@ dshot_packet_stage_1:
 	mov	Tlm_Data_L, #0FFh
 
 dshot_tlm_12bit_encoded:
-	Early_Return_Packet_Stage 3
+	Early_Return_Packet_Stage 2
 	mov	A, Tlm_Data_L
 
 	; Compute inverted xor checksum (4-bit)
@@ -1431,18 +1442,18 @@ dshot_tlm_12bit_encoded:
 
 	call	dshot_gcr_encode			; GCR encode lowest 4-bit of A (store through Temp1)
 
-	Early_Return_Packet_Stage 4
+	Early_Return_Packet_Stage 3
 
 	mov	A, Tlm_Data_L
 	call	dshot_gcr_encode
 
-	Early_Return_Packet_Stage 5
+	Early_Return_Packet_Stage 4
 
 	mov	A, Tlm_Data_L
 	swap	A
 	call	dshot_gcr_encode
 
-	Early_Return_Packet_Stage 6
+	Early_Return_Packet_Stage 5
 
 	mov	A, Tlm_Data_H
 	call	dshot_gcr_encode
@@ -1454,23 +1465,6 @@ dshot_tlm_12bit_encoded:
 
 	pop	PSW
 	ret
-
-
-dshot_packet_factory:
-	push	PSW
-	mov	PSW, #10h		; Select register bank 2
-
-	mov	A, Temp5		; dshot_packet_stage
-	rl	A			; Multiply by 2 to match jump offsets
-	mov	DPTR, #dshot_packet_stage_jump_table
-	jmp	@A+DPTR
-dshot_packet_stage_jump_table:
-	ajmp	dshot_packet_stage_1
-	ajmp	dshot_packet_stage_2
-	ajmp	dshot_packet_stage_3
-	ajmp	dshot_packet_stage_4
-	ajmp	dshot_packet_stage_5
-	ajmp	dshot_packet_stage_6
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -3299,9 +3293,12 @@ beep_delay_set:
 	call	wait100ms					; Wait for new RC pulse to be measured
 
 wait_for_power_on_no_beep:
-	jb	Flag_PACKET_PENDING, ($+6)
-	lcall	dshot_packet_factory
+	jb	Flag_PACKET_PENDING, wait_for_power_telemetry_done
+	setb	Flag_T3_PENDING			; Set flag temporarily to avoid early return
+	call	dshot_tlm_create_packet
+	clr	Flag_T3_PENDING
 
+wait_for_power_telemetry_done:
 	call	wait10ms
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	jnz	wait_for_power_on_not_missing	; If it is not zero - proceed
