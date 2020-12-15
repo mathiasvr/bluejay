@@ -381,8 +381,8 @@ ENDIF
 ENDM
 
 Push_Mem MACRO reg, val
-	mov	@reg, val			; Write value to memory address pointed to by register
-	inc	reg				; Increment pointer
+	mov	@reg, val			;; Write value to memory address pointed to by register
+	inc	reg				;; Increment pointer
 ENDM
 
 DShot_GCR_Get_Time MACRO
@@ -412,14 +412,14 @@ ENDM
 
 Early_Return_Packet_Stage_ MACRO num next
 IF num > 0
-	inc	Temp5
-	jb	Flag_T3_PENDING, dshot_packet_stage_&num	;; return early if timer 3 has wrapped
+	inc	Temp5								;; Increment current packet stage
+	jb	Flag_T3_PENDING, dshot_packet_stage_&num	;; Return early if timer 3 has wrapped
 	pop	PSW
 	ret
 dshot_packet_stage_&num:
 ENDIF
 IF num < 5
-	cjne	Temp5, #(num), dshot_packet_stage_&next
+	cjne	Temp5, #(num), dshot_packet_stage_&next		;; If this is not current stage, skip to next
 ENDIF
 ENDM
 
@@ -1290,6 +1290,8 @@ dshot_gcr_encode_F_01111:
 ; Encodes 16-bit e-period as a 12-bit value of the form:
 ; <e e e m m m m m m m m m> where M SHL E ~ e-period [us]
 ;
+; Note: Not callable to improve performance
+;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 dshot_12bit_7:
 	;mov	A, Tlm_Data_H
@@ -1458,7 +1460,7 @@ dshot_tlm_12bit_encoded:
 	mov	A, Tlm_Data_H
 	call	dshot_gcr_encode
 
-	Push_Mem	Temp1, Tmp_B				; Initial transition time
+	Push_Mem	Temp1, Tmp_B			; Initial transition time
 
 	mov	Temp5, #0
 	setb	Flag_PACKET_PENDING
@@ -2953,9 +2955,9 @@ detect_rcp_level:
 
 detect_rcp_level_read:
 	jc	($+5)
-	jb	RTX_PORT.RTX_PIN, detect_rcp_level
+	jb	RTX_PORT.RTX_PIN, detect_rcp_level	; Level changed from low to high - start over
 	jnc	($+5)
-	jnb	RTX_PORT.RTX_PIN, detect_rcp_level
+	jnb	RTX_PORT.RTX_PIN, detect_rcp_level	; Level changed from high to low - start over
 	djnz	ACC, detect_rcp_level_read
 
 	mov	Flag_RCP_DSHOT_INVERTED, C
@@ -3246,6 +3248,7 @@ wait_for_power_on:
 	mov	Comm_Period4x_H, A
 	mov	Power_On_Wait_Cnt_L, A		; Clear wait counter
 	mov	Power_On_Wait_Cnt_H, A
+
 wait_for_power_on_loop:
 	inc	Power_On_Wait_Cnt_L			; Increment low wait counter
 	mov	A, Power_On_Wait_Cnt_L
@@ -3900,12 +3903,13 @@ ENDIF
 run_to_wait_for_power_on_brake_done:
 	clr	C
 	mov	A, Stall_Cnt
-	subb	A, #4
-	jc	jmp_wait_for_power_on
-	ljmp	init_no_signal
+	subb	A, #4					; Maximum consecutive stalls before stopping
+	jc	($+5)
+	ljmp	init_no_signal				; Stalled too many times
 
-jmp_wait_for_power_on:
 	ljmp	wait_for_power_on			; Go back to wait for power on
+
+
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 
