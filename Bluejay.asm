@@ -471,7 +471,7 @@ CSEG AT 80h				; Code segment after interrupt vectors
 ;**** **** **** **** ****
 
 ; Table definitions
-STARTUP_POWER_TABLE:	DB	04h, 06h, 08h, 0Ch, 10h, 18h, 20h, 30h, 40h, 60h, 80h, 0A0h, 0C0h
+STARTUP_POWER_TABLE:	DB	1,	2,	3,	4,	6,	9,	12,	18,	25,	37,	50,	62,	75
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1671,28 +1671,6 @@ check_voltage_start:
 	mov	A, #255
 
 	mov	Pwm_Limit, A				; Increment limit
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; Set startup PWM routine
-;
-; Either the SETTLE_PHASE or the STEPPER_PHASE flag must be set
-;
-; Used for pwm control during startup
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-set_startup_pwm:
-	; Adjust startup power
-	mov	A, #50					; Set power
-	mov	Temp2, #Pgm_Startup_Pwr_Decoded
-	mov	B, @Temp2
-	mul	AB
-	xch	A, B
-	mov	C, B.7					; Multiply result by 2 (unity gain is 128)
-	rlc	A
-	mov	Pwm_Limit_Beg, A			; Set initial pwm limit
 	ret
 
 
@@ -3543,7 +3521,9 @@ read_initial_temp:
 
 	; Set up start operating conditions
 	clr	IE_EA						; Disable interrupts
-	call	set_startup_pwm
+	; Adjust startup power
+	mov	Temp2, #Pgm_Startup_Pwr_Decoded
+	mov	Pwm_Limit_Beg, @Temp2			; Set initial pwm limit
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
 	setb	IE_EA
