@@ -478,8 +478,6 @@ STARTUP_POWER_TABLE:	DB	04h, 06h, 08h, 0Ch, 10h, 18h, 20h, 30h, 40h, 60h, 80h, 0
 ;
 ; Timer 0 interrupt routine
 ;
-; No assumptions
-;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t0_int:
 	push	PSW
@@ -530,8 +528,6 @@ t0_int_dshot_tlm_finish:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Timer 1 interrupt routine
-;
-; No assumptions
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t1_int:
@@ -946,7 +942,6 @@ t1_int_exit_no_int:
 ;
 ; Timer 2 interrupt routine
 ;
-; No assumptions
 ; Requirements: Temp variables can NOT be used since PSW.x is not set
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -985,7 +980,6 @@ t2_int_exit:
 ;
 ; Timer 3 interrupt routine
 ;
-; No assumptions
 ; Requirements: Temp variables can NOT be used since PSW.x is not set
 ;               ACC can not be used, as it is not pushed to stack
 ;
@@ -1004,8 +998,6 @@ t3_int:	; Used for commutation timing
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Int0 interrupt routine
-;
-; No assumptions
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 int0_int:	; Used for RC pulse timing
@@ -1028,8 +1020,6 @@ int0_int:	; Used for RC pulse timing
 ;
 ; Int1 interrupt routine
 ;
-; No assumptions
-;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 int1_int:	; Used for RC pulse timing
 	clr	IE_EX1					; Disable int1 interrupts
@@ -1044,8 +1034,6 @@ reti
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; PCA interrupt routine
-;
-; No assumptions
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 pca_int:	; Used for setting pwm registers
@@ -1473,8 +1461,6 @@ dshot_tlm_12bit_encoded:
 ;
 ; Wait xms ~(x*4*250) (Different entry points)
 ;
-; No assumptions
-;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait1ms:
 	mov	Temp2, #1
@@ -1513,8 +1499,6 @@ waitxms_m:		; Middle loop
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Set pwm limit low rpm
-;
-; No assumptions
 ;
 ; Sets power limit for low rpms and disables demag for low rpms
 ;
@@ -1563,8 +1547,6 @@ set_pwm_limit_low_rpm_exit:
 ;
 ; Set pwm limit high rpm
 ;
-; No assumptions
-;
 ; Sets power limit for high rpms
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1598,8 +1580,6 @@ set_pwm_limit_high_rpm_store:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Check temperature, power supply voltage and limit power
-;
-; No assumptions
 ;
 ; Used to limit main motor power in order to maintain the required voltage
 ;
@@ -1720,8 +1700,6 @@ set_startup_pwm:
 ;
 ; Initialize timing routine
 ;
-; No assumptions
-;
 ; Part of initialization before motor start
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1734,8 +1712,6 @@ initialize_timing:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Calculate next commutation timing routine
-;
-; No assumptions
 ;
 ; Called immediately after each commutation
 ; Also sets up timer 3 to wait advance timing
@@ -2055,8 +2031,6 @@ calc_new_wait_times_fast_done:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Wait advance timing routine
-;
-; No assumptions
 ; NOTE: Be VERY careful if using temp registers. They are passed over this routine
 ;
 ; Waits for the advance timing to elapse and sets up the next zero cross wait
@@ -2075,8 +2049,6 @@ wait_advance_timing:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Calculate new wait times routine
-;
-; No assumptions
 ;
 ; Calculates new wait times
 ;
@@ -2231,8 +2203,6 @@ store_times_decrease_fast:
 ;
 ; Wait before zero cross scan routine
 ;
-; No assumptions
-;
 ; Waits for the zero cross scan wait time to elapse
 ; Also sets up timer 3 for the zero cross scan timeout time
 ;
@@ -2294,8 +2264,6 @@ wait_before_zc_scan_exit:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Wait for comparator to go low/high routines
-;
-; No assumptions
 ;
 ; Waits for the zero cross scan wait time to elapse
 ; Then scans for comparator going low/high
@@ -2464,8 +2432,6 @@ comp_read_wrong_load_timeout:
 ;
 ; Setup commutation timing routine
 ;
-; No assumptions
-;
 ; Sets up and starts wait from commutation to zero cross
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -2487,8 +2453,6 @@ setup_comm_wait:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Evaluate comparator integrity
-;
-; No assumptions
 ;
 ; Checks comparator signal behaviour versus expected behaviour
 ;
@@ -2516,8 +2480,6 @@ eval_comp_exit:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Wait for commutation routine
-;
-; No assumptions
 ;
 ; Waits from zero cross to commutation
 ;
@@ -2565,8 +2527,6 @@ wait_for_comm_wait:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Commutation routines
-;
-; No assumptions
 ;
 ; Performs commutation switching
 ;
@@ -2713,8 +2673,6 @@ comm61_rev:
 ;
 ; Beeper routines (4 different entry points)
 ;
-; No assumptions
-;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 beep_f1:	; Entry point 1, load beeper frequency 1 settings
 	mov	Temp3, #20	; Off wait loop length
@@ -2789,8 +2747,6 @@ beep_off:	; Fets off loop
 ;
 ; Switch power off routine
 ;
-; No assumptions
-;
 ; Switches all fets off
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -2804,8 +2760,6 @@ switch_power_off:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Set default parameters
-;
-; No assumptions
 ;
 ; Sets default programming parameters
 ;
@@ -2859,8 +2813,6 @@ set_default_parameters:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Decode settings
-;
-; No assumptions
 ;
 ; Decodes various settings
 ;
@@ -2967,8 +2919,6 @@ detect_rcp_level_read:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; LED control
-;
-; No assumptions
 ;
 ; Controls LEDs
 ;
