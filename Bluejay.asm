@@ -3496,31 +3496,30 @@ wait_for_power_on_nonzero:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 init_start:
-	clr	IE_EA
+	clr	IE_EA						; Disable interrupts
 	call	switch_power_off
+	setb	IE_EA						; Enable interrupts
+
 	clr	A
-	setb	IE_EA
-	clr	A
-	mov	Adc_Conversion_Cnt, A
 	mov	Flags0, A						; Clear flags0
 	mov	Flags1, A						; Clear flags1
 	mov	Flags_Startup, A				; Clear startup flags
 	mov	Demag_Detected_Metric, A			; Clear demag metric
-	;**** **** **** **** ****
-	; Motor start beginning
-	;**** **** **** **** ****
-	mov	Adc_Conversion_Cnt, #8			; Make sure a temp reading is done
+
 	call	wait1ms
+
 	Start_Adc							; Start adc conversion
-read_initial_temp:
-	jnb	ADC0CN0_ADINT, read_initial_temp
+
+	jnb	ADC0CN0_ADINT, $				; Wait for adc conversion to complete
+
 	Read_Adc_Result					; Read initial temperature
 	mov	A, Temp2
 	jnz	($+3)						; Is reading below 256?
-
 	mov	Temp1, A						; Yes - set average temperature value to zero
 
 	mov	Current_Average_Temp, Temp1		; Set initial average temperature
+
+	mov	Adc_Conversion_Cnt, #8			; Make sure a temp reading is done
 	call	check_temp_voltage_and_limit_power
 	mov	Adc_Conversion_Cnt, #8			; Make sure a temp reading is done next time
 
@@ -3531,7 +3530,7 @@ read_initial_temp:
 	mov	Pwm_Limit_Beg, @Temp2			; Set initial pwm limit
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
-	setb	IE_EA
+	setb	IE_EA						; Enable interrupts
 
 	; Begin startup sequence
 IF MCU_48MHZ == 1
