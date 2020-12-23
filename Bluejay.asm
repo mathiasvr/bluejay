@@ -720,27 +720,30 @@ t1_int_not_bidir:
 
 	jb	Flag_MOTOR_STARTED, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
 
-	mov	A, Temp5
-	jnz	t1_int_startup_boost_stall
 
-	mov	A, Pwm_Limit_Beg			; Set 25% of max startup power as minimum power
-	rlc	A
-	mov	B, A
-	clr	C
-	subb	A, Temp4
-	jc	t1_int_startup_boost_stall
+	; Add an extra power boost during start
+	mov	Temp6, Stall_Cnt
 
-	mov	Temp4, B
+	inc Temp6
+	mov B, #31
 
 t1_int_startup_boost_stall:
-	mov	A, Stall_Cnt				; Add an extra power boost during start
-	swap	A
-	rlc	A
-	add	A, Temp4
+	mov	A, Temp4
+	add	A, B
 	mov	Temp4, A
 	mov	A, Temp5
 	addc	A, #0
 	mov	Temp5, A
+
+	mov	A, B
+	rl	A						; Add more boost when stalling
+	mov	B, A
+
+	djnz	Temp6, t1_int_startup_boost_stall
+
+	jnb	ACC.3, ($+7)
+	mov	Temp4, #0FFh				; Set maximum 11-bit value
+	mov	Temp5, #07h
 
 t1_int_startup_boosted:
 	; Set 8-bit value
@@ -3833,7 +3836,7 @@ ENDIF
 run_to_wait_for_power_on_brake_done:
 	clr	C
 	mov	A, Stall_Cnt
-	subb	A, #4					; Maximum consecutive stalls before stopping
+	subb	A, #10					; Maximum consecutive stalls before stopping
 	jc	($+5)
 	ljmp	init_no_signal				; Stalled too many times
 
