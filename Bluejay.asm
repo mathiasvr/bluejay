@@ -2942,32 +2942,13 @@ led_3_done:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 dshot_cmd_check:
-	mov	Temp1, Dshot_Cmd
-	cjne	Temp1, #1, dshot_cmd_beep_2
+	mov	A, Dshot_Cmd
+	jz	dshot_cmd_exit_no_clear
 
-	call beacon_beep
-	ajmp	dshot_cmd_exit
-
-dshot_cmd_beep_2:
-	cjne	Temp1, #2, dshot_cmd_beep_3
-
-	call beacon_beep
-	ajmp	dshot_cmd_exit
-
-dshot_cmd_beep_3:
-	cjne	Temp1, #3, dshot_cmd_beep_4
-
-	call beacon_beep
-	ajmp	dshot_cmd_exit
-
-dshot_cmd_beep_4:
-	cjne	Temp1, #4, dshot_cmd_beep_5
-
-	call beacon_beep
-	sjmp	dshot_cmd_exit
-
-dshot_cmd_beep_5:
-	cjne	Temp1, #5, dshot_cmd_direction_1
+	mov	Temp1, A
+	clr	C
+	subb	A, #6					; Beacon beeps for command 1-5
+	jnc	dshot_cmd_direction_1
 
 	call beacon_beep
 	sjmp	dshot_cmd_exit
