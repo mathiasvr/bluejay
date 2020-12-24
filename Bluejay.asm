@@ -2941,45 +2941,45 @@ led_3_done:
 ; Determine received DShot command and perform action
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-check_dshot_cmd:
+dshot_cmd_check:
 	mov	Temp1, Dshot_Cmd
-	cjne	Temp1, #1, dshot_beep_2
+	cjne	Temp1, #1, dshot_cmd_beep_2
 
 	call beacon_beep
-	ajmp	clear_dshot_cmd
+	ajmp	dshot_cmd_exit
 
-dshot_beep_2:
-	cjne	Temp1, #2, dshot_beep_3
-
-	call beacon_beep
-	ajmp	clear_dshot_cmd
-
-dshot_beep_3:
-	cjne	Temp1, #3, dshot_beep_4
+dshot_cmd_beep_2:
+	cjne	Temp1, #2, dshot_cmd_beep_3
 
 	call beacon_beep
-	ajmp	clear_dshot_cmd
+	ajmp	dshot_cmd_exit
 
-dshot_beep_4:
-	cjne	Temp1, #4, dshot_beep_5
-
-	call beacon_beep
-	sjmp	clear_dshot_cmd
-
-dshot_beep_5:
-	cjne	Temp1, #5, dshot_direction_1
+dshot_cmd_beep_3:
+	cjne	Temp1, #3, dshot_cmd_beep_4
 
 	call beacon_beep
-	sjmp	clear_dshot_cmd
+	ajmp	dshot_cmd_exit
 
-dshot_direction_1:
+dshot_cmd_beep_4:
+	cjne	Temp1, #4, dshot_cmd_beep_5
+
+	call beacon_beep
+	sjmp	dshot_cmd_exit
+
+dshot_cmd_beep_5:
+	cjne	Temp1, #5, dshot_cmd_direction_1
+
+	call beacon_beep
+	sjmp	dshot_cmd_exit
+
+dshot_cmd_direction_1:
 	; Change programmed motor direction to normal
-	cjne	Temp1, #7, dshot_direction_2
+	cjne	Temp1, #7, dshot_cmd_direction_2
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dont_clear_dshot_cmd
+	jc	dshot_cmd_exit_no_clear
 
 	mov	A, #1
 	jnb	Flag_PGM_BIDIR, ($+5)
@@ -2988,16 +2988,16 @@ dshot_direction_1:
 	mov	@Temp1, A
 	clr	Flag_PGM_DIR_REV
 	clr	Flag_PGM_BIDIR_REV
-	sjmp	clear_dshot_cmd
+	sjmp	dshot_cmd_exit
 
-dshot_direction_2:
+dshot_cmd_direction_2:
 	; Change programmed motor direction to reversed
-	cjne	Temp1, #8, dshot_direction_bidir_off
+	cjne	Temp1, #8, dshot_cmd_direction_bidir_off
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dont_clear_dshot_cmd
+	jc	dshot_cmd_exit_no_clear
 
 	mov	A, #2
 	jnb	Flag_PGM_BIDIR, ($+5)
@@ -3006,18 +3006,18 @@ dshot_direction_2:
 	mov	@Temp1, A
 	setb	Flag_PGM_DIR_REV
 	setb	Flag_PGM_BIDIR_REV
-	sjmp	clear_dshot_cmd
+	sjmp	dshot_cmd_exit
 
-dshot_direction_bidir_off:
+dshot_cmd_direction_bidir_off:
 	; Change programmed motor mode to normal (not bidirectional)
-	cjne	Temp1, #9, dshot_direction_bidir_on
+	cjne	Temp1, #9, dshot_cmd_direction_bidir_on
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dont_clear_dshot_cmd
+	jc	dshot_cmd_exit_no_clear
 
-	jnb	Flag_PGM_BIDIR, clear_dshot_cmd
+	jnb	Flag_PGM_BIDIR, dshot_cmd_exit
 
 	clr	C
 	mov	Temp1, #Pgm_Direction
@@ -3025,18 +3025,18 @@ dshot_direction_bidir_off:
 	subb	A, #2
 	mov	@Temp1, A
 	clr	Flag_PGM_BIDIR
-	sjmp	clear_dshot_cmd
+	sjmp	dshot_cmd_exit
 
-dshot_direction_bidir_on:
+dshot_cmd_direction_bidir_on:
 	; Change programmed motor mode to bidirectional
-	cjne	Temp1, #10, dshot_direction_normal
+	cjne	Temp1, #10, dshot_cmd_direction_normal
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dont_clear_dshot_cmd
+	jc	dshot_cmd_exit_no_clear
 
-	jb	Flag_PGM_BIDIR, clear_dshot_cmd
+	jb	Flag_PGM_BIDIR, dshot_cmd_exit
 
 	mov	Temp1, #Pgm_Direction
 	mov	A, @Temp1
@@ -3044,21 +3044,21 @@ dshot_direction_bidir_on:
 	mov	@Temp1, A
 	setb	Flag_PGM_BIDIR
 
-clear_dshot_cmd:
+dshot_cmd_exit:
 	mov	Dshot_Cmd, #0
 	mov	Dshot_Cmd_Cnt, #0
 
-dont_clear_dshot_cmd:
+dshot_cmd_exit_no_clear:
 	ret
 
-dshot_direction_normal:
+dshot_cmd_direction_normal:
 	; Change programmed motor direction to that stored in eeprom
-	cjne	Temp1, #20, dshot_direction_reverse
+	cjne	Temp1, #20, dshot_cmd_direction_reverse
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dont_clear_dshot_cmd
+	jc	dshot_cmd_exit_no_clear
 
 	clr	IE_EA					; DPTR used in interrupts
 	mov	DPTR, #Eep_Pgm_Direction		; Read from flash
@@ -3074,16 +3074,16 @@ dshot_direction_normal:
 	setb	Flag_PGM_DIR_REV
 	jc	($+4)
 	setb	Flag_PGM_BIDIR_REV
-	sjmp	clear_dshot_cmd
+	sjmp	dshot_cmd_exit
 
-dshot_direction_reverse:				; Temporary reverse
+dshot_cmd_direction_reverse:			; Temporary reverse
 	; Change programmed motor direction to the reverse of what is stored in eeprom
-	cjne	Temp1, #21, dshot_save_settings
+	cjne	Temp1, #21, dshot_cmd_save_settings
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dont_clear_dshot_cmd
+	jc	dshot_cmd_exit_no_clear
 
 	clr	IE_EA					; DPTR used in interrupts
 	mov	DPTR, #Eep_Pgm_Direction		; Read from flash
@@ -3108,15 +3108,15 @@ dshot_direction_reverse:				; Temporary reverse
 	setb	Flag_PGM_DIR_REV
 	jc	($+4)
 	setb	Flag_PGM_BIDIR_REV
-	sjmp	clear_dshot_cmd
+	sjmp	dshot_cmd_exit
 
-dshot_save_settings:
-	cjne	Temp1, #12, clear_dshot_cmd
+dshot_cmd_save_settings:
+	cjne	Temp1, #12, dshot_cmd_exit
 
 	clr	C
 	mov	A, Dshot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dont_clear_dshot_cmd
+	jc	dshot_cmd_exit_no_clear
 
 	mov	Flash_Key_1, #0A5h			; Initialize flash keys to valid values
 	mov	Flash_Key_2, #0F1h
@@ -3128,7 +3128,7 @@ dshot_save_settings:
 
 	setb	IE_EA
 
-	jmp	clear_dshot_cmd
+	jmp	dshot_cmd_exit
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -3486,7 +3486,7 @@ wait_for_power_on_not_missing:
 	mov	A, Dshot_Cmd
 	jz	wait_for_power_on_loop		; Check DShot command if not zero, otherwise wait for power
 
-	call	check_dshot_cmd
+	call	dshot_cmd_check
 	sjmp	wait_for_power_on_not_missing	; Check dshot command again, in case command needs to be received multiple times
 
 wait_for_power_on_nonzero:
