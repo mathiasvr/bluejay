@@ -2652,32 +2652,47 @@ comm61_rev:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Beeper routines (4 different entry points)
+; Beeper routines (Multiple entry points)
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-beep_f1:	; Entry point 1, load beeper frequency 1 settings
-	mov	Temp3, #20	; Off wait loop length
-	mov	Temp4, #120	; Number of beep pulses
+beep_f1:
+	mov	Temp3, #66		; Off wait loop length (Tone)
+	mov	Temp4, #(3500 / 66)	; Number of beep pulses (Duration)
 	sjmp	beep
 
-beep_f2:	; Entry point 2, load beeper frequency 2 settings
-	mov	Temp3, #16
-	mov	Temp4, #140
+beep_f2:
+	mov	Temp3, #45
+	mov	Temp4, #(3500 / 45)
 	sjmp	beep
 
-beep_f3:	; Entry point 3, load beeper frequency 3 settings
-	mov	Temp3, #13
-	mov	Temp4, #180
+beep_f3:
+	mov	Temp3, #38
+	mov	Temp4, #(3500 / 38)
 	sjmp	beep
 
-beep_f4:	; Entry point 4, load beeper frequency 4 settings
-	mov	Temp3, #11
-	mov	Temp4, #200
+beep_f4:
+	mov	Temp3, #25
+	mov	Temp4, #(3500 / 25)
 	sjmp	beep
 
-beep:	; Beep loop start
+beep_f5:
+	mov	Temp3, #20
+	mov	Temp4, #(3500 / 25)
+	sjmp	beep
+
+beep_f1_short:
+	mov	Temp3, #66
+	mov	Temp4, #(2000 / 66)
+	sjmp	beep
+
+beep_f2_short:
+	mov	Temp3, #45
+	mov	Temp4, #(2000 / 45)
+	sjmp	beep
+
+beep:
 	mov	A, Beep_Strength
-	djnz	ACC, beep_start
+	djnz	ACC, beep_start	; Start if beep strength is not 1
 	ret
 
 beep_start:
@@ -2695,20 +2710,20 @@ beep_onoff:
 	; Turn on pwmfet
 	mov	A, Temp2
 	jb	ACC.0, beep_apwmfet_on
-	ApwmFET_on		; ApwmFET on
+	ApwmFET_on
 beep_apwmfet_on:
 	jnb	ACC.0, beep_cpwmfet_on
-	CpwmFET_on		; CpwmFET on
+	CpwmFET_on
 beep_cpwmfet_on:
 	mov	A, Beep_Strength
 	djnz	ACC, $
 	; Turn off pwmfet
 	mov	A, Temp2
 	jb	ACC.0, beep_apwmfet_off
-	ApwmFET_off		; ApwmFET off
+	ApwmFET_off
 beep_apwmfet_off:
 	jnb	ACC.0, beep_cpwmfet_off
-	CpwmFET_off		; CpwmFET off
+	CpwmFET_off
 beep_cpwmfet_off:
 	mov	A, #150		; 25us off
 	djnz	ACC, $
@@ -2717,10 +2732,12 @@ beep_cpwmfet_off:
 	mov	A, Temp3
 	mov	Temp1, A
 beep_off:	; Fets off loop
+	mov	A, #150
 	djnz	ACC, $
 	djnz	Temp1, beep_off
-	djnz	Temp4, beep
-	BcomFET_off		; BcomFET off
+	djnz	Temp4, beep_start
+
+	BcomFET_off
 	ret
 
 
@@ -3146,7 +3163,7 @@ beacon_beep4:
 	sjmp	beacon_beep_exit
 
 beacon_beep5:
-	call	beep_f4
+	call	beep_f5
 
 beacon_beep_exit:
 	mov	Temp2, #Pgm_Beep_Strength
@@ -3213,11 +3230,17 @@ pgm_start:
 	clr	IE_EA			; Disable interrupts explicitly
 	call	wait200ms
 	call	beep_f1
-	call	wait30ms
+	call	wait10ms
 	call	beep_f2
-	call	wait30ms
+	call	wait10ms
+	call	beep_f1
+	call	wait10ms
 	call	beep_f3
-	call	wait30ms
+	call	wait200ms
+	call beep_f2
+	call beep_f4
+	call beep_f4
+
 	call	led_control
 
 
@@ -3374,11 +3397,8 @@ ENDIF
 arming_begin:
 	; Beep arm sequence start signal
 	clr	IE_EA					; Disable all interrupts
-	call	beep_f1					; Signal that RC pulse is ready
-	call	beep_f1
-	call	beep_f1
+	call	beep_f1_short				; Signal that RC pulse is ready
 	setb	IE_EA					; Enable all interrupts
-	call	wait200ms
 
 	; Arming sequence start
 arming_wait:
@@ -3388,9 +3408,7 @@ arming_wait:
 
 	; Beep arm sequence end signal
 	clr	IE_EA					; Disable all interrupts
-	call	beep_f4					; Signal that RC pulse is ready
-	call	beep_f4
-	call	beep_f4
+	call	beep_f2_short				; Signal that ESC is armed
 	setb	IE_EA					; Enable all interrupts
 	call	wait200ms
 
