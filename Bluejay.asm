@@ -133,7 +133,8 @@ Temp8		EQU	R7
 
 ;**** **** **** **** ****
 ; RAM definitions
-DSEG AT 20h									; Ram data segment, bit-addressable
+; Bit-addressable data segment
+DSEG AT 20h
 Bit_Access:				DS	1				; MUST BE AT THIS ADDRESS. Variable at bit accessible address (for non interrupt routines)
 Bit_Access_Int:			DS	1				; Variable at bit accessible address (for interrupts)
 
@@ -169,7 +170,9 @@ Tlm_Data_L:				DS	1				; DShot telemetry data low byte
 Tlm_Data_H:				DS	1				; DShot telemetry data high byte
 Tmp_B:					DS	1
 
-DSEG AT 30h						; Ram data segment, direct addressing
+;**** **** **** **** ****
+; Direct addressing data segment
+DSEG AT 30h
 Power_On_Wait_Cnt_L:		DS	1	; Power on wait counter (lo byte)
 Power_On_Wait_Cnt_H:		DS	1	; Power on wait counter (hi byte)
 
@@ -242,8 +245,9 @@ DShot_GCR_Pulse_Time_3_Tmp:	DS	1
 
 DShot_GCR_Start_Delay:		DS	1
 
-; Indirect addressing data segment. The variables below must be in this sequence
-ISEG AT 080h
+;**** **** **** **** ****
+; Indirect addressing data segments
+ISEG AT 080h						; The variables below must be in this sequence
 _Pgm_Gov_P_Gain:			DS	1	; Governor P gain
 _Pgm_Gov_I_Gain:			DS	1	; Governor I gain
 _Pgm_Gov_Mode:				DS	1	; Governor mode
@@ -286,7 +290,6 @@ Pgm_LED_Control:			DS	1	; LED control
 ; The sequence of the variables below is no longer of importance
 Pgm_Startup_Pwr_Decoded:		DS	1	; Programmed startup power decoded
 
-; Indirect addressing data segments
 ISEG AT 0B0h
 Stack:					DS	16	; Reserved stack space
 
@@ -297,7 +300,8 @@ ISEG AT 0D0h
 Temp_Storage:				DS	48	; Temporary storage
 
 ;**** **** **** **** ****
-CSEG AT 1A00h						; "Eeprom" segment
+; "EEPROM" code segments
+CSEG AT 1A00h
 EEPROM_FW_MAIN_REVISION		EQU	0	; Main revision of the firmware
 EEPROM_FW_SUB_REVISION		EQU	40	; Sub revision of the firmware
 EEPROM_LAYOUT_REVISION		EQU	33	; Revision of the EEPROM layout
