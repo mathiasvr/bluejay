@@ -67,7 +67,7 @@ C_			EQU	3	; Ac Ap MC MB MA CC X  RC	X  X  X  X  Cc Cp Bc Bp
 D_			EQU	4	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Com fets inverted
 E_			EQU	5	; L1 L0 RC X  MC MB MA CC	X  L2 Cc Cp Bc Bp Ac Ap	A with LEDs
 F_			EQU	6	; X  X  RC X  MA MB MC CC	X  X  Cc Cp Bc Bp Ac Ap
-G_			EQU	7	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like D, but noninverted com fets
+G_			EQU	7	; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like D, but non-inverted com fets
 H_			EQU	8	; RC X  X  X  MA MB CC MC	X  Ap Bp Cp X  Ac Bc Cc
 I_			EQU	9	; X  X  RC X  MC MB MA CC	X  X  Ac Bc Cc Ap Bp Cp
 J_			EQU	10	; L2 L1 L0 RC CC MB MC MA	X  X  Cc Bc Ac Cp Bp Ap	LEDs
@@ -94,7 +94,7 @@ W_			EQU	23	; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
 ;MCU_48MHZ		EQU	0
 
 ;**** **** **** **** ****
-; Select the fet deadtime (or unselect for use with external batch compile file)
+; Select the fet dead time (or unselect for use with external batch compile file)
 ;FETON_DELAY		EQU	15	; 20.4ns per step
 
 ;**** **** **** **** ****
@@ -601,7 +601,7 @@ t1_int_outside_range:
 	mov	Dshot_Cmd, A				; Clear DShot command
 	mov	Dshot_Cmd_Cnt, A			; Clear DShot command count
 
-	ajmp	t1_int_exit_no_tlm			; Exit without reseting timeout
+	ajmp	t1_int_exit_no_tlm			; Exit without resetting timeout
 
 t1_int_exit_timeout:
 	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
@@ -1923,7 +1923,7 @@ calc_new_wait_per_demag_done:
 	subb	A, #0
 	mov	Temp4, A
 	jc	load_min_time			; Check that result is still positive
-	jnz	calc_new_wait_times_exit	; Check that result is still above minumum
+	jnz	calc_new_wait_times_exit	; Check that result is still above minimum
 	mov	A, Temp3
 	jnz	calc_new_wait_times_exit
 
@@ -1990,7 +1990,7 @@ calc_next_comm_timing_fast:
 	subb	A, Temp1
 	mov	Temp3, A
 	jc	load_min_time_fast			; Check that result is still positive
-	jnz	calc_new_wait_times_fast_done	; Check that result is still above minumum
+	jnz	calc_new_wait_times_fast_done	; Check that result is still above minimum
 
 load_min_time_fast:
 	mov	Temp3, #1
@@ -2427,7 +2427,7 @@ setup_comm_wait:
 ;
 ; Evaluate comparator integrity
 ;
-; Checks comparator signal behaviour versus expected behaviour
+; Checks comparator signal behavior versus expected behavior
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 evaluate_comparator_integrity:
@@ -3698,7 +3698,7 @@ normal_run_checks:
 	jnb	Flag_INITIAL_RUN_PHASE, initial_run_phase_done	; If not initial run phase - branch
 	jb	Flag_DIR_CHANGE_BRAKE, initial_run_phase_done	; If a direction change - branch
 
-	; Decrement startup rotaton count
+	; Decrement startup rotation count
 	mov	A, Initial_Run_Rot_Cntd
 	dec	A
 	; Check number of initial rotations
@@ -3734,11 +3734,11 @@ initial_run_phase_done:
 	clr	C
 	mov	A, Rcp_Stop_Cnt			; Load stop RC pulse counter low byte value
 	subb	A, Temp1					; Is number of stop RC pulses above limit?
-	jnc	run_to_wait_for_power_on		; Yes, go back to wait for poweron
+	jnc	run_to_wait_for_power_on		; Yes, go back to wait for power on
 
 run6_check_timeout:
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
-	jz	run_to_wait_for_power_on		; If it is zero - go back to wait for poweron
+	jz	run_to_wait_for_power_on		; If it is zero - go back to wait for power on
 
 run6_check_dir:
 	jnb	Flag_PGM_BIDIR, run6_check_speed			; Check if bidirectional operation
