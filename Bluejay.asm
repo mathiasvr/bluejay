@@ -140,34 +140,30 @@ Bit_Access_Int:			DS	1		; Variable at bit accessible address (for interrupts)
 Rcp_Outside_Range_Cnt:		DS	1		; RC pulse outside range counter (incrementing)
 Rcp_Timeout_Cntd:			DS	1		; RC pulse timeout counter (decrementing)
 
-Flags0:					DS	1		; State flags. Reset upon init_start
-Flag_T3_PENDING			BIT	Flags0.0	; Timer 3 pending flag
-Flag_DEMAG_DETECTED			BIT	Flags0.1	; Set when excessive demag time is detected
-Flag_COMP_TIMED_OUT			BIT	Flags0.2	; Set when comparator reading timed out
-Flag_PACKET_PENDING			BIT	Flags0.4	; DShot telemetry data packet is ready to be sent
-
-Flags1:					DS	1		; State flags. Reset upon init_start
-Flag_MOTOR_STARTED			BIT	Flags1.2	; Set when motor is started
-Flag_DIR_CHANGE_BRAKE		BIT	Flags1.3	; Set when braking before direction change
-Flag_HIGH_RPM				BIT	Flags1.4	; Set when motor rpm is high (Comm_Period4x_H less than 2)
-Flag_LOW_PWM_POWER			BIT	Flags1.5	; Set when pwm duty cycle is below 50%
-
 Flags_Startup:				DS	1		; State flags. Reset upon init_start
 Flag_STARTUP_PHASE			BIT	Flags_Startup.0	; Set when in startup phase
 Flag_INITIAL_RUN_PHASE		BIT	Flags_Startup.1	; Set when in initial run phase, before synchronized run is achieved
-; Remaining bits must be cleared
+; Note: Remaining bits must be cleared
+
+Flags1:					DS	1		; State flags. Reset upon init_start
+Flag_T3_PENDING			BIT	Flags1.0	; Timer 3 pending flag
+Flag_DEMAG_DETECTED			BIT	Flags1.1	; Set when excessive demag time is detected
+Flag_COMP_TIMED_OUT			BIT	Flags1.2	; Set when comparator reading timed out
+Flag_PACKET_PENDING			BIT	Flags1.3	; DShot telemetry data packet is ready to be sent
+Flag_MOTOR_STARTED			BIT	Flags1.4	; Set when motor is started
+Flag_DIR_CHANGE_BRAKE		BIT	Flags1.5	; Set when braking before direction change
+Flag_HIGH_RPM				BIT	Flags1.6	; Set when motor rpm is high (Comm_Period4x_H less than 2)
+Flag_LOW_PWM_POWER			BIT	Flags1.7	; Set when pwm duty cycle is below 50%
 
 Flags2:					DS	1		; State flags. NOT reset upon init_start
-Flag_RCP_DIR_REV			BIT	Flags2.5	; RC pulse direction in bidirectional mode
+Flag_PGM_DIR_REV			BIT	Flags2.0	; Programmed direction. 0=normal, 1=reversed
+Flag_PGM_BIDIR_REV			BIT	Flags2.1	; Programmed bidirectional direction. 0=normal, 1=reversed
+Flag_PGM_BIDIR				BIT	Flags2.2	; Programmed bidirectional operation. 0=normal, 1=bidirectional
+Flag_SKIP_T2_INT			BIT	Flags2.3	; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
+Flag_CLOCK_SET_AT_48MHZ		BIT	Flags2.4	; Set if 48MHz MCUs run at 48MHz
+Flag_RCP_STOP				BIT	Flags2.5	; Set if the RC pulse value is zero
+Flag_RCP_DIR_REV			BIT	Flags2.6	; RC pulse direction in bidirectional mode
 Flag_RCP_DSHOT_INVERTED		BIT	Flags2.7	; DShot RC pulse input is inverted (and supports telemetry)
-
-Flags3:					DS	1		; State flags. NOT reset upon init_start
-Flag_PGM_DIR_REV			BIT	Flags3.0	; Programmed direction. 0=normal, 1=reversed
-Flag_PGM_BIDIR_REV			BIT	Flags3.1	; Programmed bidirectional direction. 0=normal, 1=reversed
-Flag_PGM_BIDIR				BIT	Flags3.2	; Programmed bidirectional operation. 0=normal, 1=bidirectional
-Flag_SKIP_T2_INT			BIT	Flags3.3	; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
-Flag_CLOCK_SET_AT_48MHZ		BIT	Flags3.4	; Set if 48MHz MCUs run at 48MHz
-Flag_RCP_STOP				BIT	Flags3.5	; Set if the RC pulse value is zero
 
 Tlm_Data_L:				DS	1		; DShot telemetry data low byte
 Tlm_Data_H:				DS	1		; DShot telemetry data high byte
@@ -3501,7 +3497,6 @@ init_start:
 	setb	IE_EA						; Enable interrupts
 
 	clr	A
-	mov	Flags0, A						; Clear flags0
 	mov	Flags1, A						; Clear flags1
 	mov	Flags_Startup, A				; Clear startup flags
 	mov	Demag_Detected_Metric, A			; Clear demag metric
@@ -3793,7 +3788,6 @@ run_to_wait_for_power_on:
 run_to_wait_for_power_on_stall_done:
 	clr	IE_EA
 	call	switch_power_off
-	mov	Flags0, #0				; Clear flags0
 	mov	Flags1, #0				; Clear flags1
 	mov	Flags_Startup, #0			; Clear startup flags
 IF MCU_48MHZ == 1
