@@ -1462,23 +1462,15 @@ dshot_tlm_12bit_encoded:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Wait xms ~(x*4*250) (Different entry points)
+; Wait a number of milliseconds (Multiple entry points)
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait1ms:
 	mov	Temp2, #1
 	sjmp	waitxms_o
 
-wait3ms:
-	mov	Temp2, #3
-	sjmp	waitxms_o
-
 wait10ms:
 	mov	Temp2, #10
-	sjmp	waitxms_o
-
-wait30ms:
-	mov	Temp2, #30
 	sjmp	waitxms_o
 
 wait100ms:
@@ -1493,7 +1485,7 @@ waitxms_o:		; Outer loop
 	mov	Temp1, #23
 waitxms_m:		; Middle loop
 	clr	A
-	djnz	ACC, $	; Inner loop (42.7us - 1024 cycles)
+	djnz	ACC, $	; Inner loop (41.8us - 1024 cycles)
 	djnz	Temp1, waitxms_m
 	djnz	Temp2, waitxms_o
 	ret
