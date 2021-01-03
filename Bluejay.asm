@@ -710,8 +710,8 @@ t1_int_not_bidir:
 	mov	A, Temp5
 	addc	A, #0
 	mov	Temp5, A
-	jnb	ACC.3, ($+7)
-	mov	Temp4, #0FFh				; Set maximum 11-bit value
+	jnb	ACC.3, ($+7)				; Limit to 11-bit maximum
+	mov	Temp4, #0FFh
 	mov	Temp5, #07h
 
 	; Boost pwm during direct start
@@ -736,13 +736,13 @@ t1_int_startup_boost_stall:
 	mov	Temp5, A
 
 	mov	A, B
-	rl	A						; Add more boost when stalling
+	rl	A						; Nonlinear increase
 	mov	B, A
 
-	djnz	Temp6, t1_int_startup_boost_stall
+	djnz	Temp6, t1_int_startup_boost_stall	; Add more boost when stalling
 
-	jnb	ACC.3, ($+7)
-	mov	Temp4, #0FFh				; Set maximum 11-bit value
+	jnb	ACC.3, ($+7)				; Limit to 11-bit maximum
+	mov	Temp4, #0FFh
 	mov	Temp5, #07h
 
 t1_int_startup_boosted:
@@ -756,7 +756,7 @@ t1_int_startup_boosted:
 
 	jnz	t1_int_rcp_not_zero
 
-	mov	A, Temp4					; New_Rcp (Temp2) is only zero if all 11 bits are zero
+	mov	A, Temp4					; Only set RCP_STOP if all all 11 bits are zero
 	jnz	t1_int_rcp_not_zero
 
 	setb	Flag_RCP_STOP
