@@ -138,10 +138,8 @@ CSEG AT 0				; Code segment start
 	jmp reset
 CSEG AT 03h			; Int0 interrupt
 	jmp	int0_int
-IF MCU_48MHZ == 1
 CSEG AT 0Bh			; Timer0 overflow interrupt
 	jmp	t0_int
-ENDIF
 CSEG AT 13h			; Int1 interrupt
 	jmp	int1_int
 CSEG AT 1Bh			; Timer1 overflow interrupt
