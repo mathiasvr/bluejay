@@ -3469,7 +3469,7 @@ wait_for_power_telemetry_done:
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	jnz	wait_for_power_on_not_missing	; If it is not zero - proceed
 
-	ajmp	init_no_signal				; If pulses missing - go back to detect input signal
+	jmp	init_no_signal				; If pulses missing - go back to detect input signal
 
 wait_for_power_on_not_missing:
 	jnb	Flag_RCP_STOP,	wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
@@ -3483,11 +3483,9 @@ wait_for_power_on_not_missing:
 wait_for_power_on_nonzero:
 	call	wait100ms					; Wait to see if start pulse was only a glitch
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
-	jnz	($+5)					; If it is not zero - proceed
-	ajmp	init_no_signal				; If it is zero (pulses missing) - go back to detect input signal
+	jnz	init_start				; If it is not zero - proceed
 
-	mov	Dshot_Cmd, #0
-	mov	Dshot_Cmd_Cnt, #0
+	jmp	init_no_signal				; If it is zero (pulses missing) - go back to detect input signal
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -3496,6 +3494,9 @@ wait_for_power_on_nonzero:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 init_start:
+	mov	Dshot_Cmd, #0
+	mov	Dshot_Cmd_Cnt, #0
+
 	clr	IE_EA					; Disable interrupts
 	call	switch_power_off
 	setb	IE_EA					; Enable interrupts
@@ -3704,7 +3705,7 @@ normal_run_checks:
 
 	clr	Flag_INITIAL_RUN_PHASE		; Clear initial run phase flag
 	setb	Flag_MOTOR_STARTED			; Set motor started
-	ajmp	run1						; Continue with normal run
+	jmp	run1						; Continue with normal run
 
 initial_run_check_startup_rot:
 	mov	Initial_Run_Rot_Cntd, A		; Not zero - store counter
@@ -3714,7 +3715,7 @@ initial_run_check_startup_rot:
 	jb	Flag_RCP_STOP,	run_to_wait_for_power_on		; Check if pulse is below stop value
 
 initial_run_continue_run:
-	ajmp	run1						; Continue to run
+	jmp	run1						; Continue to run
 
 initial_run_phase_done:
 	; Reset stall count
@@ -3754,7 +3755,7 @@ run6_check_dir_change:
 
 	setb	Flag_DIR_CHANGE_BRAKE		; Set brake flag
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking
-	ajmp	run4						; Go back to run 4, thereby changing force direction
+	jmp	run4						; Go back to run 4, thereby changing force direction
 
 run6_check_speed:
 	mov	Temp1, #0F0h				; Default minimum speed
@@ -3767,9 +3768,10 @@ run6_brake_done:
 	clr	C
 	mov	A, Comm_Period4x_H			; Is Comm_Period4x more than 32ms (~1220 eRPM)?
 	subb	A, Temp1
-	jnc	($+5)					; Yes - stop or turn direction
-	ajmp	run1						; No - go back to run 1
+	jnc	run6_stop_or_turn_dir		; Yes - stop or turn direction
+	jmp	run1						; No - go back to run 1
 
+run6_stop_or_turn_dir:
 	jnb	Flag_DIR_CHANGE_BRAKE, run_to_wait_for_power_on	; If it is not a direction change - stop
 
 	clr	Flag_DIR_CHANGE_BRAKE		; Clear brake flag
@@ -3779,7 +3781,7 @@ run6_brake_done:
 	setb	Flag_INITIAL_RUN_PHASE
 	mov	Initial_Run_Rot_Cntd, #18
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
-	ajmp	run1						; Go back to run 1
+	jmp	run1						; Go back to run 1
 
 run_to_wait_for_power_on_fail:
 	inc	Stall_Cnt					; Increment stall count
