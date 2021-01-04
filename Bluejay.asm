@@ -203,8 +203,8 @@ Wt_Zc_Tout_Start_H:			DS	1	; Timer 3 start point for zero cross scan timeout (hi
 Wt_Comm_Start_L:			DS	1	; Timer 3 start point from zero cross to commutation (lo byte)
 Wt_Comm_Start_H:			DS	1	; Timer 3 start point from zero cross to commutation (hi byte)
 
-Dshot_Cmd:				DS	1	; DShot command
-Dshot_Cmd_Cnt:				DS	1	; DShot command count
+DShot_Cmd:				DS	1	; DShot command
+DShot_Cmd_Cnt:				DS	1	; DShot command count
 
 Rcp_Stop_Cnt:				DS	1	; Counter for RC pulses below stop value
 
@@ -604,8 +604,8 @@ t1_int_outside_range:
 
 	setb	Flag_Rcp_Stop				; Set pulse length to zero
 	clr	A
-	mov	Dshot_Cmd, A				; Clear DShot command
-	mov	Dshot_Cmd_Cnt, A			; Clear DShot command count
+	mov	DShot_Cmd, A				; Clear DShot command
+	mov	DShot_Cmd_Cnt, A			; Clear DShot command count
 
 	ajmp	t1_int_exit_no_tlm			; Exit without resetting timeout
 
@@ -654,14 +654,14 @@ t1_int_decode_checksum:
 	jnc	t1_dshot_set_cmd			; Check for tlm bit set (if not telemetry, Temp3 will be zero and result in invalid command)
 
 	mov	Temp3, A
-	cjne	A, Dshot_Cmd, t1_dshot_set_cmd
+	cjne	A, DShot_Cmd, t1_dshot_set_cmd
 
-	inc	Dshot_Cmd_Cnt
+	inc	DShot_Cmd_Cnt
 	sjmp	t1_normal_range
 
 t1_dshot_set_cmd:
-	mov	Dshot_Cmd, Temp3
-	mov	Dshot_Cmd_Cnt, #0
+	mov	DShot_Cmd, Temp3
+	mov	DShot_Cmd_Cnt, #0
 
 t1_normal_range:
 	; Check for bidirectional operation (0=stop, 96-2095->fwd, 2096-4095->rev)
@@ -2483,7 +2483,7 @@ detect_rcp_level_read:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 dshot_cmd_check:
-	mov	A, Dshot_Cmd
+	mov	A, DShot_Cmd
 	jz	dshot_cmd_exit_no_clear
 
 	mov	Temp1, A
@@ -2499,7 +2499,7 @@ dshot_cmd_direction_1:
 	cjne	Temp1, #7, dshot_cmd_direction_2
 
 	clr	C
-	mov	A, Dshot_Cmd_Cnt
+	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
@@ -2517,7 +2517,7 @@ dshot_cmd_direction_2:
 	cjne	Temp1, #8, dshot_cmd_direction_bidir_off
 
 	clr	C
-	mov	A, Dshot_Cmd_Cnt
+	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
@@ -2535,7 +2535,7 @@ dshot_cmd_direction_bidir_off:
 	cjne	Temp1, #9, dshot_cmd_direction_bidir_on
 
 	clr	C
-	mov	A, Dshot_Cmd_Cnt
+	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
@@ -2554,7 +2554,7 @@ dshot_cmd_direction_bidir_on:
 	cjne	Temp1, #10, dshot_cmd_direction_normal
 
 	clr	C
-	mov	A, Dshot_Cmd_Cnt
+	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
@@ -2567,8 +2567,8 @@ dshot_cmd_direction_bidir_on:
 	setb	Flag_Pgm_Bidir
 
 dshot_cmd_exit:
-	mov	Dshot_Cmd, #0
-	mov	Dshot_Cmd_Cnt, #0
+	mov	DShot_Cmd, #0
+	mov	DShot_Cmd_Cnt, #0
 
 dshot_cmd_exit_no_clear:
 	ret
@@ -2578,7 +2578,7 @@ dshot_cmd_direction_normal:
 	cjne	Temp1, #20, dshot_cmd_direction_reverse
 
 	clr	C
-	mov	A, Dshot_Cmd_Cnt
+	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
@@ -2603,7 +2603,7 @@ dshot_cmd_direction_reverse:			; Temporary reverse
 	cjne	Temp1, #21, dshot_cmd_save_settings
 
 	clr	C
-	mov	A, Dshot_Cmd_Cnt
+	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
@@ -2636,7 +2636,7 @@ dshot_cmd_save_settings:
 	cjne	Temp1, #12, dshot_cmd_exit
 
 	clr	C
-	mov	A, Dshot_Cmd_Cnt
+	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
@@ -3306,8 +3306,8 @@ ENDIF
 
 	mov	Stall_Cnt, #0				; Reset stall count
 
-	mov	Dshot_Cmd, #0				; Clear DShot command
-	mov	Dshot_Cmd_Cnt, #0			; Clear DShot command count
+	mov	DShot_Cmd, #0				; Clear DShot command
+	mov	DShot_Cmd_Cnt, #0			; Clear DShot command count
 
 	; Setup RCP for DShot
 
@@ -3347,8 +3347,8 @@ ENDIF
 ; 	clr	C
 ; 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 ; 	subb	A, #10
-; 	mov	Dshot_Cmd, #0
-; 	mov	Dshot_Cmd_Cnt, #0
+; 	mov	DShot_Cmd, #0
+; 	mov	DShot_Cmd_Cnt, #0
 ; 	jc	arming_begin
 ; ENDIF
 
@@ -3373,8 +3373,8 @@ ENDIF
 	clr	C
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 	subb	A, #10
-	mov	Dshot_Cmd, #0
-	mov	Dshot_Cmd_Cnt, #0
+	mov	DShot_Cmd, #0
+	mov	DShot_Cmd_Cnt, #0
 	jc	arming_begin
 
 	; Setup variables for DShot600
@@ -3396,8 +3396,8 @@ ENDIF
 	clr	C
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 	subb	A, #10
-	mov	Dshot_Cmd, #0
-	mov	Dshot_Cmd_Cnt, #0
+	mov	DShot_Cmd, #0
+	mov	DShot_Cmd_Cnt, #0
 	jc	arming_begin
 
 	ajmp	init_no_signal
@@ -3490,7 +3490,7 @@ wait_for_power_telemetry_done:
 wait_for_power_on_not_missing:
 	jnb	Flag_Rcp_Stop,	wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
 
-	mov	A, Dshot_Cmd
+	mov	A, DShot_Cmd
 	jz	wait_for_power_on_loop		; Check DShot command if not zero, otherwise wait for power
 
 	call	dshot_cmd_check
@@ -3510,8 +3510,8 @@ wait_for_power_on_nonzero:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 init_start:
-	mov	Dshot_Cmd, #0
-	mov	Dshot_Cmd_Cnt, #0
+	mov	DShot_Cmd, #0
+	mov	DShot_Cmd_Cnt, #0
 
 	clr	IE_EA					; Disable interrupts
 	call	switch_power_off
