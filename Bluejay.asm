@@ -476,7 +476,9 @@ STARTUP_POWER_TABLE:	DB	1,	2,	3,	4,	6,	9,	12,	18,	25,	37,	50,	62,	75
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Timer 0 interrupt routine
+; Timer 0 interrupt routine (High priority)
+;
+; Generate DShot telemetry signal
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t0_int:
@@ -528,6 +530,10 @@ t0_int_dshot_tlm_finish:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Timer 1 interrupt routine
+;
+; Decode DShot frame
+; Process new throttle value and update pwm registers
+; Schedule DShot telemetry
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t1_int:
@@ -945,10 +951,12 @@ t1_int_exit_no_int:
 ;
 ; Timer 2 interrupt routine
 ;
+; Update RC pulse timeout and stop counters
+; Happens every 32ms
 ; Requirements: Temp variables can NOT be used since PSW.x is not set
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-t2_int:	; Happens every 32ms
+t2_int:
 	push	ACC
 	clr	TMR2CN0_TF2H				; Clear interrupt flag
 	inc	Timer2_X
@@ -983,11 +991,12 @@ t2_int_exit:
 ;
 ; Timer 3 interrupt routine
 ;
+; Used for commutation timing
 ; Requirements: Temp variables can NOT be used since PSW.x is not set
 ;               ACC can not be used, as it is not pushed to stack
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-t3_int:	; Used for commutation timing
+t3_int:
 	clr	IE_EA					; Disable all interrupts
 	anl	EIE1, #7Fh				; Disable timer 3 interrupts
 	anl	TMR3CN0, #07Fh				; Clear timer 3 interrupt flag
@@ -1000,10 +1009,12 @@ t3_int:	; Used for commutation timing
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Int0 interrupt routine
+; Int0 interrupt routine (High priority)
+;
+; Read and store DShot pwm signal for decoding
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-int0_int:	; Used for RC pulse timing
+int0_int:
 	push	ACC
 	mov	A, TL0					; Read pwm for DShot immediately
 	mov	TL1, DShot_Timer_Preset		; Reset sync timer
@@ -1023,8 +1034,10 @@ int0_int:	; Used for RC pulse timing
 ;
 ; Int1 interrupt routine
 ;
+; Used for RC pulse timing
+;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-int1_int:	; Used for RC pulse timing
+int1_int:
 	clr	IE_EX1					; Disable int1 interrupts
 	setb	TCON_TR1					; Start timer 1
 	clr	TMR2CN0_TR2				; Timer 2 disabled
@@ -1038,8 +1051,10 @@ reti
 ;
 ; PCA interrupt routine
 ;
+; Update pwm registers according to PCA clock signal
+;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-pca_int:	; Used for setting pwm registers
+pca_int:
 	clr	IE_EA
 	push	ACC
 
