@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5](https://github.com/mathiasvr/bluejay/compare/v0.4.0...v0.5) (2021-01-04)
+
+
+### Features
+
+* Rework beeper routines and add a 5th beacon tone ([5659d3b](https://github.com/mathiasvr/bluejay/commit/5659d3b9201a72d3696b3cb7d03ccaa705bbe8fc))
+
+
+### Bug Fixes
+
+* Rework startup boost, increase max number of stalls ([a23e3a1](https://github.com/mathiasvr/bluejay/commit/a23e3a12cf8388f6b6e598452fc221f1170f6758))
+* Scale telemetry timings for 24MHz mode ([97d9cdc](https://github.com/mathiasvr/bluejay/commit/97d9cdc459d2cc322f4ff509b7aac7c3cbfbeda7))
+
+
+### Performance Improvements
+
+* Micro-optimize calc new wait times ([e2bc285](https://github.com/mathiasvr/bluejay/commit/e2bc285dc447cc2eb00f82ff551d6159144543c9))
+* Optimize decoding of bidirectional power ([636436e](https://github.com/mathiasvr/bluejay/commit/636436e408942fe15ee3c1b1634636541e3e2eb9))
+* Optimize startup boost handling ([ab829ed](https://github.com/mathiasvr/bluejay/commit/ab829ed15763226a4c7988a06a3b73735b198ee4))
+* Optimize telemetry packet generation and reduce commutation interference ([b3b8560](https://github.com/mathiasvr/bluejay/commit/b3b8560dd5ed0e8d21de688de638183efdb63645))
+
 ## [0.4.0](https://github.com/mathiasvr/bluejay/compare/v0.3.0...v0.4.0) (2020-11-07)
 
 
