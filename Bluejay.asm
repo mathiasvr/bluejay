@@ -1384,20 +1384,18 @@ set_pwm_limit_high_rpm_store:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Check temperature, power supply voltage and limit power
-;
-; Used to limit main motor power in order to maintain the required voltage
+; Check motor temperature and limit power
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-check_temp_voltage_and_limit_power:
+check_temp_and_limit_power:
 	inc	Adc_Conversion_Cnt			; Increment conversion counter
 	clr	C
 	mov	A, Adc_Conversion_Cnt		; Is conversion count equal to temp rate?
 	subb	A, #8
-	jc	check_voltage_start			; No - check voltage
+	jc	temp_increase_pwm_limit		; No - increase pwm limit
 
 	; Wait for ADC conversion to complete
-	jnb	ADC0CN0_ADINT, check_temp_voltage_and_limit_power
+	jnb	ADC0CN0_ADINT, check_temp_and_limit_power
 	; Read ADC result
 	Read_Adc_Result
 	; Stop ADC
@@ -1467,15 +1465,13 @@ temp_average_updated:
 temp_check_exit:
 	ret
 
-check_voltage_start:
-	; Increase pwm limit
+temp_increase_pwm_limit:
 	mov	A, Pwm_Limit
-	add	A, #16
-	jnc	($+4)					; If not max - branch
+	add	A, #16					; Increase pwm limit
+	jnc	($+4)					; Check if above maximum
+	mov	A, #255					; Set maximum value
 
-	mov	A, #255
-
-	mov	Pwm_Limit, A				; Increment limit
+	mov	Pwm_Limit, A				; Set new pwm limit
 	ret
 
 
@@ -3536,7 +3532,7 @@ init_start:
 	mov	Current_Average_Temp, Temp1	; Set initial average temperature
 
 	mov	Adc_Conversion_Cnt, #8		; Make sure a temp reading is done
-	call	check_temp_voltage_and_limit_power
+	call	check_temp_and_limit_power
 	mov	Adc_Conversion_Cnt, #8		; Make sure a temp reading is done next time
 
 	; Set up start operating conditions
@@ -3676,7 +3672,7 @@ run6:
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
 	call	comm6comm1
-	call	check_temp_voltage_and_limit_power
+	call	check_temp_and_limit_power
 	call	calc_next_comm_timing
 ;		wait_advance_timing
 ;		calc_new_wait_times
