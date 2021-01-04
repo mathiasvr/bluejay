@@ -1130,353 +1130,6 @@ ENDIF
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; DShot GCR encode
-;
-; GCR encode e-period data for DShot telemetry
-;
-; Input
-; - Temp1: Data pointer for storing pulse timings
-; - A: 4-bit value to GCR encode
-; - B: Time that must be added to transition
-; Output
-; - B: Time remaining to be added to next transition
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-dshot_gcr_encode:
-	anl	A, #0Fh
-	rl	A	; Multiply by 2 to match jump offsets
-	mov	DPTR, #dshot_gcr_encode_jump_table
-	jmp	@A+DPTR
-
-dshot_gcr_encode_jump_table:
-	ajmp	dshot_gcr_encode_0_11001
-	ajmp	dshot_gcr_encode_1_11011
-	ajmp	dshot_gcr_encode_2_10010
-	ajmp	dshot_gcr_encode_3_10011
-	ajmp	dshot_gcr_encode_4_11101
-	ajmp	dshot_gcr_encode_5_10101
-	ajmp	dshot_gcr_encode_6_10110
-	ajmp	dshot_gcr_encode_7_10111
-	ajmp	dshot_gcr_encode_8_11010
-	ajmp	dshot_gcr_encode_9_01001
-	ajmp	dshot_gcr_encode_A_01010
-	ajmp	dshot_gcr_encode_B_01011
-	ajmp	dshot_gcr_encode_C_11110
-	ajmp	dshot_gcr_encode_D_01101
-	ajmp	dshot_gcr_encode_E_01110
-	ajmp	dshot_gcr_encode_F_01111
-
-; GCR encoding is ordered by least significant bit first,
-; and represented as pulse durations.
-dshot_gcr_encode_0_11001:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_1_11011:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_2_10010:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_3_10011:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_4_11101:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_5_10101:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_6_10110:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_7_10111:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_8_11010:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_9_01001:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
-	ret
-
-dshot_gcr_encode_A_01010:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
-	ret
-
-dshot_gcr_encode_B_01011:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
-	ret
-
-dshot_gcr_encode_C_11110:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
-	ret
-
-dshot_gcr_encode_D_01101:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
-	ret
-
-dshot_gcr_encode_E_01110:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
-	ret
-
-dshot_gcr_encode_F_01111:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; DShot 12-bit encode
-;
-; Encodes 16-bit e-period as a 12-bit value of the form:
-; <e e e m m m m m m m m m> where M SHL E ~ e-period [us]
-;
-; Note: Not callable to improve performance
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-dshot_12bit_7:
-	;mov	A, Tlm_Data_H
-	mov	C, Tlm_Data_L.7
-	rlc	A
-	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H, #0fh
-	ajmp	dshot_tlm_12bit_encoded
-
-dshot_12bit_6:
-	;mov	A, Tlm_Data_H
-	mov	C, Tlm_Data_L.7
-	rlc	A
-	mov	C, Tlm_Data_L.6
-	rlc	A
-	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H, #0dh
-	ajmp	dshot_tlm_12bit_encoded
-
-dshot_12bit_5:
-	;mov	A, Tlm_Data_H
-	mov	C, Tlm_Data_L.7
-	rlc	A
-	mov	C, Tlm_Data_L.6
-	rlc	A
-	mov	C, Tlm_Data_L.5
-	rlc	A
-	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H, #0bh
-	ajmp	dshot_tlm_12bit_encoded
-
-dshot_12bit_4:
-	mov	A, Tlm_Data_L
-	anl	A, #0f0h
-	clr	Tlm_Data_H.4
-	orl	A, Tlm_Data_H
-	swap	A
-	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H, #09h
-	ajmp	dshot_tlm_12bit_encoded
-
-dshot_12bit_3:
-	mov	A, Tlm_Data_L
-	mov	C, Tlm_Data_H.0
-	rrc	A
-	mov	C, Tlm_Data_H.1
-	rrc	A
-	mov	C, Tlm_Data_H.2
-	rrc	A
-	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H, #07h
-	ajmp	dshot_tlm_12bit_encoded
-
-dshot_12bit_2:
-	mov	A, Tlm_Data_L
-	mov	C, Tlm_Data_H.0
-	rrc	A
-	mov	C, Tlm_Data_H.1
-	rrc	A
-	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H, #05h
-	ajmp	dshot_tlm_12bit_encoded
-
-dshot_12bit_1:
-	mov	A, Tlm_Data_L
-	mov	C, Tlm_Data_H.0
-	rrc	A
-	mov	Tlm_Data_L, A
-	mov	Tlm_Data_H, #03h
-	ajmp	dshot_tlm_12bit_encoded
-
-dshot_12bit_encode:
-	; Encode 16-bit e-period as a 12-bit value
-	jb	ACC.7, dshot_12bit_7		; ACC = Tlm_Data_H
-	jb	ACC.6, dshot_12bit_6
-	jb	ACC.5, dshot_12bit_5
-	jb	ACC.4, dshot_12bit_4
-	jb	ACC.3, dshot_12bit_3
-	jb	ACC.2, dshot_12bit_2
-	jb	ACC.1, dshot_12bit_1
-	mov	A, Tlm_Data_L				; Already 12-bit (E=0)
-	ajmp	dshot_tlm_12bit_encoded
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; DShot telemetry create packet
-;
-; Create DShot telemetry packet and prepare it for being sent
-; The routine is divided into 6 sections that can return early
-; in order to reduce commutation interference
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-dshot_tlm_create_packet:
-	push	PSW
-	mov	PSW, #10h					; Select register bank 2
-
-	Early_Return_Packet_Stage 0
-
-	; Read commutation period
-	clr	IE_EA
-	mov	Tlm_Data_L, Comm_Period4x_L
-	mov	Tlm_Data_H, Comm_Period4x_H
-	setb	IE_EA
-
-	; Multiply period by 3/4 (1/2 + 1/4)
-	mov	A, Tlm_Data_L
-	mov	C, Tlm_Data_H.0
-	rrc	A
-	mov	Temp2, A
-	mov	C, Tlm_Data_H.1
-	rrc	A
-	add	A, Temp2
-	mov	Tlm_Data_L, A
-
-	mov	A, Tlm_Data_H
-	rr	A
-	clr	ACC.7
-	mov	Temp2, A
-	rr	A
-	clr	ACC.7
-	addc	A, Temp2
-	mov	Tlm_Data_H, A
-
-	Early_Return_Packet_Stage 1
-	mov	A, Tlm_Data_H
-
-	; 12-bit encode telemetry data
-	jnz	dshot_12bit_encode
-	mov	A, Tlm_Data_L				; Already 12-bit
-	jnz	dshot_tlm_12bit_encoded
-
-	; If period is zero then reset to FFFFh (FFFh for 12-bit)
-	mov	Tlm_Data_H, #0Fh
-	mov	Tlm_Data_L, #0FFh
-
-dshot_tlm_12bit_encoded:
-	Early_Return_Packet_Stage 2
-	mov	A, Tlm_Data_L
-
-	; Compute inverted xor checksum (4-bit)
-	swap	A
-	xrl	A, Tlm_Data_L
-	xrl	A, Tlm_Data_H
-	cpl	A
-
-	; GCR encode the telemetry data (16-bit)
-	mov	Temp1, #Temp_Storage		; Store pulse timings in Temp_Storage
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1	; Final transition time
-
-	call	dshot_gcr_encode			; GCR encode lowest 4-bit of A (store through Temp1)
-
-	Early_Return_Packet_Stage 3
-
-	mov	A, Tlm_Data_L
-	call	dshot_gcr_encode
-
-	Early_Return_Packet_Stage 4
-
-	mov	A, Tlm_Data_L
-	swap	A
-	call	dshot_gcr_encode
-
-	Early_Return_Packet_Stage 5
-
-	mov	A, Tlm_Data_H
-	call	dshot_gcr_encode
-
-	Push_Mem	Temp1, Tmp_B			; Initial transition time
-
-	mov	Temp5, #0
-	setb	Flag_PACKET_PENDING
-
-	pop	PSW
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
 ; Wait a number of milliseconds (Multiple entry points)
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1503,6 +1156,148 @@ waitxms_m:						; Middle loop
 	djnz	ACC, $					; Inner loop (41.8us - 1024 cycles)
 	djnz	Temp1, waitxms_m
 	djnz	Temp2, waitxms_o
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Beeper routines (Multiple entry points)
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+beep_f1:
+	mov	Temp3, #66				; Off wait loop length (Tone)
+	mov	Temp4, #(3500 / 66)			; Number of beep pulses (Duration)
+	sjmp	beep
+
+beep_f2:
+	mov	Temp3, #45
+	mov	Temp4, #(3500 / 45)
+	sjmp	beep
+
+beep_f3:
+	mov	Temp3, #38
+	mov	Temp4, #(3500 / 38)
+	sjmp	beep
+
+beep_f4:
+	mov	Temp3, #25
+	mov	Temp4, #(3500 / 25)
+	sjmp	beep
+
+beep_f5:
+	mov	Temp3, #20
+	mov	Temp4, #(3500 / 25)
+	sjmp	beep
+
+beep_f1_short:
+	mov	Temp3, #66
+	mov	Temp4, #(2000 / 66)
+	sjmp	beep
+
+beep_f2_short:
+	mov	Temp3, #45
+	mov	Temp4, #(2000 / 45)
+	sjmp	beep
+
+beep:
+	mov	A, Beep_Strength
+	djnz	ACC, beep_start			; Start if beep strength is not 1
+	ret
+
+beep_start:
+	mov	Temp2, #2
+beep_onoff:
+	clr	A
+	BcomFET_off					; BcomFET off
+	djnz	ACC, $					; Allow some time after comfet is turned off
+	BpwmFET_on					; BpwmFET on (in order to charge the driver of the BcomFET)
+	djnz	ACC, $					; Let the pwmfet be turned on a while
+	BpwmFET_off					; BpwmFET off again
+	djnz	ACC, $					; Allow some time after pwmfet is turned off
+	BcomFET_on					; BcomFET on
+	djnz	ACC, $					; Allow some time after comfet is turned on
+	; Turn on pwmfet
+	mov	A, Temp2
+	jb	ACC.0, beep_apwmfet_on
+	ApwmFET_on
+beep_apwmfet_on:
+	jnb	ACC.0, beep_cpwmfet_on
+	CpwmFET_on
+beep_cpwmfet_on:
+	mov	A, Beep_Strength
+	djnz	ACC, $
+	; Turn off pwmfet
+	mov	A, Temp2
+	jb	ACC.0, beep_apwmfet_off
+	ApwmFET_off
+beep_apwmfet_off:
+	jnb	ACC.0, beep_cpwmfet_off
+	CpwmFET_off
+beep_cpwmfet_off:
+	mov	A, #150		; 25us off
+	djnz	ACC, $
+	djnz	Temp2, beep_onoff
+	; Copy variable
+	mov	A, Temp3
+	mov	Temp1, A
+beep_off:	; Fets off loop
+	mov	A, #150
+	djnz	ACC, $
+	djnz	Temp1, beep_off
+	djnz	Temp4, beep_start
+
+	BcomFET_off
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; LED control
+;
+; Controls LEDs
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+led_control:
+	mov	Temp1, #Pgm_LED_Control
+	mov	A, @Temp1
+	mov	Temp2, A
+	anl	A, #03h
+	Set_LED_0
+	jnz	led_0_done
+	Clear_LED_0
+led_0_done:
+	mov	A, Temp2
+	anl	A, #0Ch
+	Set_LED_1
+	jnz	led_1_done
+	Clear_LED_1
+led_1_done:
+	mov	A, Temp2
+	anl	A, #030h
+	Set_LED_2
+	jnz	led_2_done
+	Clear_LED_2
+led_2_done:
+	mov	A, Temp2
+	anl	A, #0C0h
+	Set_LED_3
+	jnz	led_3_done
+	Clear_LED_3
+led_3_done:
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Switch power off routine
+;
+; Switches all fets off
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+switch_power_off:
+	All_pwmFETs_Off				; Turn off all pwm fets
+	All_comFETs_Off				; Turn off all commutation fets
+	Set_Pwms_Off
 	ret
 
 
@@ -2386,7 +2181,7 @@ comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
 	setb	Flag_T3_PENDING
 	orl	EIE1, #80h				; Enable timer 3 interrupts
-	ajmp	wait_for_comp_out_start		; If comparator output is not correct - go back and restart
+	jmp	wait_for_comp_out_start		; If comparator output is not correct - go back and restart
 
 comp_read_wrong_low_rpm:
 	mov	A, Comm_Period4x_H			; Set timeout to ~4x comm period 4x value
@@ -2659,248 +2454,6 @@ comm61_rev:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Beeper routines (Multiple entry points)
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-beep_f1:
-	mov	Temp3, #66				; Off wait loop length (Tone)
-	mov	Temp4, #(3500 / 66)			; Number of beep pulses (Duration)
-	sjmp	beep
-
-beep_f2:
-	mov	Temp3, #45
-	mov	Temp4, #(3500 / 45)
-	sjmp	beep
-
-beep_f3:
-	mov	Temp3, #38
-	mov	Temp4, #(3500 / 38)
-	sjmp	beep
-
-beep_f4:
-	mov	Temp3, #25
-	mov	Temp4, #(3500 / 25)
-	sjmp	beep
-
-beep_f5:
-	mov	Temp3, #20
-	mov	Temp4, #(3500 / 25)
-	sjmp	beep
-
-beep_f1_short:
-	mov	Temp3, #66
-	mov	Temp4, #(2000 / 66)
-	sjmp	beep
-
-beep_f2_short:
-	mov	Temp3, #45
-	mov	Temp4, #(2000 / 45)
-	sjmp	beep
-
-beep:
-	mov	A, Beep_Strength
-	djnz	ACC, beep_start			; Start if beep strength is not 1
-	ret
-
-beep_start:
-	mov	Temp2, #2
-beep_onoff:
-	clr	A
-	BcomFET_off					; BcomFET off
-	djnz	ACC, $					; Allow some time after comfet is turned off
-	BpwmFET_on					; BpwmFET on (in order to charge the driver of the BcomFET)
-	djnz	ACC, $					; Let the pwmfet be turned on a while
-	BpwmFET_off					; BpwmFET off again
-	djnz	ACC, $					; Allow some time after pwmfet is turned off
-	BcomFET_on					; BcomFET on
-	djnz	ACC, $					; Allow some time after comfet is turned on
-	; Turn on pwmfet
-	mov	A, Temp2
-	jb	ACC.0, beep_apwmfet_on
-	ApwmFET_on
-beep_apwmfet_on:
-	jnb	ACC.0, beep_cpwmfet_on
-	CpwmFET_on
-beep_cpwmfet_on:
-	mov	A, Beep_Strength
-	djnz	ACC, $
-	; Turn off pwmfet
-	mov	A, Temp2
-	jb	ACC.0, beep_apwmfet_off
-	ApwmFET_off
-beep_apwmfet_off:
-	jnb	ACC.0, beep_cpwmfet_off
-	CpwmFET_off
-beep_cpwmfet_off:
-	mov	A, #150		; 25us off
-	djnz	ACC, $
-	djnz	Temp2, beep_onoff
-	; Copy variable
-	mov	A, Temp3
-	mov	Temp1, A
-beep_off:	; Fets off loop
-	mov	A, #150
-	djnz	ACC, $
-	djnz	Temp1, beep_off
-	djnz	Temp4, beep_start
-
-	BcomFET_off
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; Switch power off routine
-;
-; Switches all fets off
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-switch_power_off:
-	All_pwmFETs_Off				; Turn off all pwm fets
-	All_comFETs_Off				; Turn off all commutation fets
-	Set_Pwms_Off
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; Set default parameters
-;
-; Sets default programming parameters
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-set_default_parameters:
-	mov	Temp1, #_Pgm_Gov_P_Gain
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_P_Gain
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_I_Gain
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Mode
-	Push_Mem	Temp1, #0FFh						; _Pgm_Low_Voltage_Lim
-	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Gain
-	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Idle
-	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_PWR		; Pgm_Startup_Pwr
-	Push_Mem	Temp1, #0FFh						; _Pgm_Pwm_Freq
-	Push_Mem	Temp1, #DEFAULT_PGM_DIRECTION			; Pgm_Direction
-	Push_Mem	Temp1, #0FFh						; _Pgm_Input_Pol
-
-	inc	Temp1								; Skip Initialized_L_Dummy
-	inc	Temp1								; Skip Initialized_H_Dummy
-
-	Push_Mem	Temp1, #0FFh						; _Pgm_Enable_TX_Program
-	Push_Mem	Temp1, #0FFh						; _Pgm_Main_Rearm_Start
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Setup_Target
-	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Rpm
-	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Accel
-	Push_Mem	Temp1, #0FFh						; _Pgm_Volt_Comp
-	Push_Mem	Temp1, #DEFAULT_PGM_COMM_TIMING		; Pgm_Comm_Timing
-	Push_Mem	Temp1, #0FFh						; _Pgm_Damping_Force
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Range
-	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Method
-	Push_Mem	Temp1, #0FFh						; _Pgm_Min_Throttle
-	Push_Mem	Temp1, #0FFh						; _Pgm_Max_Throttle
-	Push_Mem	Temp1, #DEFAULT_PGM_BEEP_STRENGTH		; Pgm_Beep_Strength
-	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_STRENGTH	; Pgm_Beacon_Strength
-	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_DELAY		; Pgm_Beacon_Delay
-	Push_Mem	Temp1, #0FFh						; _Pgm_Throttle_Rate
-	Push_Mem	Temp1, #DEFAULT_PGM_DEMAG_COMP		; Pgm_Demag_Comp
-	Push_Mem	Temp1, #0FFh						; _Pgm_BEC_Voltage_High
-	Push_Mem	Temp1, #0FFh						; _Pgm_Center_Throttle
-	Push_Mem	Temp1, #0FFh						; _Pgm_Main_Spoolup_Time
-	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT	; Pgm_Enable_Temp_Prot
-	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT	; Pgm_Enable_Power_Prot
-	Push_Mem	Temp1, #0FFh						; _Pgm_Enable_Pwm_Input
-	Push_Mem	Temp1, #0FFh						; _Pgm_Pwm_Dither
-	Push_Mem	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP		; Pgm_Brake_On_Stop
-	Push_Mem	Temp1, #DEFAULT_PGM_LED_CONTROL		; Pgm_LED_Control
-
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; Decode settings
-;
-; Decodes various settings
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-decode_settings:
-	; Load programmed direction
-	mov	Temp1, #Pgm_Direction
-	mov	A, @Temp1
-	clr	C
-	subb	A, #3
-	setb	Flag_PGM_BIDIR
-	jnc	($+4)
-
-	clr	Flag_PGM_BIDIR
-
-	clr	Flag_PGM_DIR_REV
-	mov	A, @Temp1
-	jnb	ACC.1, ($+5)
-	setb	Flag_PGM_DIR_REV
-	mov	C, Flag_PGM_DIR_REV
-	mov	Flag_PGM_BIDIR_REV, C
-	; Decode startup power
-	mov	Temp1, #Pgm_Startup_Pwr
-	mov	A, @Temp1
-	dec	A
-	mov	DPTR, #STARTUP_POWER_TABLE
-	movc	A, @A+DPTR
-	mov	Temp1, #Pgm_Startup_Pwr_Decoded
-	mov	@Temp1, A
-	; Decode low rpm power slope
-	mov	Temp1, #Pgm_Startup_Pwr
-	mov	A, @Temp1
-	mov	Low_Rpm_Pwr_Slope, A
-	clr	C
-	subb	A, #2
-	jnc	($+5)
-	mov	Low_Rpm_Pwr_Slope, #2
-	; Decode demag compensation
-	mov	Temp1, #Pgm_Demag_Comp
-	mov	A, @Temp1
-	mov	Demag_Pwr_Off_Thresh, #255	; Set default
-
-	cjne	A, #2, decode_demag_high
-
-	mov	Demag_Pwr_Off_Thresh, #160	; Settings for demag comp low
-
-decode_demag_high:
-	cjne	A, #3, decode_demag_done
-
-	mov	Demag_Pwr_Off_Thresh, #130	; Settings for demag comp high
-
-decode_demag_done:
-	; Decode temperature protection limit
-	mov	Temp1, #Pgm_Enable_Temp_Prot
-	mov	A, @Temp1
-	mov	Temp1, A
-	jz	decode_temp_done
-
-	mov	A, #(TEMP_LIMIT-TEMP_LIMIT_STEP)
-decode_temp_step:
-	add	A, #TEMP_LIMIT_STEP
-	djnz	Temp1, decode_temp_step
-
-decode_temp_done:
-	mov	Temp_Prot_Limit, A
-
-	; Dithering
-IF PWM_BITS_H == 1
-	mov	Temp1, #Dithering_Patterns
-	Push_Mem	Temp1, #00h
-	Push_Mem	Temp1, #55h
-ELSEIF PWM_BITS_H == 0
-	mov	Temp1, #Dithering_Patterns
-	Push_Mem	Temp1, #00h
-	Push_Mem	Temp1, #11h
-	Push_Mem	Temp1, #55h
-	Push_Mem	Temp1, #77h
-ENDIF
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
 ; Detect DShot RCP level
 ;
 ; Determine if RCP signal level is normal or inverted DShot
@@ -2918,43 +2471,6 @@ detect_rcp_level_read:
 	djnz	ACC, detect_rcp_level_read
 
 	mov	Flag_RCP_DSHOT_INVERTED, C
-	ret
-
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; LED control
-;
-; Controls LEDs
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-led_control:
-	mov	Temp1, #Pgm_LED_Control
-	mov	A, @Temp1
-	mov	Temp2, A
-	anl	A, #03h
-	Set_LED_0
-	jnz	led_0_done
-	Clear_LED_0
-led_0_done:
-	mov	A, Temp2
-	anl	A, #0Ch
-	Set_LED_1
-	jnz	led_1_done
-	Clear_LED_1
-led_1_done:
-	mov	A, Temp2
-	anl	A, #030h
-	Set_LED_2
-	jnz	led_2_done
-	Clear_LED_2
-led_2_done:
-	mov	A, Temp2
-	anl	A, #0C0h
-	Set_LED_3
-	jnz	led_3_done
-	Clear_LED_3
-led_3_done:
 	ret
 
 
@@ -3177,6 +2693,490 @@ beacon_beep_exit:
 	mov	Beep_Strength, @Temp2
 	setb	IE_EA
 	call	wait100ms
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; DShot telemetry create packet
+;
+; Create DShot telemetry packet and prepare it for being sent
+; The routine is divided into 6 sections that can return early
+; in order to reduce commutation interference
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+dshot_tlm_create_packet:
+	push	PSW
+	mov	PSW, #10h					; Select register bank 2
+
+	Early_Return_Packet_Stage 0
+
+	; Read commutation period
+	clr	IE_EA
+	mov	Tlm_Data_L, Comm_Period4x_L
+	mov	Tlm_Data_H, Comm_Period4x_H
+	setb	IE_EA
+
+	; Multiply period by 3/4 (1/2 + 1/4)
+	mov	A, Tlm_Data_L
+	mov	C, Tlm_Data_H.0
+	rrc	A
+	mov	Temp2, A
+	mov	C, Tlm_Data_H.1
+	rrc	A
+	add	A, Temp2
+	mov	Tlm_Data_L, A
+
+	mov	A, Tlm_Data_H
+	rr	A
+	clr	ACC.7
+	mov	Temp2, A
+	rr	A
+	clr	ACC.7
+	addc	A, Temp2
+	mov	Tlm_Data_H, A
+
+	Early_Return_Packet_Stage 1
+	mov	A, Tlm_Data_H
+
+	; 12-bit encode telemetry data
+	jnz	dshot_12bit_encode
+	mov	A, Tlm_Data_L				; Already 12-bit
+	jnz	dshot_tlm_12bit_encoded
+
+	; If period is zero then reset to FFFFh (FFFh for 12-bit)
+	mov	Tlm_Data_H, #0Fh
+	mov	Tlm_Data_L, #0FFh
+
+dshot_tlm_12bit_encoded:
+	Early_Return_Packet_Stage 2
+	mov	A, Tlm_Data_L
+
+	; Compute inverted xor checksum (4-bit)
+	swap	A
+	xrl	A, Tlm_Data_L
+	xrl	A, Tlm_Data_H
+	cpl	A
+
+	; GCR encode the telemetry data (16-bit)
+	mov	Temp1, #Temp_Storage		; Store pulse timings in Temp_Storage
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1	; Final transition time
+
+	call	dshot_gcr_encode			; GCR encode lowest 4-bit of A (store through Temp1)
+
+	Early_Return_Packet_Stage 3
+
+	mov	A, Tlm_Data_L
+	call	dshot_gcr_encode
+
+	Early_Return_Packet_Stage 4
+
+	mov	A, Tlm_Data_L
+	swap	A
+	call	dshot_gcr_encode
+
+	Early_Return_Packet_Stage 5
+
+	mov	A, Tlm_Data_H
+	call	dshot_gcr_encode
+
+	Push_Mem	Temp1, Tmp_B			; Initial transition time
+
+	mov	Temp5, #0
+	setb	Flag_PACKET_PENDING
+
+	pop	PSW
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; DShot 12-bit encode
+;
+; Encodes 16-bit e-period as a 12-bit value of the form:
+; <e e e m m m m m m m m m> where M SHL E ~ e-period [us]
+;
+; Note: Not callable to improve performance
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+dshot_12bit_encode:
+	; Encode 16-bit e-period as a 12-bit value
+	jb	ACC.7, dshot_12bit_7		; ACC = Tlm_Data_H
+	jb	ACC.6, dshot_12bit_6
+	jb	ACC.5, dshot_12bit_5
+	jb	ACC.4, dshot_12bit_4
+	jb	ACC.3, dshot_12bit_3
+	jb	ACC.2, dshot_12bit_2
+	jb	ACC.1, dshot_12bit_1
+	mov	A, Tlm_Data_L				; Already 12-bit (E=0)
+	ajmp	dshot_tlm_12bit_encoded
+
+dshot_12bit_7:
+	;mov	A, Tlm_Data_H
+	mov	C, Tlm_Data_L.7
+	rlc	A
+	mov	Tlm_Data_L, A
+	mov	Tlm_Data_H, #0fh
+	ajmp	dshot_tlm_12bit_encoded
+
+dshot_12bit_6:
+	;mov	A, Tlm_Data_H
+	mov	C, Tlm_Data_L.7
+	rlc	A
+	mov	C, Tlm_Data_L.6
+	rlc	A
+	mov	Tlm_Data_L, A
+	mov	Tlm_Data_H, #0dh
+	ajmp	dshot_tlm_12bit_encoded
+
+dshot_12bit_5:
+	;mov	A, Tlm_Data_H
+	mov	C, Tlm_Data_L.7
+	rlc	A
+	mov	C, Tlm_Data_L.6
+	rlc	A
+	mov	C, Tlm_Data_L.5
+	rlc	A
+	mov	Tlm_Data_L, A
+	mov	Tlm_Data_H, #0bh
+	ajmp	dshot_tlm_12bit_encoded
+
+dshot_12bit_4:
+	mov	A, Tlm_Data_L
+	anl	A, #0f0h
+	clr	Tlm_Data_H.4
+	orl	A, Tlm_Data_H
+	swap	A
+	mov	Tlm_Data_L, A
+	mov	Tlm_Data_H, #09h
+	ajmp	dshot_tlm_12bit_encoded
+
+dshot_12bit_3:
+	mov	A, Tlm_Data_L
+	mov	C, Tlm_Data_H.0
+	rrc	A
+	mov	C, Tlm_Data_H.1
+	rrc	A
+	mov	C, Tlm_Data_H.2
+	rrc	A
+	mov	Tlm_Data_L, A
+	mov	Tlm_Data_H, #07h
+	ajmp	dshot_tlm_12bit_encoded
+
+dshot_12bit_2:
+	mov	A, Tlm_Data_L
+	mov	C, Tlm_Data_H.0
+	rrc	A
+	mov	C, Tlm_Data_H.1
+	rrc	A
+	mov	Tlm_Data_L, A
+	mov	Tlm_Data_H, #05h
+	ajmp	dshot_tlm_12bit_encoded
+
+dshot_12bit_1:
+	mov	A, Tlm_Data_L
+	mov	C, Tlm_Data_H.0
+	rrc	A
+	mov	Tlm_Data_L, A
+	mov	Tlm_Data_H, #03h
+	ajmp	dshot_tlm_12bit_encoded
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; DShot GCR encode
+;
+; GCR encode e-period data for DShot telemetry
+;
+; Input
+; - Temp1: Data pointer for storing pulse timings
+; - A: 4-bit value to GCR encode
+; - B: Time that must be added to transition
+; Output
+; - B: Time remaining to be added to next transition
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+dshot_gcr_encode:
+	anl	A, #0Fh
+	rl	A	; Multiply by 2 to match jump offsets
+	mov	DPTR, #dshot_gcr_encode_jump_table
+	jmp	@A+DPTR
+
+dshot_gcr_encode_jump_table:
+	ajmp	dshot_gcr_encode_0_11001
+	ajmp	dshot_gcr_encode_1_11011
+	ajmp	dshot_gcr_encode_2_10010
+	ajmp	dshot_gcr_encode_3_10011
+	ajmp	dshot_gcr_encode_4_11101
+	ajmp	dshot_gcr_encode_5_10101
+	ajmp	dshot_gcr_encode_6_10110
+	ajmp	dshot_gcr_encode_7_10111
+	ajmp	dshot_gcr_encode_8_11010
+	ajmp	dshot_gcr_encode_9_01001
+	ajmp	dshot_gcr_encode_A_01010
+	ajmp	dshot_gcr_encode_B_01011
+	ajmp	dshot_gcr_encode_C_11110
+	ajmp	dshot_gcr_encode_D_01101
+	ajmp	dshot_gcr_encode_E_01110
+	ajmp	dshot_gcr_encode_F_01111
+
+; GCR encoding is ordered by least significant bit first,
+; and represented as pulse durations.
+dshot_gcr_encode_0_11001:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_1_11011:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_2_10010:
+	DShot_GCR_Get_Time
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_3_10011:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_4_11101:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_5_10101:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_6_10110:
+	DShot_GCR_Get_Time
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_7_10111:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_8_11010:
+	DShot_GCR_Get_Time
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_9_01001:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	ret
+
+dshot_gcr_encode_A_01010:
+	DShot_GCR_Get_Time
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	ret
+
+dshot_gcr_encode_B_01011:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	ret
+
+dshot_gcr_encode_C_11110:
+	DShot_GCR_Get_Time
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	ret
+
+dshot_gcr_encode_D_01101:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	ret
+
+dshot_gcr_encode_E_01110:
+	DShot_GCR_Get_Time
+	Push_Mem	Temp1, A
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	ret
+
+dshot_gcr_encode_F_01111:
+	Push_Mem	Temp1, Tmp_B
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
+	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Set default parameters
+;
+; Sets default programming parameters
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+set_default_parameters:
+	mov	Temp1, #_Pgm_Gov_P_Gain
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_P_Gain
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_I_Gain
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Mode
+	Push_Mem	Temp1, #0FFh						; _Pgm_Low_Voltage_Lim
+	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Gain
+	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Idle
+	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_PWR		; Pgm_Startup_Pwr
+	Push_Mem	Temp1, #0FFh						; _Pgm_Pwm_Freq
+	Push_Mem	Temp1, #DEFAULT_PGM_DIRECTION			; Pgm_Direction
+	Push_Mem	Temp1, #0FFh						; _Pgm_Input_Pol
+
+	inc	Temp1								; Skip Initialized_L_Dummy
+	inc	Temp1								; Skip Initialized_H_Dummy
+
+	Push_Mem	Temp1, #0FFh						; _Pgm_Enable_TX_Program
+	Push_Mem	Temp1, #0FFh						; _Pgm_Main_Rearm_Start
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Setup_Target
+	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Rpm
+	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Accel
+	Push_Mem	Temp1, #0FFh						; _Pgm_Volt_Comp
+	Push_Mem	Temp1, #DEFAULT_PGM_COMM_TIMING		; Pgm_Comm_Timing
+	Push_Mem	Temp1, #0FFh						; _Pgm_Damping_Force
+	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Range
+	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Method
+	Push_Mem	Temp1, #0FFh						; _Pgm_Min_Throttle
+	Push_Mem	Temp1, #0FFh						; _Pgm_Max_Throttle
+	Push_Mem	Temp1, #DEFAULT_PGM_BEEP_STRENGTH		; Pgm_Beep_Strength
+	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_STRENGTH	; Pgm_Beacon_Strength
+	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_DELAY		; Pgm_Beacon_Delay
+	Push_Mem	Temp1, #0FFh						; _Pgm_Throttle_Rate
+	Push_Mem	Temp1, #DEFAULT_PGM_DEMAG_COMP		; Pgm_Demag_Comp
+	Push_Mem	Temp1, #0FFh						; _Pgm_BEC_Voltage_High
+	Push_Mem	Temp1, #0FFh						; _Pgm_Center_Throttle
+	Push_Mem	Temp1, #0FFh						; _Pgm_Main_Spoolup_Time
+	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT	; Pgm_Enable_Temp_Prot
+	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT	; Pgm_Enable_Power_Prot
+	Push_Mem	Temp1, #0FFh						; _Pgm_Enable_Pwm_Input
+	Push_Mem	Temp1, #0FFh						; _Pgm_Pwm_Dither
+	Push_Mem	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP		; Pgm_Brake_On_Stop
+	Push_Mem	Temp1, #DEFAULT_PGM_LED_CONTROL		; Pgm_LED_Control
+
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Decode settings
+;
+; Decodes various settings
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+decode_settings:
+	; Load programmed direction
+	mov	Temp1, #Pgm_Direction
+	mov	A, @Temp1
+	clr	C
+	subb	A, #3
+	setb	Flag_PGM_BIDIR
+	jnc	($+4)
+
+	clr	Flag_PGM_BIDIR
+
+	clr	Flag_PGM_DIR_REV
+	mov	A, @Temp1
+	jnb	ACC.1, ($+5)
+	setb	Flag_PGM_DIR_REV
+	mov	C, Flag_PGM_DIR_REV
+	mov	Flag_PGM_BIDIR_REV, C
+	; Decode startup power
+	mov	Temp1, #Pgm_Startup_Pwr
+	mov	A, @Temp1
+	dec	A
+	mov	DPTR, #STARTUP_POWER_TABLE
+	movc	A, @A+DPTR
+	mov	Temp1, #Pgm_Startup_Pwr_Decoded
+	mov	@Temp1, A
+	; Decode low rpm power slope
+	mov	Temp1, #Pgm_Startup_Pwr
+	mov	A, @Temp1
+	mov	Low_Rpm_Pwr_Slope, A
+	clr	C
+	subb	A, #2
+	jnc	($+5)
+	mov	Low_Rpm_Pwr_Slope, #2
+	; Decode demag compensation
+	mov	Temp1, #Pgm_Demag_Comp
+	mov	A, @Temp1
+	mov	Demag_Pwr_Off_Thresh, #255	; Set default
+
+	cjne	A, #2, decode_demag_high
+
+	mov	Demag_Pwr_Off_Thresh, #160	; Settings for demag comp low
+
+decode_demag_high:
+	cjne	A, #3, decode_demag_done
+
+	mov	Demag_Pwr_Off_Thresh, #130	; Settings for demag comp high
+
+decode_demag_done:
+	; Decode temperature protection limit
+	mov	Temp1, #Pgm_Enable_Temp_Prot
+	mov	A, @Temp1
+	mov	Temp1, A
+	jz	decode_temp_done
+
+	mov	A, #(TEMP_LIMIT-TEMP_LIMIT_STEP)
+decode_temp_step:
+	add	A, #TEMP_LIMIT_STEP
+	djnz	Temp1, decode_temp_step
+
+decode_temp_done:
+	mov	Temp_Prot_Limit, A
+
+	; Dithering
+IF PWM_BITS_H == 1
+	mov	Temp1, #Dithering_Patterns
+	Push_Mem	Temp1, #00h
+	Push_Mem	Temp1, #55h
+ELSEIF PWM_BITS_H == 0
+	mov	Temp1, #Dithering_Patterns
+	Push_Mem	Temp1, #00h
+	Push_Mem	Temp1, #11h
+	Push_Mem	Temp1, #55h
+	Push_Mem	Temp1, #77h
+ENDIF
 	ret
 
 
