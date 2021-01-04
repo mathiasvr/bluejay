@@ -256,18 +256,3 @@ write_tag:
 	inc	DPTR
 	djnz Temp3, write_tag
 	ret
-
-
-;**;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; Wait 1 second routine
-;
-; No assumptions
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-wait1s:
-	mov	Temp5, #5
-wait1s_loop:
-	call wait200ms
-	djnz	Temp5, wait1s_loop
-	ret
