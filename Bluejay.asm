@@ -3498,9 +3498,12 @@ wait_for_power_on_not_missing:
 
 wait_for_power_on_nonzero:
 	call	wait100ms					; Wait to see if start pulse was only a glitch
+
+	mov	DShot_Cmd, #0				; Reset DShot command
+	mov	DShot_Cmd_Cnt, #0
+
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	jnz	init_start				; If it is not zero - proceed
-
 	jmp	init_no_signal				; If it is zero (pulses missing) - go back to detect input signal
 
 
@@ -3510,9 +3513,6 @@ wait_for_power_on_nonzero:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 init_start:
-	mov	DShot_Cmd, #0
-	mov	DShot_Cmd_Cnt, #0
-
 	clr	IE_EA					; Disable interrupts
 	call	switch_power_off
 	setb	IE_EA					; Enable interrupts
