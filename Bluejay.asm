@@ -1135,27 +1135,27 @@ ENDIF
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait1ms:
 	mov	Temp2, #1
-	sjmp	waitxms_o
+	sjmp	wait_ms_o
 
 wait10ms:
 	mov	Temp2, #10
-	sjmp	waitxms_o
+	sjmp	wait_ms_o
 
 wait100ms:
 	mov	Temp2, #100
-	sjmp	waitxms_o
+	sjmp	wait_ms_o
 
 wait200ms:
 	mov	Temp2, #200
-	sjmp	waitxms_o
+	sjmp	wait_ms_o
 
-waitxms_o:						; Outer loop
+wait_ms_o:						; Outer loop
 	mov	Temp1, #23
-waitxms_m:						; Middle loop
+wait_ms_m:						; Middle loop
 	clr	A
 	djnz	ACC, $					; Inner loop (41.8us - 1024 cycles)
-	djnz	Temp1, waitxms_m
-	djnz	Temp2, waitxms_o
+	djnz	Temp1, wait_ms_m
+	djnz	Temp2, wait_ms_o
 	ret
 
 
