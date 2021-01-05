@@ -145,9 +145,6 @@ DSEG AT 20h
 Bit_Access:				DS	1				; MUST BE AT THIS ADDRESS. Variable at bit accessible address (for non interrupt routines)
 Bit_Access_Int:			DS	1				; Variable at bit accessible address (for interrupts)
 
-Rcp_Outside_Range_Cnt:		DS	1				; RC pulse outside range counter (incrementing)
-Rcp_Timeout_Cntd:			DS	1				; RC pulse timeout counter (decrementing)
-
 Flags_Startup:				DS	1				; State flags. Reset upon init_start
 Flag_Startup_Phase			BIT	Flags_Startup.0	; Set when in startup phase
 Flag_Initial_Run_Phase		BIT	Flags_Startup.1	; Set when in initial run phase, before synchronized run is achieved
@@ -183,6 +180,10 @@ Tmp_B:					DS	1
 ;**** **** **** **** ****
 ; Direct addressing data segment
 DSEG AT 30h
+Rcp_Outside_Range_Cnt:		DS	1	; RC pulse outside range counter (incrementing)
+Rcp_Timeout_Cntd:			DS	1	; RC pulse timeout counter (decrementing)
+Rcp_Stop_Cnt:				DS	1	; Counter for RC pulses below stop value
+
 Power_On_Wait_Cnt_L:		DS	1	; Power on wait counter (lo byte)
 Power_On_Wait_Cnt_H:		DS	1	; Power on wait counter (hi byte)
 
@@ -213,11 +214,6 @@ Wt_Zc_Tout_Start_H:			DS	1	; Timer 3 start point for zero cross scan timeout (hi
 Wt_Comm_Start_L:			DS	1	; Timer 3 start point from zero cross to commutation (lo byte)
 Wt_Comm_Start_H:			DS	1	; Timer 3 start point from zero cross to commutation (hi byte)
 
-DShot_Cmd:				DS	1	; DShot command
-DShot_Cmd_Cnt:				DS	1	; DShot command count
-
-Rcp_Stop_Cnt:				DS	1	; Counter for RC pulses below stop value
-
 Power_Pwm_Reg_L:			DS	1	; Power pwm register setting (lo byte)
 Power_Pwm_Reg_H:			DS	1	; Power pwm register setting (hi byte). 0x3F is minimum power
 Damp_Pwm_Reg_L:			DS	1	; Damping pwm register setting (lo byte)
@@ -228,21 +224,22 @@ Pwm_Limit_By_Rpm:			DS	1	; Maximum allowed pwm for low or high rpm
 Pwm_Limit_Beg:				DS	1	; Initial pwm limit
 
 Adc_Conversion_Cnt:			DS	1	; Adc conversion counter
-
 Current_Average_Temp:		DS	1	; Current average temperature (lo byte ADC reading, assuming hi byte is 1)
+Temp_Prot_Limit:			DS	1	; Temperature protection limit
 
 Beep_Strength:				DS	1	; Strength of beeps
 
 Flash_Key_1:				DS	1	; Flash key one
 Flash_Key_2:				DS	1	; Flash key two
 
-Temp_Prot_Limit:			DS	1	; Temperature protection limit
-
 DShot_Pwm_Thr:				DS	1	; DShot pulse width threshold value
 DShot_Timer_Preset:			DS	1	; DShot timer preset for frame sync detection
 DShot_Frame_Start_L:		DS	1	; DShot frame start timestamp (lo byte)
 DShot_Frame_Start_H:		DS	1	; DShot frame start timestamp (hi byte)
 DShot_Frame_Length_Thr:		DS	1	; DShot frame length criteria (in units of 4 timer 2 ticks)
+
+DShot_Cmd:				DS	1	; DShot command
+DShot_Cmd_Cnt:				DS	1	; DShot command count
 
 ; Pulse durations for GCR encoding DShot telemetry data
 DShot_GCR_Pulse_Time_1:		DS	1	; Encodes binary: 1
