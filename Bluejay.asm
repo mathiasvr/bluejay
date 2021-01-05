@@ -101,6 +101,14 @@ W_	EQU	23		; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
 ; Select the pwm frequency (or unselect for use with external batch compile file)
 ;PWM_FREQ			EQU	0	; 0=24, 1=48, 2=96 kHz
 
+
+PWM_CENTERED	EQU	FETON_DELAY > 0		; Use center aligned pwm on ESCs with dead time
+
+IF MCU_48MHZ < 2 AND PWM_FREQ	< 3
+	; Number of bits in pwm high byte
+	PWM_BITS_H	EQU	(2 + MCU_48MHZ - PWM_CENTERED - PWM_FREQ)
+ENDIF
+
 $include (Common.inc)					; Include common source code for EFM8BBx based ESCs
 
 ;**** **** **** **** ****
@@ -355,7 +363,19 @@ CSEG AT 1A60h
 Eep_Name:					DB	"Bluejay (BETA)  "			; Name tag (16 Bytes)
 
 ;**** **** **** **** ****
-; DShot Telemetry Macros
+Interrupt_Table_Definition			; SiLabs interrupts
+CSEG AT 80h						; Code segment after interrupt vectors
+
+;**** **** **** **** ****
+; Table definitions
+STARTUP_POWER_TABLE:	DB	1,	2,	3,	4,	6,	9,	12,	18,	25,	37,	50,	62,	75
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Macros
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
 DSHOT_TLM_CLOCK		EQU	24500000				; 24.5MHz
 DSHOT_TLM_START_DELAY	EQU	-1					; Start telemetry after 1 tick (~30us after receiving DShot cmd)
 DSHOT_TLM_PREDELAY		EQU	6					; 6 timer 0 ticks inherent delay
@@ -423,17 +443,6 @@ IF num < 5
 ENDIF
 ENDM
 
-IF FETON_DELAY == 0
-	PWM_CENTERED	EQU	0
-ELSE
-	PWM_CENTERED	EQU	1
-ENDIF
-
-IF MCU_48MHZ < 2 AND PWM_FREQ	< 3
-	; Number of bits in pwm high byte
-	PWM_BITS_H	EQU	(2 + MCU_48MHZ - PWM_CENTERED - PWM_FREQ)
-ENDIF
-
 Decode_DShot_2Bit MACRO dest, decode_fail
 	movx	A, @Temp1
 	mov	Temp7, A
@@ -463,15 +472,6 @@ Decode_DShot_2Bit MACRO dest, decode_fail
 	mov	dest, A
 	inc	Temp1
 ENDM
-
-;**** **** **** **** ****
-Interrupt_Table_Definition			; SiLabs interrupts
-CSEG AT 80h						; Code segment after interrupt vectors
-
-;**** **** **** **** ****
-
-; Table definitions
-STARTUP_POWER_TABLE:	DB	1,	2,	3,	4,	6,	9,	12,	18,	25,	37,	50,	62,	75
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
