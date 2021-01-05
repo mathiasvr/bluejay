@@ -1728,16 +1728,15 @@ calc_new_wait_per_demag_done:
 	subb	A, #0
 	mov	Temp4, A
 	jc	load_min_time				; Check that result is still positive
-	jnz	calc_new_wait_times_exit		; Check that result is still above minimum
+	jnz	calc_next_comm_timing_exit	; Check that result is still above minimum
 	mov	A, Temp3
-	jnz	calc_new_wait_times_exit
+	jnz	calc_next_comm_timing_exit
 
 load_min_time:
 	mov	Temp3, #1					; Set minimum time
 	mov	Temp4, #0
 
-calc_new_wait_times_exit:
-	sjmp	wait_advance_timing
+	sjmp	calc_next_comm_timing_exit
 
 ;**** **** **** **** ****
 ; Calculate next commutation timing fast routine
@@ -1805,6 +1804,8 @@ calc_new_wait_times_fast_done:
 	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
 	mov	A, @Temp1
 	mov	Temp8, A					; Store in Temp8
+
+calc_next_comm_timing_exit:
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1909,7 +1910,7 @@ store_times_increase:
 	mov	Wt_Adv_Start_H, Temp2
 	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 	mov	Wt_Zc_Scan_Start_H, Temp6
-	sjmp	wait_before_zc_scan
+	sjmp	calc_new_wait_times_exit
 
 store_times_decrease:
 	mov	Wt_Comm_Start_L, Temp1		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
@@ -1918,9 +1919,9 @@ store_times_decrease:
 	mov	Wt_Adv_Start_H, Temp4
 	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 	mov	Wt_Zc_Scan_Start_H, Temp6
-	jnb	Flag_Startup_Phase, store_times_exit
 
 	; Set very short delays for all but advance time during startup, in order to widen zero cross capture range
+	jnb	Flag_Startup_Phase, calc_new_wait_times_exit
 	mov	Wt_Comm_Start_L, #0F0h
 	mov	Wt_Comm_Start_H, #0FFh
 	mov	Wt_Zc_Scan_Start_L, #0F0h
@@ -1928,9 +1929,7 @@ store_times_decrease:
 	mov	Wt_Zc_Tout_Start_L, #0F0h
 	mov	Wt_Zc_Tout_Start_H, #0FFh
 
-store_times_exit:
-	sjmp	wait_before_zc_scan
-
+	sjmp	calc_new_wait_times_exit
 
 ;**** **** **** **** ****
 ; Calculate new wait times fast routine
@@ -1973,12 +1972,14 @@ store_times_increase_fast:
 	mov	Wt_Comm_Start_L, Temp3		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
 	mov	Wt_Adv_Start_L, Temp1		; New commutation advance time (~15deg nominal)
 	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
-	sjmp	wait_before_zc_scan
+	sjmp	calc_new_wait_times_exit
 
 store_times_decrease_fast:
 	mov	Wt_Comm_Start_L, Temp1		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
 	mov	Wt_Adv_Start_L, Temp3		; New commutation advance time (~15deg nominal)
 	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
+
+calc_new_wait_times_exit:
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
