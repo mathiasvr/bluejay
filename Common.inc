@@ -146,7 +146,7 @@ CSEG AT 1Bh			; Timer1 overflow interrupt
 	jmp	t1_int
 CSEG AT 2Bh			; Timer2 overflow interrupt
 	jmp	t2_int
-CSEG AT 5Bh			; Pca interrupt
+CSEG AT 5Bh			; PCA interrupt
 	jmp	pca_int
 CSEG AT 73h			; Timer3 overflow/compare interrupt
 	jmp	t3_int
@@ -156,7 +156,7 @@ Initialize_PCA MACRO
 	mov	PCA0CN0, #40h			; PCA enabled
 	mov	PCA0MD, #08h			; PCA clock is system clock
 
-	mov	PCA0PWM, #(80h + PWM_BITS_H)	; PCA ARSEL set and 8/9/10/11 bits pwm
+	mov	PCA0PWM, #(80h + PWM_BITS_H)	; Enable PCA auto-reload registers and set pwm cycle length (8-11 bits)
 
 IF PWM_CENTERED == 1
 	mov	PCA0CENT, #03h			; Center aligned pwm
@@ -220,7 +220,7 @@ ENDIF
 ENDM
 
 Set_MCU_Clk_24MHz MACRO
-	mov	CLKSEL, #13h			; Set clock to 24MHz
+	mov	CLKSEL, #13h			; Set clock to 24MHz (Oscillator 1 divided by 2)
 
 	mov	SFRPAGE, #10h
 	mov	PFE0CN, #00h			; Set flash timing for 24MHz and disable prefetch engine
@@ -234,7 +234,7 @@ Set_MCU_Clk_48MHz MACRO
 	mov	PFE0CN, #30h			; Set flash timing for 48MHz and enable prefetch engine
 	mov	SFRPAGE, #00h
 
-	mov	CLKSEL, #03h			; Set clock to 48MHz
+	mov	CLKSEL, #03h			; Set clock to 48MHz (Oscillator 1)
 
 	setb	Flag_Clock_At_48MHz
 ENDM

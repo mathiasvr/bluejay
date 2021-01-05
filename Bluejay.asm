@@ -34,7 +34,7 @@ $NOMOD51
 ; Although 24/48 are used in the code, the exact clock frequencies are 24.5MHz or 49.0 MHz
 ; Timer 0 (41.67ns counts) always counts up and is used for
 ; - RC pulse measurement
-; - DShot telemetry signal
+; - DShot telemetry pulse timing
 ; Timer 1 (41.67ns counts) always counts up and is used for
 ; - DShot frame sync detection
 ; Timer 2 (500ns counts) always counts up and is used for
@@ -113,7 +113,6 @@ $include (Common.inc)					; Include common source code for EFM8BBx based ESCs
 
 ;**** **** **** **** ****
 ; Programming defaults
-;
 DEFAULT_PGM_STARTUP_PWR			EQU	9	; 1=0.031 2=0.047 3=0.063 4=0.094 5=0.125 6=0.188 7=0.25 8=0.38 9=0.50 10=0.75 11=1.00 12=1.25 13=1.50
 DEFAULT_PGM_COMM_TIMING			EQU	3	; 1=Low		2=MediumLow	3=Medium		4=MediumHigh	5=High
 DEFAULT_PGM_DEMAG_COMP			EQU	2	; 1=Disabled	2=Low		3=High
@@ -190,7 +189,7 @@ Initial_Run_Rot_Cntd:		DS	1	; Initial run rotations counter (decrementing)
 Stall_Cnt:				DS	1	; Counts start/run attempts that resulted in stall. Reset upon a proper stop
 Demag_Detected_Metric:		DS	1	; Metric used to gauge demag event frequency
 Demag_Pwr_Off_Thresh:		DS	1	; Metric threshold above which power is cut
-Low_Rpm_Pwr_Slope:			DS	1	; Sets the slope of power increase for low rpms
+Low_Rpm_Pwr_Slope:			DS	1	; Sets the slope of power increase for low rpm
 
 Timer2_X:					DS	1	; Timer 2 extended byte
 Prev_Comm_L:				DS	1	; Previous commutation timer 3 timestamp (lo byte)
@@ -222,7 +221,7 @@ Damp_Pwm_Reg_L:			DS	1	; Damping pwm register setting (lo byte)
 Damp_Pwm_Reg_H:			DS	1	; Damping pwm register setting (hi byte)
 
 Pwm_Limit:				DS	1	; Maximum allowed pwm
-Pwm_Limit_By_Rpm:			DS	1	; Maximum allowed pwm for low or high rpms
+Pwm_Limit_By_Rpm:			DS	1	; Maximum allowed pwm for low or high rpm
 Pwm_Limit_Beg:				DS	1	; Initial pwm limit
 
 Adc_Conversion_Cnt:			DS	1	; Adc conversion counter
@@ -302,7 +301,7 @@ ISEG AT 0B0h
 Stack:					DS	16	; Reserved stack space
 
 ISEG AT 0C0h
-Dithering_Patterns:			DS	16
+Dithering_Patterns:			DS	16	; Bit patterns for pwm dithering
 
 ISEG AT 0D0h
 Temp_Storage:				DS	48	; Temporary storage
@@ -762,7 +761,7 @@ t1_int_startup_boosted:
 
 	jnz	t1_int_rcp_not_zero
 
-	mov	A, Temp4					; Only set RCP_STOP if all all 11 bits are zero
+	mov	A, Temp4					; Only set Rcp_Stop if all all 11 bits are zero
 	jnz	t1_int_rcp_not_zero
 
 	setb	Flag_Rcp_Stop
@@ -1305,7 +1304,7 @@ switch_power_off:
 ;
 ; Set pwm limit low rpm
 ;
-; Sets power limit for low rpms and disables demag for low rpms
+; Sets power limit for low rpm and disables demag for low rpm
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 set_pwm_limit:
@@ -1352,7 +1351,7 @@ set_pwm_limit_low_rpm_exit:
 ;
 ; Set pwm limit high rpm
 ;
-; Sets power limit for high rpms
+; Sets power limit for high rpm
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 set_pwm_limit_high_rpm:
@@ -1734,13 +1733,14 @@ calc_new_wait_per_demag_done:
 	jnz	calc_new_wait_times_exit
 
 load_min_time:
-	mov	Temp3, #1
+	mov	Temp3, #1					; Set minimum time
 	mov	Temp4, #0
 
 calc_new_wait_times_exit:
 	sjmp	wait_advance_timing
 
-
+;**** **** **** **** ****
+; Calculate next commutation timing fast routine
 ; Fast calculation (Comm_Period4x_H less than 2)
 calc_next_comm_timing_fast:
 	; Calculate new commutation time
@@ -1799,7 +1799,7 @@ calc_next_comm_timing_fast:
 	jnz	calc_new_wait_times_fast_done	; Check that result is still above minimum
 
 load_min_time_fast:
-	mov	Temp3, #1
+	mov	Temp3, #1					; Set minimum time
 
 calc_new_wait_times_fast_done:
 	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
@@ -1932,6 +1932,8 @@ store_times_exit:
 	sjmp	wait_before_zc_scan
 
 
+;**** **** **** **** ****
+; Calculate new wait times fast routine
 calc_new_wait_times_fast:
 	mov	A, Temp1					; Copy values
 	mov	Temp3, A
@@ -3162,7 +3164,7 @@ decode_temp_step:
 decode_temp_done:
 	mov	Temp_Prot_Limit, A
 
-	; Dithering
+	; Initialize pwm dithering bit patterns
 IF PWM_BITS_H == 1
 	mov	Temp1, #Dithering_Patterns
 	Push_Mem	Temp1, #00h
@@ -3198,7 +3200,7 @@ pgm_start:
 	orl	VDM0CN, #080h				; Enable the VDD monitor
 	mov	RSTSRC, #06h				; Set missing clock and VDD monitor as a reset source if not 1S capable
 	; Set clock frequency
-	mov	CLKSEL, #00h				; Set clock divider to 1
+	mov	CLKSEL, #00h				; Set clock divider to 1 (Oscillator 0 at 24MHz)
 	; Switch power off
 	call	switch_power_off
 	; Ports initialization
@@ -3221,8 +3223,8 @@ pgm_start:
 	clr	A						; Clear accumulator
 	mov	Temp1, A					; Clear Temp1
 	clear_ram:
-	mov	@Temp1, A					; Clear RAM
-	djnz	Temp1, clear_ram			; Is A not zero? - jump
+	mov	@Temp1, A					; Clear RAM address
+	djnz	Temp1, clear_ram			; Decrement address and repeat
 	; Set default programmed parameters
 	call	set_default_parameters
 	; Read all programmed parameters
@@ -3245,7 +3247,7 @@ pgm_start:
 	call beep_f4
 	call beep_f4
 
-	call	led_control
+	call	led_control				; Set LEDs to programmed values
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -3473,7 +3475,7 @@ beep_delay_set:
 wait_for_power_on_no_beep:
 	jb	Flag_Packet_Pending, wait_for_power_telemetry_done
 	setb	Flag_Timer3_Pending			; Set flag temporarily to avoid early return
-	call	dshot_tlm_create_packet
+	call	dshot_tlm_create_packet		; Create telemetry packet (0 rpm)
 	clr	Flag_Timer3_Pending
 
 wait_for_power_telemetry_done:
@@ -3490,7 +3492,7 @@ wait_for_power_on_not_missing:
 	jz	wait_for_power_on_loop		; Check DShot command if not zero, otherwise wait for power
 
 	call	dshot_cmd_check
-	sjmp	wait_for_power_on_not_missing	; Check dshot command again, in case command needs to be received multiple times
+	sjmp	wait_for_power_on_not_missing	; Check DShot command again, in case it needs to be received multiple times
 
 wait_for_power_on_nonzero:
 	call	wait100ms					; Wait to see if start pulse was only a glitch
@@ -3578,6 +3580,8 @@ ENDIF
 	jnb	Flag_Rcp_Dir_Rev, ($+5)		; Check force direction
 	setb	Flag_Pgm_Dir_Rev			; Set spinning direction
 
+;**** **** **** **** ****
+; Motor start beginning
 init_start_bidir_done:
 	setb	Flag_Startup_Phase			; Set startup phase flag
 	mov	Startup_Cnt, #0			; Reset counter
