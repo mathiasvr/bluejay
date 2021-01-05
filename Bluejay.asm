@@ -3188,20 +3188,14 @@ ENDIF
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 pgm_start:
-	; Initialize flash keys to invalid values
-	mov	Flash_Key_1, #0
+	mov	Flash_Key_1, #0			; Initialize flash keys to invalid values
 	mov	Flash_Key_2, #0
-	; Disable the WDT
-	mov	WDTCN, #0DEh				; Disable watchdog
+	mov	WDTCN, #0DEh				; Disable watchdog (WDT)
 	mov	WDTCN, #0ADh
-	; Initialize stack
-	mov	SP, #Stack				; 16 bytes of indirect RAM
-	; Initialize VDD monitor
+	mov	SP, #Stack				; Initialize stack (16 bytes of indirect RAM)
 	orl	VDM0CN, #080h				; Enable the VDD monitor
 	mov	RSTSRC, #06h				; Set missing clock and VDD monitor as a reset source if not 1S capable
-	; Set clock frequency
 	mov	CLKSEL, #00h				; Set clock divider to 1 (Oscillator 0 at 24MHz)
-	; Switch power off
 	call	switch_power_off
 	; Ports initialization
 	mov	P0, #P0_INIT
@@ -3215,24 +3209,21 @@ pgm_start:
 	mov	P1, #P1_INIT
 	mov	P1SKIP, #P1_SKIP
 	mov	P2MDOUT, #P2_PUSHPULL
-	; Initialize the XBAR and related functionality
-	Initialize_Xbar
-	; Switch power off again, after initializing ports
-	call	switch_power_off
+	Initialize_Xbar				; Initialize the XBAR and related functionality
+	call	switch_power_off			; Switch power off again, after initializing ports
+
 	; Clear RAM
 	clr	A						; Clear accumulator
 	mov	Temp1, A					; Clear Temp1
 	clear_ram:
 	mov	@Temp1, A					; Clear RAM address
 	djnz	Temp1, clear_ram			; Decrement address and repeat
-	; Set default programmed parameters
-	call	set_default_parameters
-	; Read all programmed parameters
-	call	read_all_eeprom_parameters
-	; Set beep strength
-	mov	Temp1, #Pgm_Beep_Strength
-	mov	Beep_Strength, @Temp1
-	; Initializing beep
+
+	call	set_default_parameters		; Set default programmed parameters
+	call	read_all_eeprom_parameters	; Read all programmed parameters
+	mov	Temp1, #Pgm_Beep_Strength	; Read programmed beep strength
+	mov	Beep_Strength, @Temp1		; Set beep strength
+	; Initializing beeps
 	clr	IE_EA					; Disable interrupts explicitly
 	call	wait200ms
 	call	beep_f1
@@ -3256,13 +3247,11 @@ pgm_start:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 init_no_signal:
-	; Disable interrupts explicitly
-	clr	IE_EA
-	; Initialize flash keys to invalid values
-	mov	Flash_Key_1, #0
+	clr	IE_EA					; Disable interrupts explicitly
+	mov	Flash_Key_1, #0			; Initialize flash keys to invalid values
 	mov	Flash_Key_2, #0
-	; Check if input signal is high for more than 15ms
-	mov	Temp1, #250
+
+	mov	Temp1, #250				; Check if input signal is high for more than 15ms
 input_high_check_1:
 	mov	Temp2, #250
 input_high_check_2:
@@ -3273,16 +3262,12 @@ input_high_check_2:
 	ljmp	1C00h					; Jump to bootloader
 
 bootloader_done:
-	; Decode settings
 	call	decode_settings
-	; Set beep strength
-	mov	Temp1, #Pgm_Beep_Strength
+	mov	Temp1, #Pgm_Beep_Strength	; Set beep strength
 	mov	Beep_Strength, @Temp1
-	; Switch power off
 	call	switch_power_off
-	; Set clock frequency
 IF MCU_48MHZ == 1
-	Set_MCU_Clk_24MHz
+	Set_MCU_Clk_24MHz				; Set clock frequency
 ENDIF
 	; Setup timers for DShot
 	mov	TCON, #51h				; Timer 0/1 run and INT0 edge triggered
