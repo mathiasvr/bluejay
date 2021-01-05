@@ -174,8 +174,8 @@ Flag_Rcp_Stop				BIT	Flags2.5			; Set if the RC pulse value is zero
 Flag_Rcp_Dir_Rev			BIT	Flags2.6			; RC pulse direction in bidirectional mode
 Flag_Rcp_DShot_Inverted		BIT	Flags2.7			; DShot RC pulse input is inverted (and supports telemetry)
 
-Tlm_Data_L:				DS	1				; DShot telemetry data low byte
-Tlm_Data_H:				DS	1				; DShot telemetry data high byte
+Tlm_Data_L:				DS	1				; DShot telemetry data (lo byte)
+Tlm_Data_H:				DS	1				; DShot telemetry data (hi byte)
 Tmp_B:					DS	1
 
 ;**** **** **** **** ****
@@ -328,8 +328,8 @@ Eep_Pgm_Startup_Pwr:		DB	DEFAULT_PGM_STARTUP_PWR		; EEPROM copy of programmed st
 _Eep_Pgm_Pwm_Freq:			DB	0FFh
 Eep_Pgm_Direction:			DB	DEFAULT_PGM_DIRECTION		; EEPROM copy of programmed rotation direction
 _Eep__Pgm_Input_Pol:		DB	0FFh
-Eep_Initialized_L:			DB	055h						; EEPROM initialized signature low byte
-Eep_Initialized_H:			DB	0AAh						; EEPROM initialized signature high byte
+Eep_Initialized_L:			DB	055h						; EEPROM initialized signature (lo byte)
+Eep_Initialized_H:			DB	0AAh						; EEPROM initialized signature (hi byte)
 _Eep_Enable_TX_Program:		DB	0FFh						; EEPROM TX programming enable
 _Eep_Main_Rearm_Start:		DB	0FFh
 _Eep_Pgm_Gov_Setup_Target:	DB	0FFh
