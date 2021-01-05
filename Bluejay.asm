@@ -3474,9 +3474,8 @@ beep_delay_set:
 
 wait_for_power_on_no_beep:
 	jb	Flag_Packet_Pending, wait_for_power_telemetry_done
-	setb	Flag_Timer3_Pending			; Set flag temporarily to avoid early return
+	setb	Flag_Timer3_Pending			; Set flag to avoid early return
 	call	dshot_tlm_create_packet		; Create telemetry packet (0 rpm)
-	clr	Flag_Timer3_Pending
 
 wait_for_power_telemetry_done:
 	call	wait10ms
