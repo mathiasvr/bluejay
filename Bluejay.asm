@@ -157,7 +157,7 @@ Flags1:					DS	1				; State flags. Reset upon init_start
 Flag_Timer3_Pending			BIT	Flags1.0			; Timer 3 pending flag
 Flag_Demag_Detected			BIT	Flags1.1			; Set when excessive demag time is detected
 Flag_Comp_Timed_Out			BIT	Flags1.2			; Set when comparator reading timed out
-Flag_Packet_Pending			BIT	Flags1.3			; DShot telemetry data packet is ready to be sent
+;						BIT	Flags1.3
 Flag_Motor_Started			BIT	Flags1.4			; Set when motor is started
 Flag_Dir_Change_Brake		BIT	Flags1.5			; Set when braking before direction change
 Flag_High_Rpm				BIT	Flags1.6			; Set when motor rpm is high (Comm_Period4x_H less than 2)
@@ -172,6 +172,9 @@ Flag_Clock_At_48MHz			BIT	Flags2.4			; Set if 48MHz MCUs run at 48MHz
 Flag_Rcp_Stop				BIT	Flags2.5			; Set if the RC pulse value is zero
 Flag_Rcp_Dir_Rev			BIT	Flags2.6			; RC pulse direction in bidirectional mode
 Flag_Rcp_DShot_Inverted		BIT	Flags2.7			; DShot RC pulse input is inverted (and supports telemetry)
+
+Flags3:					DS	1				; State flags. NOT reset upon init_start
+Flag_Packet_Pending			BIT	Flags3.0			; DShot telemetry data packet is ready to be sent
 
 Tlm_Data_L:				DS	1				; DShot telemetry data (lo byte)
 Tlm_Data_H:				DS	1				; DShot telemetry data (hi byte)
