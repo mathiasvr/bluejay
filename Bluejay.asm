@@ -174,7 +174,7 @@ Flag_Rcp_Dir_Rev			BIT	Flags2.6			; RC pulse direction in bidirectional mode
 Flag_Rcp_DShot_Inverted		BIT	Flags2.7			; DShot RC pulse input is inverted (and supports telemetry)
 
 Flags3:					DS	1				; State flags. NOT reset upon init_start
-Flag_Packet_Pending			BIT	Flags3.0			; DShot telemetry data packet is ready to be sent
+Flag_Telemetry_Pending		BIT	Flags3.0			; DShot telemetry data packet is ready to be sent
 
 Tlm_Data_L:				DS	1				; DShot telemetry data (lo byte)
 Tlm_Data_H:				DS	1				; DShot telemetry data (hi byte)
@@ -416,7 +416,7 @@ ENDM
 ; Prepare telemetry packet while waiting for timer 3 to wrap
 Wait_For_Timer3 MACRO
 LOCAL wait_for_t3 done_waiting
-	jb	Flag_Packet_Pending, wait_for_t3
+	jb	Flag_Telemetry_Pending, wait_for_t3
 
 	jnb	Flag_Timer3_Pending, done_waiting
 	call	dshot_tlm_create_packet
@@ -523,7 +523,7 @@ t0_int_dshot_tlm_finish:
 	setb	IE_EX1					; Enable int1 interrupts
 	Enable_PCA_Interrupt			; Enable pca interrupts
 
-	clr	Flag_Packet_Pending
+	clr	Flag_Telemetry_Pending
 
 	pop	PSW
 	reti
@@ -915,7 +915,7 @@ ENDIF
 
 	; Prepare DShot telemetry
 	jnb	Flag_Rcp_DShot_Inverted, t1_int_exit_no_tlm	; Only send telemetry for inverted DShot
-	jnb	Flag_Packet_Pending, t1_int_exit_no_tlm		; Check if telemetry packet is ready
+	jnb	Flag_Telemetry_Pending, t1_int_exit_no_tlm	; Check if telemetry packet is ready
 
 	; Prepare timer 0 for sending telemetry data
 	; todo: dshot150
@@ -2785,7 +2785,7 @@ dshot_tlm_12bit_encoded:
 	Push_Mem	Temp1, Tmp_B			; Initial transition time
 
 	mov	Temp5, #0
-	setb	Flag_Packet_Pending
+	setb	Flag_Telemetry_Pending
 
 	pop	PSW
 	ret
@@ -3476,7 +3476,7 @@ beep_delay_set:
 	call	wait100ms					; Wait for new RC pulse to be measured
 
 wait_for_power_on_no_beep:
-	jb	Flag_Packet_Pending, wait_for_power_telemetry_done
+	jb	Flag_Telemetry_Pending, wait_for_power_telemetry_done
 	setb	Flag_Timer3_Pending			; Set flag to avoid early return
 	call	dshot_tlm_create_packet		; Create telemetry packet (0 rpm)
 
