@@ -1184,7 +1184,7 @@ beep_f4:
 
 beep_f5:
 	mov	Temp3, #20
-	mov	Temp4, #(3500 / 25)
+	mov	Temp4, #(3500 / 20)
 	sjmp	beep
 
 beep_f1_short:
