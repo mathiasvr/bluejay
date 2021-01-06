@@ -725,7 +725,6 @@ t1_int_not_bidir:
 
 	jb	Flag_Motor_Started, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
 
-
 	; Add an extra power boost during start
 	mov	Temp6, Stall_Cnt
 
@@ -788,7 +787,7 @@ t1_int_zero_rcp_checked:
 	; Check against limit
 	clr	C
 	mov	A, Temp6
-	subb	A, Temp2	; 8-bit rc pulse
+	subb	A, Temp2					; 8-bit rc pulse
 	jnc	t1_int_scale_pwm_resolution
 
 IF PWM_BITS_H == 0					; 8-bit pwm
@@ -2075,7 +2074,6 @@ wait_for_comp_out_start:
 
 	mov	A, Flags_Startup			; Clear demag detected flag if start phases
 	jz	($+4)
-
 	clr	Flag_Demag_Detected
 
 	; Too low value (~<15) causes rough running at pwm harmonics.
@@ -2109,6 +2107,7 @@ IF MCU_48MHZ == 1
 	rlc	A
 	mov	Temp2, A
 ENDIF
+
 comp_check_timeout:
 	jb	Flag_Timer3_Pending, comp_check_timeout_not_timed_out	; Has zero cross scan timeout elapsed?
 
@@ -3529,7 +3528,7 @@ init_start:
 	mov	Pwm_Limit_Beg, @Temp2		; Set initial pwm limit
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
-	setb	IE_EA						; Enable interrupts
+	setb	IE_EA					; Enable interrupts
 
 	; Begin startup sequence
 IF MCU_48MHZ == 1
@@ -3655,7 +3654,7 @@ run5:
 ; Run 6 = B(p-on) + A(n-pwm) - comparator C evaluated
 ; Out_cC changes from high to low
 run6:
-	Start_Adc	; Start adc conversion
+	Start_Adc						; Start adc conversion
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -3797,6 +3796,7 @@ run_to_wait_for_power_on_stall_done:
 	call	switch_power_off
 	mov	Flags1, #0				; Clear flags1
 	mov	Flags_Startup, #0			; Clear startup flags
+
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz
 
@@ -3824,9 +3824,11 @@ IF MCU_48MHZ == 1
 
 	mov	DShot_GCR_Start_Delay, #DSHOT_TLM_START_DELAY
 ENDIF
+
 	setb	IE_EA
 	call	wait100ms					; Wait for pwm to be stopped
 	call	switch_power_off
+
 	mov	Temp1, #Pgm_Brake_On_Stop
 	mov	A, @Temp1
 	jz	run_to_wait_for_power_on_brake_done

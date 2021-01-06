@@ -42,51 +42,51 @@ ENDIF
 ;**** **** **** **** ****
 ; ESC selection statements
 IF ESCNO == A_
-$include (targets/A.inc)	; Select pinout A
+$include (targets/A.inc)				; Select pinout A
 ELSEIF ESCNO == B_
-$include (targets/B.inc)	; Select pinout B
+$include (targets/B.inc)				; Select pinout B
 ELSEIF ESCNO == C_
-$include (targets/C.inc)	; Select pinout C
+$include (targets/C.inc)				; Select pinout C
 ELSEIF ESCNO == D_
-$include (targets/D.inc)	; Select pinout D
+$include (targets/D.inc)				; Select pinout D
 ELSEIF ESCNO == E_
-$include (targets/E.inc)	; Select pinout E
+$include (targets/E.inc)				; Select pinout E
 ELSEIF ESCNO == F_
-$include (targets/F.inc)	; Select pinout F
+$include (targets/F.inc)				; Select pinout F
 ELSEIF ESCNO == G_
-$include (targets/G.inc)	; Select pinout G
+$include (targets/G.inc)				; Select pinout G
 ELSEIF ESCNO == H_
-$include (targets/H.inc)	; Select pinout H
+$include (targets/H.inc)				; Select pinout H
 ELSEIF ESCNO == I_
-$include (targets/I.inc)	; Select pinout I
+$include (targets/I.inc)				; Select pinout I
 ELSEIF ESCNO == J_
-$include (targets/J.inc)	; Select pinout J
+$include (targets/J.inc)				; Select pinout J
 ELSEIF ESCNO == K_
-$include (targets/K.inc)	; Select pinout K
+$include (targets/K.inc)				; Select pinout K
 ELSEIF ESCNO == L_
-$include (targets/L.inc)	; Select pinout L
+$include (targets/L.inc)				; Select pinout L
 ELSEIF ESCNO == M_
-$include (targets/M.inc)	; Select pinout M
+$include (targets/M.inc)				; Select pinout M
 ELSEIF ESCNO == N_
-$include (targets/N.inc)	; Select pinout N
+$include (targets/N.inc)				; Select pinout N
 ELSEIF ESCNO == O_
-$include (targets/O.inc)	; Select pinout O
+$include (targets/O.inc)				; Select pinout O
 ELSEIF ESCNO == P_
-$include (targets/P.inc)	; Select pinout P
+$include (targets/P.inc)				; Select pinout P
 ELSEIF ESCNO == Q_
-$include (targets/Q.inc)	; Select pinout Q
+$include (targets/Q.inc)				; Select pinout Q
 ELSEIF ESCNO == R_
-$include (targets/R.inc)	; Select pinout R
+$include (targets/R.inc)				; Select pinout R
 ELSEIF ESCNO == S_
-$include (targets/S.inc)	; Select pinout S
+$include (targets/S.inc)				; Select pinout S
 ELSEIF ESCNO == T_
-$include (targets/T.inc)	; Select pinout T
+$include (targets/T.inc)				; Select pinout T
 ELSEIF ESCNO == U_
-$include (targets/U.inc)	; Select pinout U
+$include (targets/U.inc)				; Select pinout U
 ELSEIF ESCNO == V_
-$include (targets/V.inc)	; Select pinout V
+$include (targets/V.inc)				; Select pinout V
 ELSEIF ESCNO == W_
-$include (targets/W.inc)	; Select pinout W
+$include (targets/W.inc)				; Select pinout W
 ENDIF
 
 ;**** **** **** **** ****
@@ -134,50 +134,50 @@ Eep_ESC_MCU:			DB	"#BLHELI$EFM8B21#"	; Project and MCU tag (16 Bytes)
 ENDIF
 
 Interrupt_Table_Definition MACRO
-CSEG AT 0				; Code segment start
+CSEG AT 0							;; Code segment start
 	jmp reset
-CSEG AT 03h			; Int0 interrupt
+CSEG AT 03h						;; Int0 interrupt
 	jmp	int0_int
-CSEG AT 0Bh			; Timer0 overflow interrupt
+CSEG AT 0Bh						;; Timer0 overflow interrupt
 	jmp	t0_int
-CSEG AT 13h			; Int1 interrupt
+CSEG AT 13h						;; Int1 interrupt
 	jmp	int1_int
-CSEG AT 1Bh			; Timer1 overflow interrupt
+CSEG AT 1Bh						;; Timer1 overflow interrupt
 	jmp	t1_int
-CSEG AT 2Bh			; Timer2 overflow interrupt
+CSEG AT 2Bh						;; Timer2 overflow interrupt
 	jmp	t2_int
-CSEG AT 5Bh			; PCA interrupt
+CSEG AT 5Bh						;; PCA interrupt
 	jmp	pca_int
-CSEG AT 73h			; Timer3 overflow/compare interrupt
+CSEG AT 73h						;; Timer3 overflow/compare interrupt
 	jmp	t3_int
 ENDM
 
 Initialize_PCA MACRO
-	mov	PCA0CN0, #40h			; PCA enabled
-	mov	PCA0MD, #08h			; PCA clock is system clock
+	mov	PCA0CN0, #40h				;; PCA enabled
+	mov	PCA0MD, #08h				;; PCA clock is system clock
 
-	mov	PCA0PWM, #(80h + PWM_BITS_H)	; Enable PCA auto-reload registers and set pwm cycle length (8-11 bits)
+	mov	PCA0PWM, #(80h + PWM_BITS_H)	;; Enable PCA auto-reload registers and set pwm cycle length (8-11 bits)
 
 IF PWM_CENTERED == 1
-	mov	PCA0CENT, #03h			; Center aligned pwm
+	mov	PCA0CENT, #03h				;; Center aligned pwm
 ELSE
-	mov	PCA0CENT, #00h			; Edge aligned pwm
+	mov	PCA0CENT, #00h				;; Edge aligned pwm
 ENDIF
 ENDM
 
 Enable_Power_Pwm_Module MACRO
 IF FETON_DELAY == 0
-	mov	PCA0_POWER_MODULE, #4Ah	; Enable comparator of module, enable match, set pwm mode
+	mov	PCA0_POWER_MODULE, #4Ah		;; Enable comparator of module, enable match, set pwm mode
 ELSE
-	mov	PCA0_POWER_MODULE, #42h	; Enable comparator of module, set pwm mode
+	mov	PCA0_POWER_MODULE, #42h		;; Enable comparator of module, set pwm mode
 ENDIF
 ENDM
 
 Enable_Damp_Pwm_Module MACRO
 IF FETON_DELAY == 0
-	mov	PCA0_DAMP_MODULE, #00h	; Disable
+	mov	PCA0_DAMP_MODULE, #00h		;; Disable
 ELSE
-	mov	PCA0_DAMP_MODULE, #42h	; Enable comparator of module, set pwm mode
+	mov	PCA0_DAMP_MODULE, #42h		;; Enable comparator of module, set pwm mode
 ENDIF
 ENDM
 
@@ -216,14 +216,14 @@ set_pca_int_hi_pwm:
 	Enable_CCF_Interrupt
 pca_enabled:
 ENDIF
-	orl	EIE1, #10h			; Enable pca interrupts
+	orl	EIE1, #10h				;; Enable pca interrupts
 ENDM
 
 Set_MCU_Clk_24MHz MACRO
-	mov	CLKSEL, #13h			; Set clock to 24MHz (Oscillator 1 divided by 2)
+	mov	CLKSEL, #13h				;; Set clock to 24MHz (Oscillator 1 divided by 2)
 
 	mov	SFRPAGE, #10h
-	mov	PFE0CN, #00h			; Set flash timing for 24MHz and disable prefetch engine
+	mov	PFE0CN, #00h				;; Set flash timing for 24MHz and disable prefetch engine
 	mov	SFRPAGE, #00h
 
 	clr	Flag_Clock_At_48MHz
@@ -231,10 +231,10 @@ ENDM
 
 Set_MCU_Clk_48MHz MACRO
 	mov	SFRPAGE, #10h
-	mov	PFE0CN, #30h			; Set flash timing for 48MHz and enable prefetch engine
+	mov	PFE0CN, #30h				;; Set flash timing for 48MHz and enable prefetch engine
 	mov	SFRPAGE, #00h
 
-	mov	CLKSEL, #03h			; Set clock to 48MHz (Oscillator 1)
+	mov	CLKSEL, #03h				;; Set clock to 48MHz (Oscillator 1)
 
 	setb	Flag_Clock_At_48MHz
 ENDM
