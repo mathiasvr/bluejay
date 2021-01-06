@@ -960,10 +960,9 @@ t2_int:
 	inc	Timer2_X
 
 IF MCU_48MHZ == 1
-	jnb	Flag_Clock_At_48MHz, t2_int_start
+	jnb	Flag_Clock_At_48MHz, t2_int_start	; Always run if clock is 24MHz
 
-	; Check skip variable
-	jbc	Flag_Skip_Timer2_Int, t2_int_exit	; Skip this interrupt
+	jbc	Flag_Skip_Timer2_Int, t2_int_exit	; Flag set? - Skip interrupt and clear flag
 
 t2_int_start:
 	setb	Flag_Skip_Timer2_Int		; Skip next interrupt
@@ -971,14 +970,15 @@ ENDIF
 	; Update RC pulse timeout counter
 	mov	A, Rcp_Timeout_Cntd			; RC pulse timeout count zero?
 	jz	($+4)					; Yes - do not decrement
-	dec	Rcp_Timeout_Cntd			; No decrement
+	dec	Rcp_Timeout_Cntd			; No - decrement
 
 	jnb	Flag_Rcp_Stop, t2_int_exit	; Exit if pulse is above stop value
-	inc	Rcp_Stop_Cnt				; Otherwise, increment stop counter
 
+	; Update RC pulse stop counter
+	inc	Rcp_Stop_Cnt				; Increment stop counter
 	mov	A, Rcp_Stop_Cnt
 	jnz	($+4)					; Branch if counter has not wrapped
-	dec	Rcp_Stop_Cnt				; Set stop counter to max
+	dec	Rcp_Stop_Cnt				; Set stop counter back to max
 
 t2_int_exit:
 	pop	ACC						; Restore preserved registers
@@ -1053,7 +1053,7 @@ reti
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 pca_int:
-	clr	IE_EA
+	clr	IE_EA					; Disable all interrupts
 	push	ACC
 
 IF FETON_DELAY != 0					; HI/LO enable style drivers
@@ -1122,7 +1122,7 @@ IF FETON_DELAY == 0
 ENDIF
 
 	pop	ACC						; Restore preserved registers
-	setb	IE_EA
+	setb	IE_EA					; Enable all interrupts
 	reti
 
 
@@ -1499,7 +1499,7 @@ calc_next_comm_timing:				; Entry point for run phase
 	; Read commutation time
 	clr	IE_EA
 	clr	TMR2CN0_TR2				; Timer 2 disabled
-	mov	Temp1, TMR2L				; Load timer value
+	mov	Temp1, TMR2L				; Load timer 2 value
 	mov	Temp2, TMR2H
 	mov	Temp3, Timer2_X
 	jnb	TMR2CN0_TF2H, ($+4)			; Check if interrupt is pending
@@ -2660,9 +2660,9 @@ dshot_cmd_save_settings:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 beacon_beep:
-	clr	IE_EA
+	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off			; Switch power off in case braking is set
-	mov	Temp2, #Pgm_Beacon_Strength
+	mov	Temp2, #Pgm_Beacon_Strength	; Set beacon beep strength
 	mov	Beep_Strength, @Temp2
 
 	cjne	Temp1, #1, beacon_beep2
@@ -2688,9 +2688,9 @@ beacon_beep5:
 	call	beep_f5
 
 beacon_beep_exit:
-	mov	Temp2, #Pgm_Beep_Strength
+	mov	Temp2, #Pgm_Beep_Strength	; Set normal beep strength
 	mov	Beep_Strength, @Temp2
-	setb	IE_EA
+	setb	IE_EA					; Enable all interrupts
 	call	wait100ms
 	ret
 
@@ -3386,29 +3386,24 @@ ENDIF
 	ajmp	init_no_signal
 
 arming_begin:
-	; Beep arm sequence start signal
-	clr	IE_EA					; Disable all interrupts
-	call	beep_f1_short				; Signal that RC pulse is ready
-	setb	IE_EA					; Enable all interrupts
+	clr	IE_EA
+	call	beep_f1_short				; Beep signal that RC pulse is ready
+	setb	IE_EA
 
-	; Arming sequence start
 arming_wait:
-	call	wait100ms					; Wait for new throttle value
+	call	wait100ms
+	jnb	Flag_Rcp_Stop, arming_wait	; Wait until throttle is zero
 
-	jnb	Flag_Rcp_Stop, arming_wait	; Start over if not below stop
-
-	; Beep arm sequence end signal
-	clr	IE_EA					; Disable all interrupts
-	call	beep_f2_short				; Signal that ESC is armed
-	setb	IE_EA					; Enable all interrupts
+	clr	IE_EA
+	call	beep_f2_short				; Beep signal that ESC is armed
+	setb	IE_EA
 	call	wait200ms
 
-	; Armed and waiting for power on
-wait_for_power_on:
+wait_for_power_on:					; Armed and waiting for power on
 	clr	A
 	mov	Comm_Period4x_L, A			; Reset commutation period for telemetry
 	mov	Comm_Period4x_H, A
-	mov	Power_On_Wait_Cnt_L, A		; Clear wait counter
+	mov	Power_On_Wait_Cnt_L, A		; Clear lost signal beacon wait counter
 	mov	Power_On_Wait_Cnt_H, A
 
 wait_for_power_on_loop:
@@ -3506,6 +3501,7 @@ init_start:
 
 	call	wait1ms
 
+	; Read initial average temperature
 	Start_Adc						; Start adc conversion
 
 	jnb	ADC0CN0_ADINT, $			; Wait for adc conversion to complete
@@ -3523,7 +3519,6 @@ init_start:
 
 	; Set up start operating conditions
 	clr	IE_EA					; Disable interrupts
-	; Adjust startup power
 	mov	Temp2, #Pgm_Startup_Pwr_Decoded
 	mov	Pwm_Limit_Beg, @Temp2		; Set initial pwm limit
 	mov	Pwm_Limit, Pwm_Limit_Beg
@@ -3792,7 +3787,7 @@ run_to_wait_for_power_on:
 	mov	Stall_Cnt, #0
 
 run_to_wait_for_power_on_stall_done:
-	clr	IE_EA
+	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off
 	mov	Flags1, #0				; Clear flags1
 	mov	Flags_Startup, #0			; Clear startup flags
@@ -3825,11 +3820,11 @@ IF MCU_48MHZ == 1
 	mov	DShot_GCR_Start_Delay, #DSHOT_TLM_START_DELAY
 ENDIF
 
-	setb	IE_EA
+	setb	IE_EA					; Enable all interrupts
 	call	wait100ms					; Wait for pwm to be stopped
 	call	switch_power_off
 
-	mov	Temp1, #Pgm_Brake_On_Stop
+	mov	Temp1, #Pgm_Brake_On_Stop	; Check if using brake on stop
 	mov	A, @Temp1
 	jz	run_to_wait_for_power_on_brake_done
 
