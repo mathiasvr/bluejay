@@ -2459,7 +2459,7 @@ comm61_rev:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 detect_rcp_level:
-	mov	A, #100					; Must repeat the same level 100 times in a row
+	mov	A, #50					; Must detect the same level 50 times (25 us)
 	mov	C, RTX_PORT.RTX_PIN
 
 detect_rcp_level_read:
