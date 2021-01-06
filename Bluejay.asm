@@ -3225,7 +3225,7 @@ pgm_start:
 	mov	Beep_Strength, @Temp1		; Set beep strength
 	; Initializing beeps
 	clr	IE_EA					; Disable interrupts explicitly
-	call	wait200ms
+	call	wait100ms
 	call	beep_f1
 	call	wait10ms
 	call	beep_f2
@@ -3240,6 +3240,8 @@ pgm_start:
 
 	call	led_control				; Set LEDs to programmed values
 
+	call	wait200ms					; Wait for flight controller to get ready
+	call	wait200ms
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
