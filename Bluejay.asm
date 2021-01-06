@@ -3417,19 +3417,19 @@ wait_for_power_on_loop:
 	inc	Power_On_Wait_Cnt_H			; Increment high wait counter
 	mov	Temp1, #Pgm_Beacon_Delay
 	mov	A, @Temp1
-	mov	Temp1, #25				; Approximately 1 min
+	mov	Temp1, #20				; 1 min
 	dec	A
 	jz	beep_delay_set
 
-	mov	Temp1, #50				; Approximately 2 min
+	mov	Temp1, #40				; 2 min
 	dec	A
 	jz	beep_delay_set
 
-	mov	Temp1, #125				; Approximately 5 min
+	mov	Temp1, #100				; 5 min
 	dec	A
 	jz	beep_delay_set
 
-	mov	Temp1, #250				; Approximately 10 min
+	mov	Temp1, #200				; 10 min
 	dec	A
 	jz	beep_delay_set
 
@@ -3441,10 +3441,10 @@ beep_delay_set:
 	subb	A, Temp1					; Check against chosen delay
 	jc	wait_for_power_on_no_beep	; Has delay elapsed?
 
+	dec	Power_On_Wait_Cnt_H			; Decrement high wait counter for continued beeping
+
 	call	switch_power_off			; Switch power off in case braking is set
 	call	wait1ms
-	dec	Power_On_Wait_Cnt_H			; Decrement high wait counter
-	mov	Power_On_Wait_Cnt_L, #0		; Set low wait counter
 	mov	Temp1, #Pgm_Beacon_Strength
 	mov	Beep_Strength, @Temp1
 	clr	IE_EA					; Disable all interrupts
