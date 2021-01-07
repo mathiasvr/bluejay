@@ -2314,9 +2314,9 @@ wait_for_comm_wait:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ; Comm phase 1 to comm phase 2
-comm1comm2:
+comm1_comm2:
 	Set_RPM_Out
-	jb	Flag_Pgm_Dir_Rev, comm12_rev
+	jb	Flag_Pgm_Dir_Rev, comm1_comm2_rev
 
 	clr	IE_EA					; Disable all interrupts
 	BcomFET_off					; Turn off comfet
@@ -2326,7 +2326,7 @@ comm1comm2:
 	Set_Comp_Phase_B				; Set comparator phase
 	ret
 
-comm12_rev:
+comm1_comm2_rev:
 	clr	IE_EA					; Disable all interrupts
 	BcomFET_off					; Turn off comfet
 	CcomFET_on					; Turn on comfet (reverse)
@@ -2337,9 +2337,9 @@ comm12_rev:
 
 
 ; Comm phase 2 to comm phase 3
-comm2comm3:
+comm2_comm3:
 	Clear_RPM_Out
-	jb	Flag_Pgm_Dir_Rev, comm23_rev
+	jb	Flag_Pgm_Dir_Rev, comm2_comm3_rev
 
 	clr	IE_EA					; Disable all interrupts
 	CpwmFET_off					; Turn off pwmfet
@@ -2349,7 +2349,7 @@ comm2comm3:
 	Set_Comp_Phase_C				; Set comparator phase
 	ret
 
-comm23_rev:
+comm2_comm3_rev:
 	clr	IE_EA					; Disable all interrupts
 	ApwmFET_off					; Turn off pwmfet (reverse)
 	Set_Pwm_B						; To reapply power after a demag cut
@@ -2360,9 +2360,9 @@ comm23_rev:
 
 
 ; Comm phase 3 to comm phase 4
-comm3comm4:
+comm3_comm4:
 	Set_RPM_Out
-	jb	Flag_Pgm_Dir_Rev, comm34_rev
+	jb	Flag_Pgm_Dir_Rev, comm3_comm4_rev
 
 	clr	IE_EA					; Disable all interrupts
 	AcomFET_off					; Turn off comfet
@@ -2372,7 +2372,7 @@ comm3comm4:
 	Set_Comp_Phase_A				; Set comparator phase
 	ret
 
-comm34_rev:
+comm3_comm4_rev:
 	clr	IE_EA					; Disable all interrupts
 	CcomFET_off					; Turn off comfet (reverse)
 	AcomFET_on					; Turn on comfet (reverse)
@@ -2383,9 +2383,9 @@ comm34_rev:
 
 
 ; Comm phase 4 to comm phase 5
-comm4comm5:
+comm4_comm5:
 	Clear_RPM_Out
-	jb	Flag_Pgm_Dir_Rev, comm45_rev
+	jb	Flag_Pgm_Dir_Rev, comm4_comm5_rev
 
 	clr	IE_EA					; Disable all interrupts
 	BpwmFET_off					; Turn off pwmfet
@@ -2395,7 +2395,7 @@ comm4comm5:
 	Set_Comp_Phase_B				; Set comparator phase
 	ret
 
-comm45_rev:
+comm4_comm5_rev:
 	clr	IE_EA					; Disable all interrupts
 	BpwmFET_off					; Turn off pwmfet
 	Set_Pwm_C
@@ -2406,9 +2406,9 @@ comm45_rev:
 
 
 ; Comm phase 5 to comm phase 6
-comm5comm6:
+comm5_comm6:
 	Set_RPM_Out
-	jb	Flag_Pgm_Dir_Rev, comm56_rev
+	jb	Flag_Pgm_Dir_Rev, comm5_comm6_rev
 
 	clr	IE_EA					; Disable all interrupts
 	CcomFET_off					; Turn off comfet
@@ -2418,7 +2418,7 @@ comm5comm6:
 	Set_Comp_Phase_C				; Set comparator phase
 	ret
 
-comm56_rev:
+comm5_comm6_rev:
 	clr	IE_EA					; Disable all interrupts
 	AcomFET_off					; Turn off comfet (reverse)
 	BcomFET_on					; Turn on comfet
@@ -2429,9 +2429,9 @@ comm56_rev:
 
 
 ; Comm phase 6 to comm phase 1
-comm6comm1:
+comm6_comm1:
 	Clear_RPM_Out
-	jb	Flag_Pgm_Dir_Rev, comm61_rev
+	jb	Flag_Pgm_Dir_Rev, comm6_comm1_rev
 
 	clr	IE_EA					; Disable all interrupts
 	ApwmFET_off					; Turn off pwmfet
@@ -2441,7 +2441,7 @@ comm6comm1:
 	Set_Comp_Phase_A				; Set comparator phase
 	ret
 
-comm61_rev:
+comm6_comm1_rev:
 	clr	IE_EA					; Disable all interrupts
 	CpwmFET_off					; Turn off pwmfet (reverse)
 	Set_Pwm_A
@@ -3566,8 +3566,8 @@ ENDIF
 init_start_bidir_done:
 	setb	Flag_Startup_Phase			; Set startup phase flag
 	mov	Startup_Cnt, #0			; Reset counter
-	call	comm5comm6				; Initialize commutation
-	call	comm6comm1
+	call	comm5_comm6				; Initialize commutation
+	call	comm6_comm1
 	call	initialize_timing			; Initialize timing
 	call	calc_next_comm_timing		; Set virtual commutation point
 	call	initialize_timing			; Initialize timing
@@ -3589,7 +3589,7 @@ run1:
 ;		setup_comm_wait			; Setup wait time from zero cross to commutation
 ;		evaluate_comparator_integrity	; Check whether comparator reading has been normal
 	call	wait_for_comm				; Wait from zero cross to commutation
-	call	comm1comm2				; Commutate
+	call	comm1_comm2				; Commutate
 	call	calc_next_comm_timing		; Calculate next timing and wait advance timing wait
 ;		wait_advance_timing			; Wait advance timing and start zero cross wait
 ;		calc_new_wait_times
@@ -3603,7 +3603,7 @@ run2:
 ;		evaluate_comparator_integrity
 	call	set_pwm_limit				; Set pwm power limit for low or high rpm
 	call	wait_for_comm
-	call	comm2comm3
+	call	comm2_comm3
 	call	calc_next_comm_timing
 ;		wait_advance_timing
 ;		calc_new_wait_times
@@ -3616,7 +3616,7 @@ run3:
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
-	call	comm3comm4
+	call	comm3_comm4
 	call	calc_next_comm_timing
 ;		wait_advance_timing
 ;		calc_new_wait_times
@@ -3629,7 +3629,7 @@ run4:
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
-	call	comm4comm5
+	call	comm4_comm5
 	call	calc_next_comm_timing
 ;		wait_advance_timing
 ;		calc_new_wait_times
@@ -3642,7 +3642,7 @@ run5:
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
-	call	comm5comm6
+	call	comm5_comm6
 	call	calc_next_comm_timing
 ;		wait_advance_timing
 ;		calc_new_wait_times
@@ -3656,7 +3656,7 @@ run6:
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
-	call	comm6comm1
+	call	comm6_comm1
 	call	check_temp_and_limit_power
 	call	calc_next_comm_timing
 ;		wait_advance_timing
