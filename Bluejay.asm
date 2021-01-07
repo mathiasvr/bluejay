@@ -1240,14 +1240,11 @@ beep_cpwmfet_off:
 
 	djnz	Temp2, beep_onoff			; Toggle next pwmfet
 
-	; Copy variable
 	mov	A, Temp3
-	mov	Temp1, A
-
 beep_off:							; Fets off loop
-	mov	A, #150
-	djnz	ACC, $
-	djnz	Temp1, beep_off			; Off time according to beep frequency
+	mov	Temp1, #200
+	djnz	Temp1, $
+	djnz	ACC, beep_off				; Off time according to beep frequency
 
 	djnz	Temp4, beep_start			; Number of beep pulses (duration)
 
