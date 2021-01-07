@@ -3309,7 +3309,6 @@ ENDIF
 	mov	IP, #03h					; High priority to timer 0 and INT0 interrupts
 
 	setb	IE_EA					; Enable all interrupts
-	call	wait200ms
 
 	; Setup variables for DShot150
 	; TODO: dshot150 not supported for now
@@ -3395,7 +3394,6 @@ arming_wait:
 	clr	IE_EA
 	call	beep_f2_short				; Beep signal that ESC is armed
 	setb	IE_EA
-	call	wait200ms
 
 wait_for_power_on:					; Armed and waiting for power on
 	clr	A
