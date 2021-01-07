@@ -3355,12 +3355,10 @@ ENDIF
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
 	mov	DShot_Pwm_Thr, #16			; Load DShot regular pwm threshold
-	clr	C
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
-	subb	A, #10
 	mov	DShot_Cmd, #0
 	mov	DShot_Cmd_Cnt, #0
-	jc	arming_begin
+	jz	arming_begin
 
 	; Setup variables for DShot600
 IF MCU_48MHZ == 1
@@ -3378,12 +3376,10 @@ ENDIF
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
 	mov	DShot_Pwm_Thr, #8			; Load DShot regular pwm threshold
-	clr	C
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
-	subb	A, #10
 	mov	DShot_Cmd, #0
 	mov	DShot_Cmd_Cnt, #0
-	jc	arming_begin
+	jz	arming_begin
 
 	ajmp	init_no_signal
 
