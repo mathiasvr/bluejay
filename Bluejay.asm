@@ -2662,6 +2662,8 @@ dshot_cmd_save_settings:
 ; Beep with beacon strength
 ; Beep type 1-5 in Temp1
 ;
+; Note: This routine switches off power
+;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 beacon_beep:
 	clr	IE_EA					; Disable all interrupts
@@ -2695,7 +2697,6 @@ beacon_beep_exit:
 	mov	Temp2, #Pgm_Beep_Strength	; Set normal beep strength
 	mov	Beep_Strength, @Temp2
 	setb	IE_EA					; Enable all interrupts
-	call	wait100ms
 	ret
 
 
@@ -3441,16 +3442,8 @@ beep_delay_set:
 
 	dec	Power_On_Wait_Cnt_H			; Decrement high wait counter for continued beeping
 
-	call	switch_power_off			; Switch power off in case braking is set
-	call	wait1ms
-	mov	Temp1, #Pgm_Beacon_Strength
-	mov	Beep_Strength, @Temp1
-	clr	IE_EA					; Disable all interrupts
-	call	beep_f4					; Signal that there is no signal
-	setb	IE_EA					; Enable all interrupts
-	mov	Temp1, #Pgm_Beep_Strength
-	mov	Beep_Strength, @Temp1
-	call	wait100ms					; Wait for new RC pulse to be measured
+	mov	Temp1, #4					; Beep tone 4
+	call	beacon_beep
 
 wait_for_power_on_no_beep:
 	jb	Flag_Telemetry_Pending, wait_for_power_telemetry_done
