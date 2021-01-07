@@ -1204,6 +1204,7 @@ beep:
 
 beep_start:
 	mov	Temp2, #2
+
 beep_onoff:
 	clr	A
 	BcomFET_off					; BcomFET off
@@ -1214,35 +1215,41 @@ beep_onoff:
 	djnz	ACC, $					; Allow some time after pwmfet is turned off
 	BcomFET_on					; BcomFET on
 	djnz	ACC, $					; Allow some time after comfet is turned on
-	; Turn on pwmfet
-	mov	A, Temp2
+
+	mov	A, Temp2					; Turn on pwmfet
 	jb	ACC.0, beep_apwmfet_on
 	ApwmFET_on
 beep_apwmfet_on:
 	jnb	ACC.0, beep_cpwmfet_on
 	CpwmFET_on
 beep_cpwmfet_on:
-	mov	A, Beep_Strength
+
+	mov	A, Beep_Strength			; On time according to beep strength
 	djnz	ACC, $
-	; Turn off pwmfet
-	mov	A, Temp2
+
+	mov	A, Temp2					; Turn off pwmfet
 	jb	ACC.0, beep_apwmfet_off
 	ApwmFET_off
 beep_apwmfet_off:
 	jnb	ACC.0, beep_cpwmfet_off
 	CpwmFET_off
 beep_cpwmfet_off:
-	mov	A, #150		; 25us off
+
+	mov	A, #150					; Off for 25 us
 	djnz	ACC, $
-	djnz	Temp2, beep_onoff
+
+	djnz	Temp2, beep_onoff			; Toggle next pwmfet
+
 	; Copy variable
 	mov	A, Temp3
 	mov	Temp1, A
-beep_off:	; Fets off loop
+
+beep_off:							; Fets off loop
 	mov	A, #150
 	djnz	ACC, $
-	djnz	Temp1, beep_off
-	djnz	Temp4, beep_start
+	djnz	Temp1, beep_off			; Off time according to beep frequency
+
+	djnz	Temp4, beep_start			; Number of beep pulses (duration)
 
 	BcomFET_off
 	ret
