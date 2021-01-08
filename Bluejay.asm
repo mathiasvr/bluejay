@@ -494,6 +494,13 @@ rla MACRO var						;; Rotate left via accumulator
 	mov	var, A
 ENDM
 
+ljc MACRO label					;; Long jump if carry set
+LOCAL skip
+	jnc	skip
+	jmp	label
+skip:
+ENDM
+
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
@@ -3728,12 +3735,11 @@ run6_brake_done:
 	clr	C
 	mov	A, Comm_Period4x_H			; Is Comm_Period4x more than 32ms (~1220 eRPM)?
 	subb	A, Temp1
-	jnc	run6_stop_or_turn_dir		; Yes - stop or turn direction
-	jmp	run1						; No - go back to run 1
+	ljc	run1						; No - go back to run 1
 
-run6_stop_or_turn_dir:
 	jnb	Flag_Dir_Change_Brake, run_to_wait_for_power_on	; If it is not a direction change - stop
 
+	; Turn spinning direction
 	clr	Flag_Dir_Change_Brake		; Clear brake flag
 	clr	Flag_Pgm_Dir_Rev			; Set spinning direction. Default fwd
 	jnb	Flag_Rcp_Dir_Rev, ($+5)		; Check force direction
@@ -3791,10 +3797,9 @@ run_to_wait_for_power_on_brake_done:
 	clr	C
 	mov	A, Stall_Cnt
 	subb	A, #10					; Maximum consecutive stalls before stopping
-	jc	($+5)
-	ljmp	init_no_signal				; Stalled too many times
+	ljc	wait_for_power_on			; Go back to wait for power on
 
-	ljmp	wait_for_power_on			; Go back to wait for power on
+	ljmp	init_no_signal				; Stalled too many times
 
 
 
