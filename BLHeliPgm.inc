@@ -34,8 +34,6 @@
 ;
 ; Read all eeprom parameters routine
 ;
-; No assumptions
-;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 read_all_eeprom_parameters:
 	; Check initialized signature
@@ -44,12 +42,11 @@ read_all_eeprom_parameters:
 	call read_eeprom_byte
 	mov	A, Bit_Access
 	cjne	A, #055h, read_eeprom_store_defaults
-	inc	DPTR				; Now Eep_Initialized_H
+	inc	DPTR						; Now Eep_Initialized_H
 	call read_eeprom_byte
 	mov	A, Bit_Access
 	cjne	A, #0AAh, read_eeprom_store_defaults
 	jmp	read_eeprom_read
-
 
 read_eeprom_store_defaults:
 	mov	Flash_Key_1, #0A5h
@@ -64,7 +61,7 @@ read_eeprom_read:
 	; Read eeprom
 	mov	DPTR, #_Eep_Pgm_Gov_P_Gain
 	mov	Temp1, #_Pgm_Gov_P_Gain
-	mov	Temp4, #10
+	mov	Temp4, #10				; 10 parameters
 read_eeprom_block1:
 	call read_eeprom_byte
 	inc	DPTR
@@ -73,7 +70,7 @@ read_eeprom_block1:
 
 	mov	DPTR, #_Eep_Enable_TX_Program
 	mov	Temp1, #_Pgm_Enable_TX_Program
-	mov	Temp4, #26	; 26 parameters
+	mov	Temp4, #26				; 26 parameters
 read_eeprom_block2:
 	call read_eeprom_byte
 	inc	DPTR
@@ -89,8 +86,6 @@ read_eeprom_exit:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Erase flash and store all parameter value in EEPROM routine
-;
-; No assumptions
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 erase_and_store_all_in_eeprom:
@@ -113,7 +108,7 @@ erase_and_store_all_in_eeprom:
 	; Write eeprom
 	mov	DPTR, #_Eep_Pgm_Gov_P_Gain
 	mov	Temp1, #_Pgm_Gov_P_Gain
-	mov	Temp4, #10
+	mov	Temp4, #10				; 10 parameters
 write_eeprom_block1:
 	call write_eeprom_byte
 	inc	DPTR
@@ -122,7 +117,7 @@ write_eeprom_block1:
 
 	mov	DPTR, #_Eep_Enable_TX_Program
 	mov	Temp1, #_Pgm_Enable_TX_Program
-	mov	Temp4, #26	; 26 parameters
+	mov	Temp4, #26				; 26 parameters
 write_eeprom_block2:
 	call write_eeprom_byte
 	inc	DPTR
@@ -135,7 +130,6 @@ write_eeprom_block2:
 	ret
 
 
-
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Read eeprom byte routine
@@ -146,7 +140,7 @@ write_eeprom_block2:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 read_eeprom_byte:
 	clr	A
-	movc	A, @A+DPTR			; Read from flash
+	movc	A, @A+DPTR				; Read from flash
 	mov	@Temp1, A
 	ret
 
@@ -162,21 +156,21 @@ read_eeprom_byte:
 write_eeprom_byte:
 	mov	A, @Temp1
 write_eeprom_byte_from_acc:
-	orl	PSCTL, #01h			; Set the PSWE bit
-	anl	PSCTL, #0FDh			; Clear the PSEE bit
+	orl	PSCTL, #01h				; Set the PSWE bit
+	anl	PSCTL, #0FDh				; Clear the PSEE bit
 	mov	Temp8, A
 	clr	C
-	mov	A, DPH				; Check that address is not in bootloader area
+	mov	A, DPH					; Check that address is not in bootloader area
 	subb	A, #1Ch
 	jc	($+3)
 
 	ret
 
 	mov	A, Temp8
-	mov	FLKEY, Flash_Key_1		; First key code
-	mov	FLKEY, Flash_Key_2		; Second key code
-	movx	@DPTR, A				; Write to flash
-	anl	PSCTL, #0FEh			; Clear the PSWE bit
+	mov	FLKEY, Flash_Key_1			; First key code
+	mov	FLKEY, Flash_Key_2			; Second key code
+	movx	@DPTR, A					; Write to flash
+	anl	PSCTL, #0FEh				; Clear the PSWE bit
 	ret
 
 
@@ -184,25 +178,21 @@ write_eeprom_byte_from_acc:
 ;
 ; Erase flash routine (erases the flash segment used for "eeprom" variables)
 ;
-; No assumptions
-;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 erase_flash:
-	orl	PSCTL, #02h			; Set the PSEE bit
-	orl	PSCTL, #01h			; Set the PSWE bit
-	mov	FLKEY, Flash_Key_1		; First key code
-	mov	FLKEY, Flash_Key_2		; Second key code
+	orl	PSCTL, #02h				; Set the PSEE bit
+	orl	PSCTL, #01h				; Set the PSWE bit
+	mov	FLKEY, Flash_Key_1			; First key code
+	mov	FLKEY, Flash_Key_2			; Second key code
 	mov	DPTR, #Eep_Initialized_L
 	movx	@DPTR, A
-	anl	PSCTL, #0FCh			; Clear the PSEE and PSWE bits
+	anl	PSCTL, #0FCh				; Clear the PSEE and PSWE bits
 	ret
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Write eeprom signature routine
-;
-; No assumptions
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 write_eeprom_signature:
@@ -220,18 +210,16 @@ write_eeprom_signature:
 ;
 ; Read all tags from flash and store in temporary storage
 ;
-; No assumptions
-;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 read_tags:
-	mov	Temp3, #48			; Number of tags
-	mov	Temp2, #Temp_Storage	; Set RAM address
+	mov	Temp3, #48				; Number of tags
+	mov	Temp2, #Temp_Storage		; Set RAM address
 	mov	Temp1, #Bit_Access
-	mov	DPTR, #Eep_ESC_Layout	; Set flash address
+	mov	DPTR, #Eep_ESC_Layout		; Set flash address
 read_tag:
 	call read_eeprom_byte
 	mov	A, Bit_Access
-	mov	@Temp2, A				; Write to RAM
+	mov	@Temp2, A					; Write to RAM
 	inc	Temp2
 	inc	DPTR
 	djnz Temp3, read_tag
@@ -242,15 +230,13 @@ read_tag:
 ;
 ; Write all tags from temporary storage and store in flash
 ;
-; No assumptions
-;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 write_tags:
-	mov	Temp3, #48			; Number of tags
-	mov	Temp2, #Temp_Storage	; Set RAM address
-	mov	DPTR, #Eep_ESC_Layout	; Set flash address
+	mov	Temp3, #48				; Number of tags
+	mov	Temp2, #Temp_Storage		; Set RAM address
+	mov	DPTR, #Eep_ESC_Layout		; Set flash address
 write_tag:
-	mov	A, @Temp2				; Read from RAM
+	mov	A, @Temp2					; Read from RAM
 	call write_eeprom_byte_from_acc
 	inc	Temp2
 	inc	DPTR
