@@ -452,9 +452,7 @@ Decode_DShot_2Bit MACRO dest, decode_fail
 	jc	decode_fail				; Check that bit is longer than minimum
 
 	subb	A, Temp2					; Check if bit is zero or one
-	mov	A, dest					; Shift bit into data byte
-	rlc	A
-	mov	dest, A
+	rlca	dest						; Shift bit into data byte
 	inc	Temp1					; Next bit
 
 	movx	A, @Temp1
@@ -466,10 +464,34 @@ Decode_DShot_2Bit MACRO dest, decode_fail
 	jc	decode_fail
 
 	subb	A, Temp2
-	mov	A, dest
-	rlc	A
-	mov	dest, A
+	rlca	dest
 	inc	Temp1
+ENDM
+
+;**** **** **** **** ****
+; Compound instructions for convenience
+xcha MACRO var1, var2				;; Exchange via accumulator
+	mov	A, var1
+	xch	A, var2
+	mov	var1, A
+ENDM
+
+rrca MACRO var						;; Rotate right through carry via accumulator
+	mov	A, var
+	rrc	A
+	mov	var, A
+ENDM
+
+rlca MACRO var						;; Rotate left through carry via accumulator
+	mov	A, var
+	rlc	A
+	mov	var, A
+ENDM
+
+rla MACRO var						;; Rotate left via accumulator
+	mov	A, var
+	rl	A
+	mov	var, A
 ENDM
 
 
@@ -686,12 +708,8 @@ t1_int_bidir_rev_chk:
 	cpl	Flag_Rcp_Dir_Rev
 
 	clr	C						; Multiply throttle value by 2
-	mov	A, Temp4
-	rlc	A
-	mov	Temp4, A
-	mov	A, Temp5
-	rlc	A
-	mov	Temp5, A
+	rlca	Temp4
+	rlca	Temp5
 
 t1_int_not_bidir:
 	; Generate 4/256
@@ -702,12 +720,8 @@ t1_int_not_bidir:
 	mov	Temp3, A
 	; Align to 11 bits
 	clr	C
-	mov	A, Temp5
-	rrc	A
-	mov	Temp5, A
-	mov	A, Temp4
-	rrc	A
-	mov	Temp4, A
+	rrca	Temp5
+	rrca	Temp4
 	; Scale from 2000 to 2048
 	mov	A, Temp4
 	add	A, Temp3					; Holds 4/128
@@ -739,9 +753,7 @@ t1_int_startup_boost_stall:
 	addc	A, #0
 	mov	Temp5, A
 
-	mov	A, B
-	rl	A						; Nonlinear increase
-	mov	B, A
+	rla	B						; Nonlinear increase
 
 	djnz	Temp6, t1_int_startup_boost_stall	; Add more boost when stalling
 
@@ -1512,15 +1524,9 @@ calc_next_comm_timing:				; Entry point for run phase
 	setb	IE_EA
 IF MCU_48MHZ == 1
 	clr	C
-	mov	A, Temp3
-	rrc	A
-	mov	Temp3, A
-	mov	A, Temp2
-	rrc	A
-	mov	Temp2, A
-	mov	A, Temp1
-	rrc	A
-	mov	Temp1, A
+	rrca	Temp3
+	rrca	Temp2
+	rrca	Temp1
 ENDIF
 	; Calculate this commutation time
 	mov	Temp4, Prev_Comm_L
@@ -1622,12 +1628,8 @@ calc_next_comm_normal:
 
 calc_next_comm_avg_period_div:
 	clr	C
-	mov	A, Temp6
-	rrc	A						; Divide by 2
-	mov	Temp6, A
-	mov	A, Temp5
-	rrc	A
-	mov	Temp5, A
+	rrca	Temp6					; Divide by 2
+	rrca	Temp5
 	djnz	Temp7, calc_next_comm_avg_period_div
 
 	clr	C
@@ -1642,12 +1644,8 @@ calc_next_comm_avg_period_div:
 
 calc_next_comm_new_period_div:
 	clr	C
-	mov	A, Temp2
-	rrc	A						; Divide by 2
-	mov	Temp2, A
-	mov	A, Temp1
-	rrc	A
-	mov	Temp1, A
+	rrca	Temp2					; Divide by 2
+	rrca	Temp1
 	djnz	Temp8, calc_next_comm_new_period_div
 
 calc_next_comm_new_period_div_done:
@@ -1846,12 +1844,8 @@ calc_new_wait_times:
 	mov	Temp2, A
 IF MCU_48MHZ == 1
 	clr	C
-	mov	A, Temp1					; Multiply by 2
-	rlc	A
-	mov	Temp1, A
-	mov	A, Temp2
-	rlc	A
-	mov	Temp2, A
+	rlca	Temp1					; Multiply by 2
+	rlca	Temp2
 ENDIF
 
 	jb	Flag_High_Rpm, calc_new_wait_times_fast	; Branch if high rpm
@@ -2006,20 +2000,12 @@ setup_zc_scan_timeout:
 	mov	Temp1, Comm_Period4x_L		; Set long timeout when starting
 	mov	Temp2, Comm_Period4x_H
 	clr	C
-	mov	A, Temp2
-	rrc	A
-	mov	Temp2, A
-	mov	A, Temp1
-	rrc	A
-	mov	Temp1, A
+	rrca	Temp2
+	rrca	Temp1
 IF MCU_48MHZ == 0
 	clr	C
-	mov	A, Temp2
-	rrc	A
-	mov	Temp2, A
-	mov	A, Temp1
-	rrc	A
-	mov	Temp1, A
+	rrca	Temp2
+	rrca	Temp1
 ENDIF
 	jnb	Flag_Startup_Phase, setup_zc_scan_timeout_startup_done
 
@@ -2103,13 +2089,9 @@ wait_for_comp_out_start:
 comp_scale_samples:
 IF MCU_48MHZ == 1
 	clr	C
-	mov	A, Temp1
-	rlc	A
-	mov	Temp1, A
+	rlca	Temp1
 	clr	C
-	mov	A, Temp2
-	rlc	A
-	mov	Temp2, A
+	rlca	Temp2
 ENDIF
 
 comp_check_timeout:
@@ -3524,25 +3506,15 @@ IF MCU_48MHZ == 1
 
 	; Scale DShot criteria for 48MHz
 	clr	C
-	mov	A, DShot_Frame_Length_Thr	; Scale frame length criteria
-	rlc	A
-	mov	DShot_Frame_Length_Thr, A
+	rlca	DShot_Frame_Length_Thr		; Scale frame length criteria
 
 	clr	C
-	mov	A, DShot_Pwm_Thr			; Scale pulse width criteria
-	rlc	A
-	mov	DShot_Pwm_Thr, A
+	rlca	DShot_Pwm_Thr				; Scale pulse width criteria
 
 	; Scale DShot telemetry for 24MHz
-	mov	A, DShot_GCR_Pulse_Time_1
-	xch	A, DShot_GCR_Pulse_Time_1_Tmp
-	mov	DShot_GCR_Pulse_Time_1, A
-	mov	A, DShot_GCR_Pulse_Time_2
-	xch	A, DShot_GCR_Pulse_Time_2_Tmp
-	mov	DShot_GCR_Pulse_Time_2, A
-	mov	A, DShot_GCR_Pulse_Time_3
-	xch	A, DShot_GCR_Pulse_Time_3_Tmp
-	mov	DShot_GCR_Pulse_Time_3, A
+	xcha	DShot_GCR_Pulse_Time_1, DShot_GCR_Pulse_Time_1_Tmp
+	xcha	DShot_GCR_Pulse_Time_2, DShot_GCR_Pulse_Time_2_Tmp
+	xcha	DShot_GCR_Pulse_Time_3, DShot_GCR_Pulse_Time_3_Tmp
 
 	mov	DShot_GCR_Start_Delay, #DSHOT_TLM_START_DELAY_48
 ENDIF
@@ -3790,25 +3762,15 @@ IF MCU_48MHZ == 1
 
 	; Scale DShot criteria for 24MHz
 	clr	C
-	mov	A, DShot_Frame_Length_Thr	; Scale frame length criteria
-	rrc	A
-	mov	DShot_Frame_Length_Thr, A
+	rrca	DShot_Frame_Length_Thr		; Scale frame length criteria
 
 	clr	C
-	mov	A, DShot_Pwm_Thr			; Scale pulse width criteria
-	rrc	A
-	mov	DShot_Pwm_Thr, A
+	rrca	DShot_Pwm_Thr				; Scale pulse width criteria
 
 	; Scale DShot telemetry for 24MHz
-	mov	A, DShot_GCR_Pulse_Time_1
-	xch	A, DShot_GCR_Pulse_Time_1_Tmp
-	mov	DShot_GCR_Pulse_Time_1, A
-	mov	A, DShot_GCR_Pulse_Time_2
-	xch	A, DShot_GCR_Pulse_Time_2_Tmp
-	mov	DShot_GCR_Pulse_Time_2, A
-	mov	A, DShot_GCR_Pulse_Time_3
-	xch	A, DShot_GCR_Pulse_Time_3_Tmp
-	mov	DShot_GCR_Pulse_Time_3, A
+	xcha	DShot_GCR_Pulse_Time_1, DShot_GCR_Pulse_Time_1_Tmp
+	xcha	DShot_GCR_Pulse_Time_2, DShot_GCR_Pulse_Time_2_Tmp
+	xcha	DShot_GCR_Pulse_Time_3, DShot_GCR_Pulse_Time_3_Tmp
 
 	mov	DShot_GCR_Start_Delay, #DSHOT_TLM_START_DELAY
 ENDIF
