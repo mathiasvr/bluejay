@@ -1,6 +1,17 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file.
+
+## [0.6](https://github.com/mathiasvr/bluejay/compare/v0.5...v0.6) (2021-01-08)
+
+
+### Bug Fixes
+
+* Adjust duration of lost signal beacon delay ([bf3b8e9](https://github.com/mathiasvr/bluejay/commit/bf3b8e90cbe3c7d899e52e522ef18fcedc4a71b7))
+* Correct duration of beep tone 5 ([944d3fd](https://github.com/mathiasvr/bluejay/commit/944d3fd2c0430d9d76d4141c3356eb7255a136eb))
+* Do not reset telemetry flag on motor start ([c54412c](https://github.com/mathiasvr/bluejay/commit/c54412c7f30be978d562e8cbcf1232174603ac32))
+* Enable timer 0 interrupt vector on BB1 MCUs ([7c0b18f](https://github.com/mathiasvr/bluejay/commit/7c0b18f61724d1e3dbd462e479b63d036d8d87e6))
+* Wait for FC to initialize during startup ([ec73e39](https://github.com/mathiasvr/bluejay/commit/ec73e39dfe147b44d8aea863be6beae2d30b1782))
 
 ## [0.5](https://github.com/mathiasvr/bluejay/compare/v0.4.0...v0.5) (2021-01-04)
 
