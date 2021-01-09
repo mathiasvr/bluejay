@@ -120,8 +120,6 @@ DEFAULT_PGM_DIRECTION			EQU	1	; 1=Normal	2=Reversed	3=Bidir		4=Bidir rev
 DEFAULT_PGM_BEEP_STRENGTH		EQU	40	; Beep strength
 DEFAULT_PGM_BEACON_STRENGTH		EQU	80	; Beacon strength
 DEFAULT_PGM_BEACON_DELAY			EQU	4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
-
-; COMMON
 DEFAULT_PGM_ENABLE_TEMP_PROT		EQU	7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
 DEFAULT_PGM_ENABLE_POWER_PROT		EQU	1	; 1=Enabled	0=Disabled
 DEFAULT_PGM_BRAKE_ON_STOP		EQU	0	; 1=Enabled	0=Disabled
@@ -232,11 +230,11 @@ Beep_Strength:				DS	1	; Strength of beeps
 Flash_Key_1:				DS	1	; Flash key one
 Flash_Key_2:				DS	1	; Flash key two
 
-DShot_Pwm_Thr:				DS	1	; DShot pulse width threshold value
-DShot_Timer_Preset:			DS	1	; DShot timer preset for frame sync detection
-DShot_Frame_Start_L:		DS	1	; DShot frame start timestamp (lo byte)
-DShot_Frame_Start_H:		DS	1	; DShot frame start timestamp (hi byte)
-DShot_Frame_Length_Thr:		DS	1	; DShot frame length criteria (in units of 4 timer 2 ticks)
+DShot_Pwm_Thr:				DS	1	; DShot pulse width threshold value (timer 0 ticks)
+DShot_Timer_Preset:			DS	1	; DShot timer preset for frame sync detection (timer 1 lo byte)
+DShot_Frame_Start_L:		DS	1	; DShot frame start timestamp (timer 2 lo byte)
+DShot_Frame_Start_H:		DS	1	; DShot frame start timestamp (timer 2 hi byte)
+DShot_Frame_Length_Thr:		DS	1	; DShot frame length criteria (timer 2 ticks)
 
 DShot_Cmd:				DS	1	; DShot command
 DShot_Cmd_Cnt:				DS	1	; DShot command count
@@ -452,14 +450,14 @@ Decode_DShot_2Bit MACRO dest, decode_fail
 	movx	A, @Temp1
 	mov	Temp7, A
 	clr	C
-	subb	A, Temp6					; Subtract previous timestamp
+	subb	A, Temp6					;; Subtract previous timestamp
 	clr	C
 	subb	A, Temp2
-	jc	decode_fail				; Check that bit is longer than minimum
+	jc	decode_fail				;; Check that bit is longer than minimum
 
-	subb	A, Temp2					; Check if bit is zero or one
-	rlca	dest						; Shift bit into data byte
-	inc	Temp1					; Next bit
+	subb	A, Temp2					;; Check if bit is zero or one
+	rlca	dest						;; Shift bit into data byte
+	inc	Temp1					;; Next bit
 
 	movx	A, @Temp1
 	mov	Temp6, A
@@ -1624,9 +1622,11 @@ calc_next_comm_startup_no_X:
 	mov	Prev_Prev_Comm_H, Temp5
 	mov	Temp1, Prev_Comm_L			; Reload this commutation time
 	mov	Temp2, Prev_Comm_H
+
+	; Calculate the new commutation time based upon the two last commutations (to reduce sensitivity to offset)
 	clr	C
 	mov	A, Temp1
-	subb	A, Temp7					; Calculate the new commutation time based upon the two last commutations (to reduce sensitivity to offset)
+	subb	A, Temp7
 	mov	Temp1, A
 	mov	A, Temp2
 	subb	A, Temp8
@@ -3569,8 +3569,8 @@ ENDIF
 	mov	TH0, #0					; Auto reload value zero
 	mov	TH1, #0
 
-	mov	TMR2CN0, #04h				; Timer 2 enabled
-	mov	TMR3CN0, #04h				; Timer 3 enabled
+	mov	TMR2CN0, #04h				; Timer 2 enabled (system clock divided by 12)
+	mov	TMR3CN0, #04h				; Timer 3 enabled (system clock divided by 12)
 
 	Initialize_PCA					; Initialize PCA
 	Set_Pwm_Polarity				; Set pwm polarity
@@ -3585,9 +3585,7 @@ ENDIF
 	mov	DShot_Cmd, #0				; Clear DShot command
 	mov	DShot_Cmd_Cnt, #0			; Clear DShot command count
 
-	; Setup RCP for DShot
-
-	call	detect_rcp_level			; Detect normal or inverted DShot
+	call	detect_rcp_level			; Detect RCP level (normal or inverted DShot)
 
 	; Route RCP according to detected DShot signal (normal or inverted)
 	mov	IT01CF, #(80h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to INT0/1, with INT1 inverted
@@ -3690,7 +3688,7 @@ wait_for_power_on:					; Armed and waiting for power on
 	clr	A
 	mov	Comm_Period4x_L, A			; Reset commutation period for telemetry
 	mov	Comm_Period4x_H, A
-	mov	Power_On_Wait_Cnt_L, A		; Clear lost signal beacon wait counter
+	mov	Power_On_Wait_Cnt_L, A		; Clear beacon wait counter
 	mov	Power_On_Wait_Cnt_H, A
 
 wait_for_power_on_loop:
