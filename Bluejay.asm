@@ -3629,7 +3629,7 @@ ENDIF
 
 	; Setup variables for DShot300
 	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot300)
-	mov	DShot_Pwm_Thr, #20			; Load DShot qualification pwm threshold (for DShot300)
+	mov	DShot_Pwm_Thr, #16			; Load DShot pwm threshold (for DShot300)
 	mov	DShot_Frame_Length_Thr, #80	; Load DShot frame length criteria
 
 	Set_DShot_Tlm_Bitrate	375000	; = 5/4 * 300000
@@ -3637,7 +3637,6 @@ ENDIF
 	; Test whether signal is DShot300
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
-	mov	DShot_Pwm_Thr, #16			; Load DShot regular pwm threshold
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 	mov	DShot_Cmd, #0
 	mov	DShot_Cmd_Cnt, #0
@@ -3645,7 +3644,7 @@ ENDIF
 
 	; Setup variables for DShot600
 	mov	DShot_Timer_Preset, #192		; Load DShot sync timer preset (for DShot600)
-	mov	DShot_Pwm_Thr, #10			; Load DShot qualification pwm threshold (for DShot600)
+	mov	DShot_Pwm_Thr, #8			; Load DShot pwm threshold (for DShot600)
 	mov	DShot_Frame_Length_Thr, #40	; Load DShot frame length criteria
 
 	Set_DShot_Tlm_Bitrate	750000	; = 5/4 * 600000
@@ -3653,7 +3652,6 @@ ENDIF
 	; Test whether signal is DShot600
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
-	mov	DShot_Pwm_Thr, #8			; Load DShot regular pwm threshold
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 	mov	DShot_Cmd, #0
 	mov	DShot_Cmd_Cnt, #0
