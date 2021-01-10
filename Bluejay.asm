@@ -3628,12 +3628,7 @@ ENDIF
 	mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot300/600)
 
 	; Setup variables for DShot300
-IF MCU_48MHZ == 1
-	mov	DShot_Timer_Preset, #0		; Load DShot sync timer preset (for DShot300)
-ELSE
-	mov	DShot_Timer_Preset, #128
-ENDIF
-
+	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot300)
 	mov	DShot_Pwm_Thr, #20			; Load DShot qualification pwm threshold (for DShot300)
 	mov	DShot_Frame_Length_Thr, #80	; Load DShot frame length criteria
 
@@ -3649,12 +3644,7 @@ ENDIF
 	jz	arming_begin
 
 	; Setup variables for DShot600
-IF MCU_48MHZ == 1
-	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot600)
-ELSE
-	mov	DShot_Timer_Preset, #192
-ENDIF
-
+	mov	DShot_Timer_Preset, #192		; Load DShot sync timer preset (for DShot600)
 	mov	DShot_Pwm_Thr, #10			; Load DShot qualification pwm threshold (for DShot600)
 	mov	DShot_Frame_Length_Thr, #40	; Load DShot frame length criteria
 
@@ -3808,6 +3798,9 @@ IF MCU_48MHZ == 1
 	Set_MCU_Clk_48MHz
 
 	; Scale DShot criteria for 48MHz
+	clr	C
+	rlca	DShot_Timer_Preset			; Scale sync timer preset
+
 	clr	C
 	rlca	DShot_Frame_Length_Thr		; Scale frame length criteria
 
@@ -4063,6 +4056,9 @@ IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz
 
 	; Scale DShot criteria for 24MHz
+	setb	C
+	rrca	DShot_Timer_Preset			; Scale sync timer preset
+
 	clr	C
 	rrca	DShot_Frame_Length_Thr		; Scale frame length criteria
 
