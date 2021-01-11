@@ -1190,6 +1190,10 @@ wait200ms:
 	mov	Temp2, #200
 	sjmp	wait_ms_o
 
+wait250ms:
+	mov	Temp2, #250
+	sjmp	wait_ms_o
+
 wait_ms_o:						; Outer loop
 	mov	Temp1, #23
 wait_ms_m:						; Middle loop
@@ -3531,8 +3535,8 @@ pgm_start:
 
 	call	led_control				; Set LEDs to programmed values
 
-	call	wait200ms					; Wait for flight controller to get ready
-	call	wait200ms
+	call	wait250ms					; Wait for flight controller to get ready
+	call	wait250ms
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
