@@ -1178,6 +1178,10 @@ wait1ms:
 	mov	Temp2, #1
 	sjmp	wait_ms_o
 
+wait5ms:
+	mov	Temp2, #5
+	sjmp	wait_ms_o
+
 wait10ms:
 	mov	Temp2, #10
 	sjmp	wait_ms_o
@@ -3522,11 +3526,11 @@ pgm_start:
 	clr	IE_EA					; Disable interrupts explicitly
 	call	wait100ms
 	call	beep_f1
-	call	wait10ms
+	call	wait5ms
 	call	beep_f2
-	call	wait10ms
+	call	wait5ms
 	call	beep_f1
-	call	wait10ms
+	call	wait5ms
 	call	beep_f3
 	call	wait200ms
 	call beep_f2
