@@ -4046,13 +4046,8 @@ run6_brake_done:
 
 run_to_wait_for_power_on_fail:
 	inc	Stall_Cnt					; Increment stall count
-	; Check if RCP is zero, then it is a normal stop
-	jnb	Flag_Rcp_Stop, run_to_wait_for_power_on_stall_done
 
 run_to_wait_for_power_on:
-	mov	Stall_Cnt, #0
-
-run_to_wait_for_power_on_stall_done:
 	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off
 	mov	Flags1, #0				; Clear flags1
@@ -4092,6 +4087,9 @@ ENDIF
 	CcomFET_on
 
 run_to_wait_for_power_on_brake_done:
+	jnb	Flag_Rcp_Stop, ($+6)		; Check if RCP is zero, then it is a normal stop
+	mov	Stall_Cnt, #0
+
 	clr	C
 	mov	A, Stall_Cnt
 	subb	A, #10					; Maximum consecutive stalls before stopping
