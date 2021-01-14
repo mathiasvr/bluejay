@@ -152,7 +152,7 @@ Flags1:					DS	1				; State flags. Reset upon init_start
 Flag_Timer3_Pending			BIT	Flags1.0			; Timer 3 pending flag
 Flag_Demag_Detected			BIT	Flags1.1			; Set when excessive demag time is detected
 Flag_Comp_Timed_Out			BIT	Flags1.2			; Set when comparator reading timed out
-;						BIT	Flags1.3
+Flag_Motor_Running			BIT	Flags1.3
 Flag_Motor_Started			BIT	Flags1.4			; Set when motor is started
 Flag_Dir_Change_Brake		BIT	Flags1.5			; Set when braking before direction change
 Flag_High_Rpm				BIT	Flags1.6			; Set when motor rpm is high (Comm_Period4x_H less than 2)
@@ -188,7 +188,7 @@ Power_On_Wait_Cnt_H:		DS	1	; Power on wait counter (hi byte)
 Startup_Cnt:				DS	1	; Startup phase commutations counter (incrementing)
 Startup_Zc_Timeout_Cntd:		DS	1	; Startup zero cross timeout counter (decrementing)
 Initial_Run_Rot_Cntd:		DS	1	; Initial run rotations counter (decrementing)
-Stall_Cnt:				DS	1	; Counts start/run attempts that resulted in stall. Reset upon a proper stop
+Startup_Stall_Cnt:			DS	1	; Counts start/run attempts that resulted in stall. Reset upon a proper stop
 Demag_Detected_Metric:		DS	1	; Metric used to gauge demag event frequency
 Demag_Pwr_Off_Thresh:		DS	1	; Metric threshold above which power is cut
 Low_Rpm_Pwr_Slope:			DS	1	; Sets the slope of power increase for low rpm
@@ -761,7 +761,7 @@ t1_int_not_bidir:
 	jb	Flag_Motor_Started, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
 
 	; Add an extra power boost during start
-	mov	Temp6, Stall_Cnt
+	mov	Temp6, Startup_Stall_Cnt
 
 	inc Temp6
 	mov B, #31
@@ -3588,7 +3588,7 @@ ENDIF
 	Initialize_Adc					; Initialize ADC operation
 	call	wait1ms
 
-	mov	Stall_Cnt, #0				; Reset stall count
+	mov	Startup_Stall_Cnt, #0		; Reset stall count
 
 	mov	DShot_Cmd, #0				; Clear DShot command
 	mov	DShot_Cmd_Cnt, #0			; Clear DShot command count
@@ -3981,7 +3981,9 @@ initial_run_continue_run:
 
 initial_run_phase_done:
 	; Reset stall count
-	mov	Stall_Cnt, #0
+	mov	Startup_Stall_Cnt, #0
+	setb	Flag_Motor_Running
+
 	; Exit run loop after a given time
 	jb	Flag_Pgm_Bidir, run6_check_timeout	; Check if bidirectional operation
 
@@ -4045,7 +4047,8 @@ run6_brake_done:
 	jmp	run1						; Go back to run 1
 
 run_to_wait_for_power_on_fail:
-	inc	Stall_Cnt					; Increment stall count
+	jb	Flag_Motor_Running, run_to_wait_for_power_on
+	inc	Startup_Stall_Cnt			; Increment stall count if motors did not properly start
 
 run_to_wait_for_power_on:
 	clr	IE_EA					; Disable all interrupts
@@ -4088,10 +4091,10 @@ ENDIF
 
 run_to_wait_for_power_on_brake_done:
 	jnb	Flag_Rcp_Stop, ($+6)		; Check if RCP is zero, then it is a normal stop
-	mov	Stall_Cnt, #0
+	mov	Startup_Stall_Cnt, #0
 
 	clr	C
-	mov	A, Stall_Cnt
+	mov	A, Startup_Stall_Cnt
 	subb	A, #10					; Maximum consecutive stalls before stopping
 	ljc	wait_for_power_on			; Go back to wait for power on
 
