@@ -733,19 +733,20 @@ t1_int_bidir_rev_chk:
 	rlca	Temp5
 
 t1_int_not_bidir:
-	; Generate 4/256
-	mov	A, Temp5
-	add	A, Temp5
-	addc	A, Temp5
-	addc	A, Temp5
+	mov	A, Temp4					; Divide by 16 (12 to 8-bit)
+	anl	A, #0F0h
+	orl	A, Temp5					; Note: Assumes Temp5 to be 4-bit
+	swap	A
+	mov	B, #5					; Divide by 5 (80 in total)
+	div	AB
 	mov	Temp3, A
 	; Align to 11 bits
-	clr	C
+	;clr	C						; Note: Cleared by div
 	rrca	Temp5
-	rrca	Temp4
-	; Scale from 2000 to 2048
 	mov	A, Temp4
-	add	A, Temp3					; Holds 4/128
+	rrc	A
+	; Scale from 2000 to 2048
+	add	A, Temp3
 	mov	Temp4, A
 	mov	A, Temp5
 	addc	A, #0
