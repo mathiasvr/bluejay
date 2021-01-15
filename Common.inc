@@ -92,45 +92,32 @@ ENDIF
 ;**** **** **** **** ****
 ; Constant definitions
 ;**** **** **** **** ****
-ESC_LETTER	EQU	40h + ESCNO
+ESC_C	EQU	"A" + ESCNO - 1		; ESC target letter
 
-IF MCU_48MHZ == 0
-MCU_MHZ_LETTER	EQU	"L"
+IF MCU_48MHZ == 0					; MCU letter (24Mhz=L, 48Mhz=H)
+MCU_C	EQU	"L"
 ELSE
-MCU_MHZ_LETTER	EQU	"H"
+MCU_C	EQU	"H"
+ENDIF
 ENDIF
 
-CSEG AT 1A40h
-IF FETON_DELAY == 0
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_00#        "	; ESC layout tag
-ELSEIF FETON_DELAY == 5
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_05#        "
-ELSEIF FETON_DELAY == 10
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_10#        "
-ELSEIF FETON_DELAY == 15
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_15#        "
-ELSEIF FETON_DELAY == 20
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_20#        "
-ELSEIF FETON_DELAY == 25
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_25#        "
-ELSEIF FETON_DELAY == 30
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_30#        "
-ELSEIF FETON_DELAY == 40
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_40#        "
-ELSEIF FETON_DELAY == 50
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_50#        "
-ELSEIF FETON_DELAY == 70
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_70#        "
-ELSEIF FETON_DELAY == 90
-Eep_ESC_Layout:		DB	"#",ESC_LETTER,"_",MCU_MHZ_LETTER,"_90#        "
+; Dead time number as chars
+DT_C2	EQU	"0" + (FETON_DELAY / 100)
+DT_C1	EQU	"0" + ((FETON_DELAY / 10) MOD 10)
+DT_C0	EQU	"0" + (FETON_DELAY MOD 10)
+
+CSEG AT 1A40h						; ESC layout tag
+IF FETON_DELAY < 100
+Eep_ESC_Layout:	DB	"#", ESC_C, "_", MCU_C, "_", DT_C1, DT_C0, "#        "
+ELSE
+Eep_ESC_Layout:	DB	"#", ESC_C, "_", MCU_C, "_", DT_C2, DT_C1, DT_C0, "#       "
 ENDIF
 
+CSEG AT 1A50h						; Project and MCU tag (16 Bytes)
 IF MCU_48MHZ == 0
-CSEG AT 1A50h
-Eep_ESC_MCU:			DB	"#BLHELI$EFM8B10#"	; Project and MCU tag (16 Bytes)
+Eep_ESC_MCU:		DB	"#BLHELI$EFM8B10#"
 ELSE
-CSEG AT 1A50h
-Eep_ESC_MCU:			DB	"#BLHELI$EFM8B21#"	; Project and MCU tag (16 Bytes)
+Eep_ESC_MCU:		DB	"#BLHELI$EFM8B21#"
 ENDIF
 
 Interrupt_Table_Definition MACRO
