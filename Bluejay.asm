@@ -217,9 +217,9 @@ Power_Pwm_Reg_H:			DS	1	; Power pwm register setting (hi byte). 0x3F is minimum 
 Damp_Pwm_Reg_L:			DS	1	; Damping pwm register setting (lo byte)
 Damp_Pwm_Reg_H:			DS	1	; Damping pwm register setting (hi byte)
 
-Pwm_Limit:				DS	1	; Maximum allowed pwm
-Pwm_Limit_By_Rpm:			DS	1	; Maximum allowed pwm for low or high rpm
-Pwm_Limit_Beg:				DS	1	; Initial pwm limit
+Pwm_Limit:				DS	1	; Maximum allowed pwm (8-bit)
+Pwm_Limit_By_Rpm:			DS	1	; Maximum allowed pwm for low or high rpm (8-bit)
+Pwm_Limit_Beg:				DS	1	; Initial pwm limit (8-bit)
 
 Adc_Conversion_Cnt:			DS	1	; Adc conversion counter
 Current_Average_Temp:		DS	1	; Current average temperature (lo byte ADC reading, assuming hi byte is 1)
@@ -366,6 +366,7 @@ CSEG AT 80h						; Code segment after interrupt vectors
 
 ;**** **** **** **** ****
 ; Table definitions
+; Rampup pwm power (8-bit)
 STARTUP_POWER_TABLE:	DB	1,	2,	3,	4,	6,	9,	12,	18,	25,	37,	50,	62,	75
 
 
@@ -733,6 +734,7 @@ t1_int_bidir_rev_chk:
 	rlca	Temp5
 
 t1_int_not_bidir:
+	; From here Temp5/Temp4 should be at most 3999 (4095-96)
 	mov	A, Temp4					; Divide by 16 (12 to 8-bit)
 	anl	A, #0F0h
 	orl	A, Temp5					; Note: Assumes Temp5 to be 4-bit
