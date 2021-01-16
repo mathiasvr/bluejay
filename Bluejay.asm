@@ -781,7 +781,8 @@ t1_int_startup_boost_stall:
 
 	djnz	Temp6, t1_int_startup_boost_stall	; Add more boost when stalling
 
-	jnb	ACC.3, ($+7)				; Limit to 11-bit maximum
+	mov	A, Temp5					; Limit to 11-bit maximum
+	jnb	ACC.3, ($+7)
 	mov	Temp4, #0FFh
 	mov	Temp5, #07h
 
