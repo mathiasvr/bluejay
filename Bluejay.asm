@@ -757,11 +757,11 @@ t1_int_not_bidir:
 	mov	Temp4, #0FFh
 	mov	Temp5, #07h
 
+	jb	Flag_Motor_Started, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
+
 	; Boost pwm during direct start
 	mov	A, Flags_Startup
 	jz	t1_int_startup_boosted
-
-	jb	Flag_Motor_Started, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
 
 	; Add an extra power boost during start
 	mov	Temp6, Startup_Stall_Cnt
