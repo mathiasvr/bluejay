@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7](https://github.com/mathiasvr/bluejay/compare/v0.6...v0.7) (2021-01-16)
+
+
+### Features
+
+* Smoother DShot throttle scaling ([2268e16](https://github.com/mathiasvr/bluejay/commit/2268e16d5f834efb72d91d61f86dddd130c56faa))
+
+
+### Bug Fixes
+
+* Add delay between beacon beeps ([3b4fad9](https://github.com/mathiasvr/bluejay/commit/3b4fad93e48eb6d6a1500bfd675f9223e0d07f8c))
+* Adjust telemetry timing and ensure port is ready ([5ad0a92](https://github.com/mathiasvr/bluejay/commit/5ad0a925aac33828b983e378c746a0e8f329925a))
+* Delay stall count reset in case of gradual power down ([1ee21f5](https://github.com/mathiasvr/bluejay/commit/1ee21f55df631fa873c67b8a0bcaef79014c8fc0))
+* Fix bug causing excessive startup boost ([98e7de9](https://github.com/mathiasvr/bluejay/commit/98e7de9983c8f1e40f4a741d9eed43063b72e24b))
+* Only boost power when stalling from failed starts ([3652e31](https://github.com/mathiasvr/bluejay/commit/3652e3183e2721cf4808ea8043a844ff10cfb591))
+* Scale DShot sync timer during signal detection ([36f70ce](https://github.com/mathiasvr/bluejay/commit/36f70ce668d10e6f9feba84af8239f44f05aa00b))
+
+
+### Performance Improvements
+
+* Optimize startup boost check order ([2c96991](https://github.com/mathiasvr/bluejay/commit/2c96991ae08e6cf17b44bdfb3a2568edf18c7d5a))
+
+
 ## [0.6](https://github.com/mathiasvr/bluejay/compare/v0.5...v0.6) (2021-01-08)
 
 
@@ -66,7 +89,7 @@ All notable changes to this project will be documented in this file.
 
 * Micro-optimize telemetry packet creation ([c9640f9](https://github.com/mathiasvr/bluejay/commit/c9640f9e5ae6dc4f11ec2650603d30b37596ee38))
 
-### [0.2.1](https://github.com/mathiasvr/bluejay/compare/v0.2.0...v0.2.1) (2020-10-25)
+## [0.2.1](https://github.com/mathiasvr/bluejay/compare/v0.2.0...v0.2.1) (2020-10-25)
 
 
 ### Bug Fixes
