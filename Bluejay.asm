@@ -381,12 +381,12 @@ STARTUP_POWER_TABLE:	DB	1,	2,	3,	4,	6,	9,	12,	18,	25,	37,	50,	62,	75
 
 
 DSHOT_TLM_CLOCK		EQU	24500000				; 24.5MHz
-DSHOT_TLM_START_DELAY	EQU	-1					; Start telemetry after 1 tick (~30us after receiving DShot cmd)
+DSHOT_TLM_START_DELAY	EQU	-(5 * 25 / 4)			; Start telemetry after 5 us (~30 us after receiving DShot cmd)
 DSHOT_TLM_PREDELAY		EQU	6					; 6 timer 0 ticks inherent delay
 
 IF MCU_48MHZ == 1
 	DSHOT_TLM_CLOCK_48		EQU	49000000			; 49MHz
-	DSHOT_TLM_START_DELAY_48	EQU	-(14 * 49 / 4)		; Start telemetry after 14us (~30us after receiving DShot cmd)
+	DSHOT_TLM_START_DELAY_48	EQU	-(16 * 49 / 4)		; Start telemetry after 15 us (~30 us after receiving DShot cmd)
 	DSHOT_TLM_PREDELAY_48	EQU	8				; 8 timer 0 ticks inherent delay
 ENDIF
 
@@ -955,15 +955,16 @@ ENDIF
 	mov	CKCON0, #01h				; Timer 0 is system clock divided by 4
 	mov	TMOD, #0A2h				; Timer 0 runs free not gated by INT0
 
-	mov	TL0, DShot_GCR_Start_Delay	; Telemetry will begin after this delay
-	clr	TCON_TF0					; Clear timer 0 overflow flag
-	setb	IE_ET0					; Enable timer 0 interrupts
-
 	; Configure RTX_PIN for digital output
 	setb	RTX_PORT.RTX_PIN			; Default to high level
 	orl	RTX_MDOUT, #(1 SHL RTX_PIN)	; Set output mode to push-pull
 
 	mov	Temp1, #0					; Set pointer to start
+
+	; Note: Delay must be large enough to ensure port is ready for output
+	mov	TL0, DShot_GCR_Start_Delay	; Telemetry will begin after this delay
+	clr	TCON_TF0					; Clear timer 0 overflow flag
+	setb	IE_ET0					; Enable timer 0 interrupts
 
 	sjmp	t1_int_exit_no_int
 
