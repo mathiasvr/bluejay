@@ -26,10 +26,10 @@ All releases can be found in the [releases](https://github.com/mathiasvr/bluejay
 
 Release files use a naming convention similar to BLHeli: `{T}_{M}_{D}_{P}_{V}.hex`.
 
-|   |                    |                                                       |
-|---|--------------------|-------------------------------------------------------|
-| T | `A` - `W`          | Target ESC layout                                     |
-| M | `L` or `H`         | MCU type: `L` (BB1 24MHz), `H` (BB2 48MHz)            |
+|   |                    |                                                         |
+|---|--------------------|---------------------------------------------------------|
+| T | `A` - `W`          | Target ESC layout                                       |
+| M | `L` or `H`         | MCU type: `L` (BB1 24MHz), `H` (BB2 48MHz)              |
 | D | `0` - `90`         | Dead time (`0` *only* for ESCs with built-in dead time) |
-| P | `24`, `48` or `96` | PWM frequency [kHz]                                   |
-| V | eg. `0.5`        | Bluejay version                                       |
+| P | `24`, `48` or `96` | PWM frequency [kHz]                                     |
+| V | eg. `0.7`          | Bluejay version                                         |
