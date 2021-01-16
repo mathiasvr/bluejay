@@ -2546,6 +2546,7 @@ dshot_cmd_check:
 	jnc	dshot_cmd_direction_1
 
 	call	beacon_beep
+	call wait200ms
 
 	sjmp	dshot_cmd_exit
 
