@@ -765,8 +765,8 @@ t1_int_not_bidir:
 
 	mov	Temp6, Startup_Stall_Cnt		; Add more boost when failing to start motor
 
-	inc Temp6
-	mov B, #31
+	inc	Temp6
+	mov	B, #31
 
 t1_int_stall_boost_loop:
 	mov	A, Temp4
@@ -2385,7 +2385,6 @@ comm1_comm2_rev:
 	Set_Comp_Phase_B				; Set comparator phase
 	ret
 
-
 ; Comm phase 2 to comm phase 3
 comm2_comm3:
 	Clear_RPM_Out
@@ -2407,7 +2406,6 @@ comm2_comm3_rev:
 	setb	IE_EA
 	Set_Comp_Phase_A				; Set comparator phase (reverse)
 	ret
-
 
 ; Comm phase 3 to comm phase 4
 comm3_comm4:
@@ -2431,7 +2429,6 @@ comm3_comm4_rev:
 	Set_Comp_Phase_C				; Set comparator phase (reverse)
 	ret
 
-
 ; Comm phase 4 to comm phase 5
 comm4_comm5:
 	Clear_RPM_Out
@@ -2454,7 +2451,6 @@ comm4_comm5_rev:
 	Set_Comp_Phase_B				; Set comparator phase
 	ret
 
-
 ; Comm phase 5 to comm phase 6
 comm5_comm6:
 	Set_RPM_Out
@@ -2476,7 +2472,6 @@ comm5_comm6_rev:
 	setb	IE_EA
 	Set_Comp_Phase_A				; Set comparator phase (reverse)
 	ret
-
 
 ; Comm phase 6 to comm phase 1
 comm6_comm1:
@@ -2549,7 +2544,8 @@ dshot_cmd_check:
 	subb	A, #6					; Beacon beeps for command 1-5
 	jnc	dshot_cmd_direction_1
 
-	call beacon_beep
+	call	beacon_beep
+
 	sjmp	dshot_cmd_exit
 
 dshot_cmd_direction_1:
@@ -2568,6 +2564,7 @@ dshot_cmd_direction_1:
 	mov	@Temp1, A
 	clr	Flag_Pgm_Dir_Rev
 	clr	Flag_Pgm_Bidir_Rev
+
 	sjmp	dshot_cmd_exit
 
 dshot_cmd_direction_2:
@@ -2586,6 +2583,7 @@ dshot_cmd_direction_2:
 	mov	@Temp1, A
 	setb	Flag_Pgm_Dir_Rev
 	setb	Flag_Pgm_Bidir_Rev
+
 	sjmp	dshot_cmd_exit
 
 dshot_cmd_direction_bidir_off:
@@ -2605,6 +2603,7 @@ dshot_cmd_direction_bidir_off:
 	subb	A, #2
 	mov	@Temp1, A
 	clr	Flag_Pgm_Bidir
+
 	sjmp	dshot_cmd_exit
 
 dshot_cmd_direction_bidir_on:
@@ -2654,6 +2653,7 @@ dshot_cmd_direction_normal:
 	setb	Flag_Pgm_Dir_Rev
 	jc	($+4)
 	setb	Flag_Pgm_Bidir_Rev
+
 	sjmp	dshot_cmd_exit
 
 dshot_cmd_direction_reverse:			; Temporary reverse
@@ -2688,6 +2688,7 @@ dshot_cmd_direction_reverse:			; Temporary reverse
 	setb	Flag_Pgm_Dir_Rev
 	jc	($+4)
 	setb	Flag_Pgm_Bidir_Rev
+
 	sjmp	dshot_cmd_exit
 
 dshot_cmd_save_settings:
@@ -3122,11 +3123,11 @@ read_all_eeprom_parameters:
 	; Check initialized signature
 	mov	DPTR, #Eep_Initialized_L
 	mov	Temp1, #Bit_Access
-	call read_eeprom_byte
+	call	read_eeprom_byte
 	mov	A, Bit_Access
 	cjne	A, #055h, read_eeprom_store_defaults
 	inc	DPTR						; Now Eep_Initialized_H
-	call read_eeprom_byte
+	call	read_eeprom_byte
 	mov	A, Bit_Access
 	cjne	A, #0AAh, read_eeprom_store_defaults
 	jmp	read_eeprom_read
@@ -3134,8 +3135,8 @@ read_all_eeprom_parameters:
 read_eeprom_store_defaults:
 	mov	Flash_Key_1, #0A5h
 	mov	Flash_Key_2, #0F1h
-	call set_default_parameters
-	call erase_and_store_all_in_eeprom
+	call	set_default_parameters
+	call	erase_and_store_all_in_eeprom
 	mov	Flash_Key_1, #0
 	mov	Flash_Key_2, #0
 	jmp	read_eeprom_exit
@@ -3146,7 +3147,7 @@ read_eeprom_read:
 	mov	Temp1, #_Pgm_Gov_P_Gain
 	mov	Temp4, #10				; 10 parameters
 read_eeprom_block1:
-	call read_eeprom_byte
+	call	read_eeprom_byte
 	inc	DPTR
 	inc	Temp1
 	djnz	Temp4, read_eeprom_block1
@@ -3155,7 +3156,7 @@ read_eeprom_block1:
 	mov	Temp1, #_Pgm_Enable_TX_Program
 	mov	Temp4, #26				; 26 parameters
 read_eeprom_block2:
-	call read_eeprom_byte
+	call	read_eeprom_byte
 	inc	DPTR
 	inc	Temp1
 	djnz	Temp4, read_eeprom_block2
@@ -3178,22 +3179,22 @@ erase_and_store_all_in_eeprom:
 
 	mov	DPTR, #Eep_FW_Main_Revision	; Store firmware main revision
 	mov	A, #EEPROM_FW_MAIN_REVISION
-	call write_eeprom_byte_from_acc
+	call	write_eeprom_byte_from_acc
 
 	inc	DPTR						; Now firmware sub revision
 	mov	A, #EEPROM_FW_SUB_REVISION
-	call write_eeprom_byte_from_acc
+	call	write_eeprom_byte_from_acc
 
 	inc	DPTR						; Now layout revision
 	mov	A, #EEPROM_LAYOUT_REVISION
-	call write_eeprom_byte_from_acc
+	call	write_eeprom_byte_from_acc
 
 	; Write eeprom
 	mov	DPTR, #_Eep_Pgm_Gov_P_Gain
 	mov	Temp1, #_Pgm_Gov_P_Gain
 	mov	Temp4, #10				; 10 parameters
 write_eeprom_block1:
-	call write_eeprom_byte
+	call	write_eeprom_byte
 	inc	DPTR
 	inc	Temp1
 	djnz	Temp4, write_eeprom_block1
@@ -3202,13 +3203,13 @@ write_eeprom_block1:
 	mov	Temp1, #_Pgm_Enable_TX_Program
 	mov	Temp4, #26				; 26 parameters
 write_eeprom_block2:
-	call write_eeprom_byte
+	call	write_eeprom_byte
 	inc	DPTR
 	inc	Temp1
 	djnz	Temp4, write_eeprom_block2
 
 	call	write_tags
-	call write_eeprom_signature
+	call	write_eeprom_signature
 	mov	DPTR, #Eep_Dummy			; Set pointer to uncritical area
 	ret
 
@@ -3281,11 +3282,11 @@ erase_flash:
 write_eeprom_signature:
 	mov	DPTR, #Eep_Initialized_L
 	mov	A, #055h
-	call write_eeprom_byte_from_acc
+	call	write_eeprom_byte_from_acc
 
 	mov	DPTR, #Eep_Initialized_H
 	mov	A, #0AAh
-	call write_eeprom_byte_from_acc
+	call	write_eeprom_byte_from_acc
 	ret
 
 
@@ -3300,7 +3301,7 @@ read_tags:
 	mov	Temp1, #Bit_Access
 	mov	DPTR, #Eep_ESC_Layout		; Set flash address
 read_tag:
-	call read_eeprom_byte
+	call	read_eeprom_byte
 	mov	A, Bit_Access
 	mov	@Temp2, A					; Write to RAM
 	inc	Temp2
@@ -3320,7 +3321,7 @@ write_tags:
 	mov	DPTR, #Eep_ESC_Layout		; Set flash address
 write_tag:
 	mov	A, @Temp2					; Read from RAM
-	call write_eeprom_byte_from_acc
+	call	write_eeprom_byte_from_acc
 	inc	Temp2
 	inc	DPTR
 	djnz Temp3, write_tag
@@ -3536,9 +3537,9 @@ pgm_start:
 	call	wait5ms
 	call	beep_f3
 	call	wait200ms
-	call beep_f2
-	call beep_f4
-	call beep_f4
+	call	beep_f2
+	call	beep_f4
+	call	beep_f4
 
 	call	led_control				; Set LEDs to programmed values
 
