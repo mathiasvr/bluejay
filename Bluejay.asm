@@ -757,19 +757,18 @@ t1_int_not_bidir:
 	mov	Temp4, #0FFh
 	mov	Temp5, #07h
 
-	jb	Flag_Motor_Started, t1_int_startup_boosted	; Do not boost when changing direction in bidirectional mode
+	; Do not boost when changing direction in bidirectional mode
+	jb	Flag_Motor_Started, t1_int_startup_boosted
 
-	; Boost pwm during direct start
-	mov	A, Flags_Startup
+	mov	A, Flags_Startup			; Boost pwm during direct start
 	jz	t1_int_startup_boosted
 
-	; Add an extra power boost during start
-	mov	Temp6, Startup_Stall_Cnt
+	mov	Temp6, Startup_Stall_Cnt		; Add more boost when failing to start motor
 
 	inc Temp6
 	mov B, #31
 
-t1_int_startup_boost_stall:
+t1_int_stall_boost_loop:
 	mov	A, Temp4
 	add	A, B
 	mov	Temp4, A
@@ -779,7 +778,7 @@ t1_int_startup_boost_stall:
 
 	rla	B						; Nonlinear increase
 
-	djnz	Temp6, t1_int_startup_boost_stall	; Add more boost when stalling
+	djnz	Temp6, t1_int_stall_boost_loop
 
 	mov	A, Temp5					; Limit to 11-bit maximum
 	jnb	ACC.3, ($+7)
