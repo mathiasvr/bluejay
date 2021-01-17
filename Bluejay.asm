@@ -4101,7 +4101,7 @@ run_to_wait_for_power_on_brake_done:
 
 	clr	C
 	mov	A, Startup_Stall_Cnt
-	subb	A, #10					; Maximum consecutive stalls before stopping
+	subb	A, #4					; Maximum consecutive stalls before stopping
 	ljc	wait_for_power_on			; Go back to wait for power on
 
 	ljmp	init_no_signal				; Stalled too many times
