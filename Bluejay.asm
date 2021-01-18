@@ -2109,17 +2109,17 @@ wait_before_zc_scan_exit:
 wait_for_comp_out_low:
 	setb	Flag_Demag_Detected			; Set demag detected flag as default
 	mov	Comparator_Read_Cnt, #0		; Reset number of comparator reads
-	mov	Bit_Access, #00h			; Desired comparator output
+	mov	B, #00h					; Desired comparator output
 	jnb	Flag_Dir_Change_Brake, ($+6)
-	mov	Bit_Access, #40h
+	mov	B, #40h
 	sjmp	wait_for_comp_out_start
 
 wait_for_comp_out_high:
 	setb	Flag_Demag_Detected			; Set demag detected flag as default
 	mov	Comparator_Read_Cnt, #0		; Reset number of comparator reads
-	mov	Bit_Access, #40h			; Desired comparator output
+	mov	B, #40h					; Desired comparator output
 	jnb	Flag_Dir_Change_Brake, ($+6)
-	mov	Bit_Access, #00h
+	mov	B, #00h
 
 wait_for_comp_out_start:
 	; Set number of comparator readings
@@ -2179,7 +2179,7 @@ comp_check_timeout_not_timed_out:
 	inc	Comparator_Read_Cnt			; Increment comparator read count
 	Read_Comp_Out					; Read comparator output
 	anl	A, #40h
-	cjne	A, Bit_Access, comp_read_wrong
+	cjne	A, B, comp_read_wrong
 
 	; Comp read ok
 	mov	A, Startup_Cnt				; Force a timeout for the first commutation
