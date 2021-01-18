@@ -386,7 +386,7 @@ DSHOT_TLM_PREDELAY		EQU	6					; 6 timer 0 ticks inherent delay
 
 IF MCU_48MHZ == 1
 	DSHOT_TLM_CLOCK_48		EQU	49000000			; 49MHz
-	DSHOT_TLM_START_DELAY_48	EQU	-(16 * 49 / 4)		; Start telemetry after 15 us (~30 us after receiving DShot cmd)
+	DSHOT_TLM_START_DELAY_48	EQU	-(16 * 49 / 4)		; Start telemetry after 16 us (~30 us after receiving DShot cmd)
 	DSHOT_TLM_PREDELAY_48	EQU	8				; 8 timer 0 ticks inherent delay
 ENDIF
 
@@ -430,6 +430,8 @@ wait_for_t3:
 done_waiting:
 ENDM
 
+; Used for subdividing the DShot telemetry routine into chunks,
+; that will return if timer 3 has wrapped
 Early_Return_Packet_Stage MACRO num
 	Early_Return_Packet_Stage_ num, %(num+1)
 ENDM
@@ -523,6 +525,9 @@ ENDM
 ;
 ; Generate DShot telemetry signal
 ;
+; Requirements:
+; - Must NOT be called while Flag_Telemetry_Pending is cleared
+; - Must NOT use Temp5
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t0_int:
 	push	PSW
@@ -564,7 +569,7 @@ t0_int_dshot_tlm_finish:
 	setb	IE_EX1					; Enable int1 interrupts
 	Enable_PCA_Interrupt			; Enable pca interrupts
 
-	clr	Flag_Telemetry_Pending
+	clr	Flag_Telemetry_Pending		; Mark that new telemetry packet may be created
 
 	pop	PSW
 	reti
@@ -2144,13 +2149,12 @@ wait_for_comp_out_not_startup:
 	clr	C
 	rrc	A
 	jnz	($+3)
-	inc	A
+	inc	A						; Minimum 1
 	mov	Temp3, A
 	clr	C
 	subb	A, #20
 	jc	($+4)
-
-	mov	Temp3, #20
+	mov	Temp3, #20				; Maximum 20
 
 comp_scale_samples:
 IF MCU_48MHZ == 1
@@ -2769,6 +2773,8 @@ beacon_beep_exit:
 ; The routine is divided into 6 sections that can return early
 ; in order to reduce commutation interference
 ;
+; Requirements: Must NOT be called while Flag_Telemetry_Pending is set
+;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 dshot_tlm_create_packet:
 	push	PSW
@@ -2847,10 +2853,10 @@ dshot_tlm_12bit_encoded:
 
 	Push_Mem	Temp1, Tmp_B			; Initial transition time
 
-	mov	Temp5, #0
-	setb	Flag_Telemetry_Pending
+	mov	Temp5, #0					; Reset current packet stage
 
 	pop	PSW
+	setb	Flag_Telemetry_Pending		; Mark that packet is ready to be sent
 	ret
 
 
@@ -3222,8 +3228,8 @@ write_eeprom_block2:
 ;
 ; Read eeprom byte routine
 ;
-; Gives data in A and in address given by Temp1. Assumes address in DPTR
-; Also assumes address high byte to be zero
+; Gives data in A and in address given by Temp1
+; Assumes address in DPTR
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 read_eeprom_byte:
@@ -3237,8 +3243,8 @@ read_eeprom_byte:
 ;
 ; Write eeprom byte routine
 ;
-; Assumes data in address given by Temp1, or in accumulator. Assumes address in DPTR
-; Also assumes address high byte to be zero
+; Assumes data in address given by Temp1, or in accumulator
+; Assumes address in DPTR
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 write_eeprom_byte:
