@@ -2128,41 +2128,35 @@ wait_for_comp_out_init:
 
 wait_for_comp_out_start:
 	; Set number of comparator readings
-	mov	Temp3, #1					; Number of OK readings required
-	mov	Temp4, #1					; Max number of readings required
-	jb	Flag_High_Rpm, comp_scale_samples	; Branch if high rpm
+	mov	Temp3, #(1 SHL MCU_48MHZ)	; Number of OK readings required
+	mov	Temp4, #(1 SHL MCU_48MHZ)	; Max number of readings required
+	jb	Flag_High_Rpm, comp_check_timeout	; Branch if high rpm
 
 	mov	A, Flags_Startup			; Clear demag detected flag if start phases
 	jz	($+4)
 	clr	Flag_Demag_Detected
 
 	jnb	Flag_Startup_Phase, wait_for_comp_out_not_startup
-	mov	Temp3, #27				; Set many samples during startup, approximately one pwm period
-	mov	Temp4, #27
-	sjmp	comp_scale_samples
+	mov	Temp3, #(27 SHL MCU_48MHZ)	; Set many samples during startup, approximately one pwm period
+	mov	Temp4, #(27 SHL MCU_48MHZ)
+	sjmp	comp_check_timeout
 
 wait_for_comp_out_not_startup:
 	; Too low value (~<15) causes rough running at pwm harmonics.
 	; Too high a value (~>35) causes the RCT4215 630 to run rough on full throttle
-	mov	Temp4, #20
+	mov	Temp4, #(20 SHL MCU_48MHZ)
 	mov	A, Comm_Period4x_H			; Set number of readings higher for lower speeds
+IF MCU_48MHZ == 0
 	clr	C
 	rrc	A
+ENDIF
 	jnz	($+3)
 	inc	A						; Minimum 1
 	mov	Temp3, A
 	clr	C
-	subb	A, #20
+	subb	A, #(20 SHL MCU_48MHZ)
 	jc	($+4)
-	mov	Temp3, #20				; Maximum 20
-
-comp_scale_samples:
-IF MCU_48MHZ == 1
-	clr	C
-	rlca	Temp3
-	clr	C
-	rlca	Temp4
-ENDIF
+	mov	Temp3, #(20 SHL MCU_48MHZ)	; Maximum 20
 
 comp_check_timeout:
 	jb	Flag_Timer3_Pending, comp_check_timeout_not_timed_out	; Has zero cross scan timeout elapsed?
