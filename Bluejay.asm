@@ -536,10 +536,11 @@ t0_int:
 	dec	Temp1
 	cjne	Temp1, #(Temp_Storage-1), t0_int_dshot_tlm_transition
 
-	; If last pulse is high telemetry is finished
-	jb	RTX_PORT.RTX_PIN, t0_int_dshot_tlm_finish
+	inc	Temp1					; Set pointer to uncritical position
 
-	inc	Temp1					; Otherwise wait for it to return to high
+	; If last pulse is high, telemetry is finished,
+	; otherwise wait for it to return to high
+	jb	RTX_PORT.RTX_PIN, t0_int_dshot_tlm_finish
 
 t0_int_dshot_tlm_transition:
 	cpl	RTX_PORT.RTX_PIN			; Invert signal level
