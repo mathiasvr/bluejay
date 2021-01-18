@@ -527,7 +527,7 @@ ENDM
 ;
 ; Requirements:
 ; - Must NOT be called while Flag_Telemetry_Pending is cleared
-; - Must NOT use Temp5
+; - Must NOT write to Temp5, Temp8
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t0_int:
 	push	PSW
@@ -557,9 +557,7 @@ t0_int_dshot_tlm_finish:
 
 	clr	IE_ET0					; Disable timer 0 interrupts
 
-	; todo: dshot150
-	;mov	CKCON0, Temp2				; Restore normal DShot timer 0/1 clock settings
-	mov	CKCON0, #0Ch
+	mov	CKCON0, Temp8				; Restore regular DShot timer 0/1 clock settings
 	mov	TMOD, #0AAh				; Timer 0/1 gated by INT0/1
 
 	clr	TCON_IE0					; Clear int0 pending flag
@@ -956,8 +954,6 @@ ENDIF
 	jnb	Flag_Telemetry_Pending, t1_int_exit_no_tlm	; Check if telemetry packet is ready
 
 	; Prepare timer 0 for sending telemetry data
-	; todo: dshot150
-	;mov	Temp2, CKCON0				; Save value to restore later
 	mov	CKCON0, #01h				; Timer 0 is system clock divided by 4
 	mov	TMOD, #0A2h				; Timer 0 runs free not gated by INT0
 
@@ -3614,31 +3610,22 @@ ENDIF
 
 	setb	IE_EA					; Enable all interrupts
 
-	; Setup variables for DShot150
-	; TODO: dshot150 not supported for now
-; IF MCU_48MHZ == 1
-; 	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot150)
-; ELSE
-; 	mov	DShot_Timer_Preset, #192
-; ENDIF
-; 	; TODO: we cannot currently support DShot150 on 48MHz (because of DShot_Frame_Length_Thr)
-; IF MCU_48MHZ == 0
-; 	mov	DShot_Pwm_Thr, #10			; Load DShot qualification pwm threshold (for DShot150)
-; 	mov	DShot_Frame_Length_Thr, #160	; Load DShot frame length criteria
+	; Setup variables for DShot150 (Only on 24MHz because frame length threshold cannot be scaled up)
+IF MCU_48MHZ == 0
+	mov	DShot_Timer_Preset, #-64		; Load DShot sync timer preset (for DShot150)
+	mov	DShot_Pwm_Thr, #8			; Load DShot qualification pwm threshold (for DShot150)
+	mov	DShot_Frame_Length_Thr, #160	; Load DShot frame length criteria
 
-; 	Set_DShot_Tlm_Bitrate	187500	; = 5/4 * 150000
+	Set_DShot_Tlm_Bitrate	187500	; = 5/4 * 150000
 
-; 	; Test whether signal is DShot150
-; 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
-; 	call	wait100ms					; Wait for new RC pulse
-; 	mov	DShot_Pwm_Thr, #8			; Load DShot regular pwm threshold
-; 	clr	C
-; 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
-; 	subb	A, #10
-; 	mov	DShot_Cmd, #0
-; 	mov	DShot_Cmd_Cnt, #0
-; 	jc	arming_begin
-; ENDIF
+	; Test whether signal is DShot150
+	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
+	call	wait100ms					; Wait for new RC pulse
+	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
+	mov	DShot_Cmd, #0
+	mov	DShot_Cmd_Cnt, #0
+	jz	arming_begin
+ENDIF
 
 	mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot300/600)
 
@@ -3675,6 +3662,11 @@ ENDIF
 	ljmp	init_no_signal
 
 arming_begin:
+	push	PSW
+	mov	PSW, #10h					; Temp8 in register bank 2 holds value
+	mov	Temp8, CKCON0				; Save DShot clock settings for telemetry
+	pop	PSW
+
 	clr	IE_EA
 	call	beep_f1_short				; Beep signal that RC pulse is ready
 	setb	IE_EA
