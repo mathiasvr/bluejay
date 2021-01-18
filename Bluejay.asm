@@ -2226,11 +2226,7 @@ comp_read_wrong_extend_timeout:
 	jnb	Flag_High_Rpm, comp_read_wrong_low_rpm	; Branch if not high rpm
 
 	mov	TMR3L, #00h				; Set timeout to ~1ms
-IF MCU_48MHZ == 1
-	mov	TMR3H, #0F0h
-ELSE
-	mov	TMR3H, #0F8h
-ENDIF
+	mov	TMR3H, #-(8 SHL MCU_48MHZ)
 
 comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
@@ -3652,7 +3648,7 @@ ENDIF
 	mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot300/600)
 
 	; Setup variables for DShot300
-	mov	DShot_Timer_Preset, #128		; Load DShot sync timer preset (for DShot300)
+	mov	DShot_Timer_Preset, #-128	; Load DShot sync timer preset (for DShot300)
 	mov	DShot_Pwm_Thr, #16			; Load DShot pwm threshold (for DShot300)
 	mov	DShot_Frame_Length_Thr, #80	; Load DShot frame length criteria
 
@@ -3667,7 +3663,7 @@ ENDIF
 	jz	arming_begin
 
 	; Setup variables for DShot600
-	mov	DShot_Timer_Preset, #192		; Load DShot sync timer preset (for DShot600)
+	mov	DShot_Timer_Preset, #-64		; Load DShot sync timer preset (for DShot600)
 	mov	DShot_Pwm_Thr, #8			; Load DShot pwm threshold (for DShot600)
 	mov	DShot_Frame_Length_Thr, #40	; Load DShot frame length criteria
 
