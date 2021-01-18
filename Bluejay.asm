@@ -3595,6 +3595,7 @@ ENDIF
 
 	mov	DShot_Cmd, #0				; Clear DShot command
 	mov	DShot_Cmd_Cnt, #0			; Clear DShot command count
+	clr	Flag_Telemetry_Pending		; Clear DShot telemetry
 
 	call	detect_rcp_level			; Detect RCP level (normal or inverted DShot)
 
