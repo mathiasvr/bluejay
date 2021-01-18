@@ -2171,7 +2171,7 @@ comp_check_timeout:
 
 comp_check_timeout_timeout_extended:
 	setb	Flag_Comp_Timed_Out
-	sjmp	setup_comm_wait
+	sjmp	wait_for_comp_out_exit
 
 comp_check_timeout_extend_timeout:
 	call	setup_zc_scan_timeout
@@ -2191,7 +2191,7 @@ comp_check_timeout_not_timed_out:
 
 	clr	Flag_Comp_Timed_Out
 
-	sjmp	setup_comm_wait
+	sjmp	wait_for_comp_out_exit
 
 comp_read_wrong:
 	jnb	Flag_Startup_Phase, comp_read_wrong_not_startup
@@ -2259,6 +2259,8 @@ comp_read_wrong_load_timeout:
 	mov	TMR3L, #0
 	mov	TMR3H, A
 	sjmp	comp_read_wrong_timeout_set
+
+wait_for_comp_out_exit:
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
