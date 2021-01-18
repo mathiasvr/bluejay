@@ -2107,19 +2107,19 @@ wait_before_zc_scan_exit:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_for_comp_out_low:
-	setb	Flag_Demag_Detected			; Set demag detected flag as default
-	mov	Comparator_Read_Cnt, #0		; Reset number of comparator reads
 	mov	B, #00h					; Desired comparator output
 	jnb	Flag_Dir_Change_Brake, ($+6)
 	mov	B, #40h
-	sjmp	wait_for_comp_out_start
+	sjmp	wait_for_comp_out_init
 
 wait_for_comp_out_high:
-	setb	Flag_Demag_Detected			; Set demag detected flag as default
-	mov	Comparator_Read_Cnt, #0		; Reset number of comparator reads
 	mov	B, #40h					; Desired comparator output
 	jnb	Flag_Dir_Change_Brake, ($+6)
 	mov	B, #00h
+
+wait_for_comp_out_init:
+	setb	Flag_Demag_Detected			; Set demag detected flag as default
+	mov	Comparator_Read_Cnt, #0		; Reset number of comparator reads
 
 wait_for_comp_out_start:
 	; Set number of comparator readings
@@ -2131,6 +2131,12 @@ wait_for_comp_out_start:
 	jz	($+4)
 	clr	Flag_Demag_Detected
 
+	jnb	Flag_Startup_Phase, wait_for_comp_out_not_startup
+	mov	Temp3, #27				; Set many samples during startup, approximately one pwm period
+	mov	Temp4, #27
+	sjmp	comp_scale_samples
+
+wait_for_comp_out_not_startup:
 	; Too low value (~<15) causes rough running at pwm harmonics.
 	; Too high a value (~>35) causes the RCT4215 630 to run rough on full throttle
 	mov	Temp4, #20
@@ -2145,11 +2151,6 @@ wait_for_comp_out_start:
 	jc	($+4)
 
 	mov	Temp3, #20
-
-	jnb	Flag_Startup_Phase, comp_scale_samples
-
-	mov	Temp3, #27				; Set many samples during startup, approximately one pwm period
-	mov	Temp4, #27
 
 comp_scale_samples:
 IF MCU_48MHZ == 1
@@ -2194,18 +2195,7 @@ comp_check_timeout_not_timed_out:
 	sjmp	wait_for_comp_out_exit
 
 comp_read_wrong:
-	jnb	Flag_Startup_Phase, comp_read_wrong_not_startup
-
-	inc	Temp3					; Increment number of OK readings required
-	clr	C
-	mov	A, Temp3
-	subb	A, Temp4					; If above initial requirement - do not increment further
-	jc	($+3)
-	dec	Temp3
-
-	sjmp	comp_check_timeout			; Continue to look for good ones
-
-comp_read_wrong_not_startup:
+	jb	Flag_Startup_Phase, comp_read_wrong_startup
 	jb	Flag_Demag_Detected, comp_read_wrong_extend_timeout
 
 	inc	Temp3					; Increment number of OK readings required
@@ -2214,6 +2204,16 @@ comp_read_wrong_not_startup:
 	subb	A, Temp4
 	jc	comp_check_timeout			; If below initial requirement - take another reading
 	sjmp	wait_for_comp_out_start		; Otherwise - go back and restart
+
+comp_read_wrong_startup:
+	inc	Temp3					; Increment number of OK readings required
+	clr	C
+	mov	A, Temp3
+	subb	A, Temp4					; If above initial requirement - do not increment further
+	jc	($+3)
+	dec	Temp3
+
+	sjmp	comp_check_timeout			; Continue to look for good ones
 
 comp_read_wrong_extend_timeout:
 	clr	Flag_Demag_Detected			; Clear demag detected flag
