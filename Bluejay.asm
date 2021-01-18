@@ -2180,6 +2180,7 @@ comp_check_timeout_timeout_extended:
 
 comp_check_timeout_extend_timeout:
 	call	setup_zc_scan_timeout
+
 comp_check_timeout_not_timed_out:
 	inc	Comparator_Read_Cnt			; Increment comparator read count
 	Read_Comp_Out					; Read comparator output
@@ -2195,7 +2196,6 @@ comp_check_timeout_not_timed_out:
 	djnz	Temp3, comp_check_timeout	; Decrement readings counter - repeat comparator reading if not zero
 
 	clr	Flag_Comp_Timed_Out
-
 	sjmp	wait_for_comp_out_exit
 
 comp_read_wrong:
@@ -2231,6 +2231,7 @@ IF MCU_48MHZ == 1
 ELSE
 	mov	TMR3H, #0F8h
 ENDIF
+
 comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
 	setb	Flag_Timer3_Pending
@@ -2240,12 +2241,13 @@ comp_read_wrong_timeout_set:
 comp_read_wrong_low_rpm:
 	mov	A, Comm_Period4x_H			; Set timeout to ~4x comm period 4x value
 	mov	Temp7, #0FFh				; Default to long
+
 IF MCU_48MHZ == 1
 	clr	C
 	rlc	A
 	jc	comp_read_wrong_load_timeout
-
 ENDIF
+
 	clr	C
 	rlc	A
 	jc	comp_read_wrong_load_timeout
