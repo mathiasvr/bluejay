@@ -194,13 +194,13 @@ Demag_Pwr_Off_Thresh:		DS	1	; Metric threshold above which power is cut
 Low_Rpm_Pwr_Slope:			DS	1	; Sets the slope of power increase for low rpm
 
 Timer2_X:					DS	1	; Timer 2 extended byte
-Prev_Comm_L:				DS	1	; Previous commutation timer 3 timestamp (lo byte)
-Prev_Comm_H:				DS	1	; Previous commutation timer 3 timestamp (hi byte)
-Prev_Comm_X:				DS	1	; Previous commutation timer 3 timestamp (ext byte)
-Prev_Prev_Comm_L:			DS	1	; Pre-previous commutation timer 3 timestamp (lo byte)
-Prev_Prev_Comm_H:			DS	1	; Pre-previous commutation timer 3 timestamp (hi byte)
-Comm_Period4x_L:			DS	1	; Timer 3 counts between the last 4 commutations (lo byte)
-Comm_Period4x_H:			DS	1	; Timer 3 counts between the last 4 commutations (hi byte)
+Prev_Comm_L:				DS	1	; Previous commutation timer 2 timestamp (lo byte)
+Prev_Comm_H:				DS	1	; Previous commutation timer 2 timestamp (hi byte)
+Prev_Comm_X:				DS	1	; Previous commutation timer 2 timestamp (ext byte)
+Prev_Prev_Comm_L:			DS	1	; Pre-previous commutation timer 2 timestamp (lo byte)
+Prev_Prev_Comm_H:			DS	1	; Pre-previous commutation timer 2 timestamp (hi byte)
+Comm_Period4x_L:			DS	1	; Timer 2 counts between the last 4 commutations (lo byte)
+Comm_Period4x_H:			DS	1	; Timer 2 counts between the last 4 commutations (hi byte)
 Comparator_Read_Cnt:		DS	1	; Number of comparator reads done
 
 Wt_Adv_Start_L:			DS	1	; Timer 3 start point for commutation advance timing (lo byte)
