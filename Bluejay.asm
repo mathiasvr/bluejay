@@ -2110,20 +2110,20 @@ wait_before_zc_scan_exit:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_for_comp_out_low:
 	mov	B, #00h					; Desired comparator output
-	jnb	Flag_Dir_Change_Brake, ($+6)
+	jnb	Flag_Dir_Change_Brake, comp_init
 	mov	B, #40h
-	sjmp	wait_for_comp_out_init
+	sjmp	comp_init
 
 wait_for_comp_out_high:
 	mov	B, #40h					; Desired comparator output
-	jnb	Flag_Dir_Change_Brake, ($+6)
+	jnb	Flag_Dir_Change_Brake, comp_init
 	mov	B, #00h
 
-wait_for_comp_out_init:
+comp_init:
 	setb	Flag_Demag_Detected			; Set demag detected flag as default
 	mov	Comparator_Read_Cnt, #0		; Reset number of comparator reads
 
-wait_for_comp_out_start:
+comp_start:
 	; Set number of comparator readings
 	mov	Temp3, #(1 SHL MCU_48MHZ)	; Number of OK readings required
 	mov	Temp4, #(1 SHL MCU_48MHZ)	; Max number of readings required
@@ -2133,12 +2133,12 @@ wait_for_comp_out_start:
 	jz	($+4)
 	clr	Flag_Demag_Detected
 
-	jnb	Flag_Startup_Phase, wait_for_comp_out_not_startup
+	jnb	Flag_Startup_Phase, comp_not_startup
 	mov	Temp3, #(27 SHL MCU_48MHZ)	; Set many samples during startup, approximately one pwm period
 	mov	Temp4, #(27 SHL MCU_48MHZ)
 	sjmp	comp_check_timeout
 
-wait_for_comp_out_not_startup:
+comp_not_startup:
 	; Too low value (~<15) causes rough running at pwm harmonics.
 	; Too high a value (~>35) causes the RCT4215 630 to run rough on full throttle
 	mov	Temp4, #(20 SHL MCU_48MHZ)
@@ -2167,7 +2167,7 @@ comp_check_timeout:
 
 comp_check_timeout_timeout_extended:
 	setb	Flag_Comp_Timed_Out
-	sjmp	wait_for_comp_out_exit
+	sjmp	comp_exit
 
 comp_check_timeout_extend_timeout:
 	call	setup_zc_scan_timeout
@@ -2180,14 +2180,14 @@ comp_check_timeout_not_timed_out:
 
 	; Comp read ok
 	mov	A, Startup_Cnt				; Force a timeout for the first commutation
-	jz	wait_for_comp_out_start
+	jz	comp_start
 
-	jb	Flag_Demag_Detected, wait_for_comp_out_start	; Do not accept correct comparator output if it is demag
+	jb	Flag_Demag_Detected, comp_start	; Do not accept correct comparator output if it is demag
 
 	djnz	Temp3, comp_check_timeout	; Decrement readings counter - repeat comparator reading if not zero
 
 	clr	Flag_Comp_Timed_Out
-	sjmp	wait_for_comp_out_exit
+	sjmp	comp_exit
 
 comp_read_wrong:
 	jb	Flag_Startup_Phase, comp_read_wrong_startup
@@ -2198,7 +2198,7 @@ comp_read_wrong:
 	mov	A, Temp3
 	subb	A, Temp4
 	jc	comp_check_timeout			; If below initial requirement - take another reading
-	sjmp	wait_for_comp_out_start		; Otherwise - go back and restart
+	sjmp	comp_start				; Otherwise - go back and restart
 
 comp_read_wrong_startup:
 	inc	Temp3					; Increment number of OK readings required
@@ -2223,7 +2223,7 @@ comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable timer 3 interrupts
-	jmp	wait_for_comp_out_start		; If comparator output is not correct - go back and restart
+	jmp	comp_start				; If comparator output is not correct - go back and restart
 
 comp_read_wrong_low_rpm:
 	mov	A, Comm_Period4x_H			; Set timeout to ~4x comm period 4x value
@@ -2253,7 +2253,7 @@ comp_read_wrong_load_timeout:
 	mov	TMR3H, A
 	sjmp	comp_read_wrong_timeout_set
 
-wait_for_comp_out_exit:
+comp_exit:
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
