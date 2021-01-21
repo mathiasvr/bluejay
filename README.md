@@ -12,7 +12,7 @@ If you want to help testing it any feedback you can provide is greatly appreciat
 
 ## Current Features
 
-- Digital signal protocol: DShot 300 and 600
+- Digital signal protocol: DShot 150, 300 and 600
 - Bidirectional DShot: RPM telemetry
 - Selectable PWM frequency: 24, 48 and 96 kHz
 - PWM dithering: 10-bit effective throttle resolution
