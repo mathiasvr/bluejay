@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8](https://github.com/mathiasvr/bluejay/compare/v0.7...v0.8) (2021-01-21)
+
+### Features
+
+* Add DShot150 support on 24MHz MCUs ([f16cd2c](https://github.com/mathiasvr/bluejay/commit/f16cd2c4da336f40c923c4bdb81b881551ea168d))
+
+### Bug Fixes
+
+* Fix bug in comparator routine ([32ae3df](https://github.com/mathiasvr/bluejay/commit/32ae3dfbfb9db8872762defc18a1dee5d630eb86))
+
+### Performance Improvements
+
+* Optimize comparator wait routine on 48MHz ([661be1b](https://github.com/mathiasvr/bluejay/commit/661be1b9540a6129275975b2a356926fe4251254))
+
+
 ## [0.7](https://github.com/mathiasvr/bluejay/compare/v0.6...v0.7) (2021-01-16)
 
 ### Features

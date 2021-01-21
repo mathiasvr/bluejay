@@ -1,5 +1,5 @@
 # set current revision
-REVISION		?= v0.7
+REVISION		?= v0.8
 
 # targets
 TARGETS			= A B C D E F G H I J K L M N O P Q R S T U V W
