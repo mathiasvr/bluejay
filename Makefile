@@ -94,7 +94,7 @@ all : $$(HEX_TARGETS)
 $(foreach _t,$(TARGETS), \
 	$(foreach _m, $(MCUS), \
 		$(foreach _f, $(FETON_DELAYS), \
-			$(foreach _p, $(PWM_FREQUENCIES), \
+			$(foreach _p, $(filter-out $(subst L,96,$(_m)), $(PWM_FREQUENCIES)), \
 				$(eval $(call MAKE_OBJ,$(_t),$(_m),$(_f),$(_p)))))))
 
 
