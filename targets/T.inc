@@ -30,21 +30,8 @@
 TEMP_LIMIT			EQU 	49	; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
 TEMP_LIMIT_STEP		EQU	9	; Temperature measurement ADC value increment for another 10degC
 
-;**** **** **** **** ****
-; Bootloader definitions
-;**** **** **** **** ****
-RTX_PORT		  		EQU 	P0		; Receive/Transmit port
-RTX_MDOUT				EQU	P0MDOUT	; Set to 1 for PUSHPULL
-RTX_MDIN				EQU	P0MDIN	; Set to 1 for DIGITAL
-RTX_SKIP				EQU	P0SKIP	; Set to 1 for SKIP
-RTX_PIN				EQU 	7		; RTX pin
 
-SIGNATURE_001			EQU	0E8h		; Device signature
-IF MCU_48MHZ == 0
-SIGNATURE_002			EQU	0B1h
-ELSE
-SIGNATURE_002			EQU	0B2h
-ENDIF
+
 
 
 ;*********************
@@ -64,11 +51,19 @@ P0_INIT		EQU	0FFh
 P0_PUSHPULL	EQU	0
 P0_SKIP		EQU	0FFh
 
+PWM_ACTIVE_HIGH	EQU	1
+COMPWM_ACTIVE_HIGH	EQU	1
+
 Set_Pwm_Polarity MACRO
 IF FETON_DELAY == 0
 	mov	PCA0POL, #00h				; Pwm noninverted
 ELSE
-	mov	PCA0POL, #01h				; Damping inverted, pwm noninverted
+; Damping inverted, pwm noninverted
+IF PCA0_POWER_MODULE == PCA0CPM0
+	mov	PCA0POL, #((COMPWM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
+ELSE
+	mov	PCA0POL, #(((1-PWM_ACTIVE_HIGH) SHL 1) + COMPWM_ACTIVE_HIGH)
+ENDIF
 ENDIF
 ENDM
 
@@ -103,135 +98,32 @@ AcomFET		EQU	2	;o
 BcomFET		EQU	1	;o
 CcomFET		EQU	0	;o
 
+P1_SKIP_ALL	EQU 	((1 SHL ApwmFET)+(1 SHL AcomFET)+(1 SHL BpwmFET)+(1 SHL BcomFET)+(1 SHL CpwmFET)+(1 SHL CcomFET))
+
+P_ApwmFET		EQU	P1.ApwmFET
+P_AcomFET		EQU	P1.AcomFET
+P_BpwmFET		EQU	P1.BpwmFET
+P_BcomFET		EQU	P1.BcomFET
+P_CpwmFET		EQU	P1.CpwmFET
+P_CcomFET		EQU	P1.CcomFET
+
+; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
+COMP_PORT		EQU	0
+
+ALL_FETS_ON_PORT1	EQU	1
+
+$include (Base.inc)
+
 P1_DIGITAL	EQU	(1 SHL ApwmFET)+(1 SHL BpwmFET)+(1 SHL CpwmFET)+(1 SHL AcomFET)+(1 SHL BcomFET)+(1 SHL CcomFET)
 P1_INIT		EQU 	00h
 P1_PUSHPULL	EQU	(1 SHL ApwmFET)+(1 SHL BpwmFET)+(1 SHL CpwmFET)+(1 SHL AcomFET)+(1 SHL BcomFET)+(1 SHL CcomFET)
-P1_SKIP		EQU	3Fh
+P1_SKIP		EQU	P1_SKIP_ALL
 
-ApwmFET_on MACRO
-	setb	P1.ApwmFET
-IF FETON_DELAY == 0
-	setb	P1.AcomFET
-ENDIF
-ENDM
-ApwmFET_off MACRO
-IF FETON_DELAY != 0
-	clr	P1.ApwmFET
-ELSE
-	clr	P1.AcomFET
-ENDIF
-ENDM
-BpwmFET_on MACRO
-	setb	P1.BpwmFET
-IF FETON_DELAY == 0
-	setb	P1.BcomFET
-ENDIF
-ENDM
-BpwmFET_off MACRO
-IF FETON_DELAY != 0
-	clr	P1.BpwmFET
-ELSE
-	clr	P1.BcomFET
-ENDIF
-ENDM
-CpwmFET_on MACRO
-	setb	P1.CpwmFET
-IF FETON_DELAY == 0
-	setb	P1.CcomFET
-ENDIF
-ENDM
-CpwmFET_off MACRO
-IF FETON_DELAY != 0
-	clr	P1.CpwmFET
-ELSE
-	clr	P1.CcomFET
-ENDIF
-ENDM
-All_pwmFETs_Off MACRO
-IF FETON_DELAY != 0
-	clr	P1.ApwmFET
-	clr	P1.BpwmFET
-	clr	P1.CpwmFET
-ELSE
-	clr	P1.AcomFET
-	clr	P1.BcomFET
-	clr	P1.CcomFET
-ENDIF
-ENDM
 
-AcomFET_on MACRO
-IF FETON_DELAY == 0
-	clr	P1.ApwmFET
-ENDIF
-	setb	P1.AcomFET
-ENDM
-AcomFET_off MACRO
-	clr	P1.AcomFET
-ENDM
-BcomFET_on MACRO
-IF FETON_DELAY == 0
-	clr	P1.BpwmFET
-ENDIF
-	setb	P1.BcomFET
-ENDM
-BcomFET_off MACRO
-	clr	P1.BcomFET
-ENDM
-CcomFET_on MACRO
-IF FETON_DELAY == 0
-	clr	P1.CpwmFET
-ENDIF
-	setb	P1.CcomFET
-ENDM
-CcomFET_off MACRO
-	clr	P1.CcomFET
-ENDM
-All_comFETs_Off MACRO
-	clr	P1.AcomFET
-	clr	P1.BcomFET
-	clr	P1.CcomFET
-ENDM
 
-Set_Pwm_A MACRO
-IF FETON_DELAY == 0
-	setb	P1.AcomFET
-	mov	P1SKIP, #37h
-ELSE
-	mov	P1SKIP, #33h
-ENDIF
-ENDM
-Set_Pwm_B MACRO
-IF FETON_DELAY == 0
-	setb	P1.BcomFET
-	mov	P1SKIP, #2Fh
-ELSE
-	mov	P1SKIP, #2Dh
-ENDIF
-ENDM
-Set_Pwm_C MACRO
-IF FETON_DELAY == 0
-	setb	P1.CcomFET
-	mov	P1SKIP, #1Fh
-ELSE
-	mov	P1SKIP, #1Eh
-ENDIF
-ENDM
-Set_Pwms_Off MACRO
-	mov	P1SKIP, #3Fh
-ENDM
 
-Set_Comp_Phase_A MACRO
-	mov	CMP0MX, #52h	; Set comparator multiplexer to phase A
-ENDM
-Set_Comp_Phase_B MACRO
-	mov	CMP0MX, #32h	; Set comparator multiplexer to phase B
-ENDM
-Set_Comp_Phase_C MACRO
-	mov	CMP0MX, #12h	; Set comparator multiplexer to phase C
-ENDM
-Read_Comp_Out MACRO
-	mov	A, CMP0CN0	; Read comparator output
-ENDM
+
+
 
 
 ;*********************
@@ -245,38 +137,10 @@ P2_PUSHPULL	EQU	(1 SHL DebugPin)
 ;**********************
 ; MCU specific macros *
 ;**********************
-Initialize_Xbar MACRO
-	mov	XBR2, #40h	; Xbar enabled
-	mov	XBR1, #02h	; CEX0 and CEX1 routed to pins
-ENDM
-Initialize_Comparator MACRO
-	mov	CMP0CN0, #80h	; Comparator enabled, no hysteresis
-	mov	CMP0MD, #00h	; Comparator response time 100ns
-ENDM
-Initialize_Adc MACRO
-	mov	REF0CN, #0Ch	; Set vdd (3.3V) as reference. Enable temp sensor and bias
-IF MCU_48MHZ == 0
-	mov	ADC0CF, #59h	; ADC clock 2MHz, PGA gain 1
-ELSE
-	mov	ADC0CF, #0B9h	; ADC clock 2MHz, PGA gain 1
-ENDIF
-	mov	ADC0MX, #10h	; Select temp sensor input
-	mov	ADC0CN0, #80h	; ADC enabled
-	mov	ADC0CN1, #01h	; Common mode buffer enabled
-ENDM
-Start_Adc MACRO
-	mov	ADC0CN0, #90h	; ADC start
-ENDM
-Read_Adc_Result MACRO
-	mov	Temp1, ADC0L
-	mov	Temp2, ADC0H
-ENDM
-Stop_Adc MACRO
-ENDM
-Set_RPM_Out MACRO
-ENDM
-Clear_RPM_Out MACRO
-ENDM
+
+
+
+
 Set_LED_0 MACRO
 ENDM
 Clear_LED_0 MACRO

@@ -39,13 +39,6 @@ RTX_MDIN				EQU	P0MDIN	; Set to 1 for DIGITAL
 RTX_SKIP				EQU	P0SKIP	; Set to 1 for SKIP
 RTX_PIN				EQU 	7		; RTX pin
 
-SIGNATURE_001			EQU	0E8h		; Device signature
-IF MCU_48MHZ == 0
-SIGNATURE_002			EQU	0B1h
-ELSE
-SIGNATURE_002			EQU	0B2h
-ENDIF
-
 
 ;*********************
 ; PORT 0 definitions *
@@ -213,30 +206,7 @@ Initialize_Comparator MACRO
 	mov	CMP0CN0, #80h	; Comparator enabled, no hysteresis
 	mov	CMP0MD, #00h	; Comparator response time 100ns
 ENDM
-Initialize_Adc MACRO
-	mov	REF0CN, #0Ch	; Set vdd (3.3V) as reference. Enable temp sensor and bias
-IF MCU_48MHZ == 0
-	mov	ADC0CF, #59h	; ADC clock 2MHz, PGA gain 1
-ELSE
-	mov	ADC0CF, #0B9h	; ADC clock 2MHz, PGA gain 1
-ENDIF
-	mov	ADC0MX, #10h	; Select temp sensor input
-	mov	ADC0CN0, #80h	; ADC enabled
-	mov	ADC0CN1, #01h	; Common mode buffer enabled
-ENDM
-Start_Adc MACRO
-	mov	ADC0CN0, #90h	; ADC start
-ENDM
-Read_Adc_Result MACRO
-	mov	Temp1, ADC0L
-	mov	Temp2, ADC0H
-ENDM
-Stop_Adc MACRO
-ENDM
-Set_RPM_Out MACRO
-ENDM
-Clear_RPM_Out MACRO
-ENDM
+
 Set_LED_0 MACRO
 ENDM
 Clear_LED_0 MACRO
