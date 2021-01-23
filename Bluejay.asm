@@ -884,12 +884,11 @@ ELSEIF PWM_BITS_H == 0				; 8-bit pwm
 	mov	Temp3, #0
 ENDIF
 
-; 10-bit effective dithering of 8/9-bit pwm
-IF PWM_BITS_H < 2
+; 11-bit effective dithering of 8/9/10-bit pwm
+IF PWM_BITS_H < 3
 	mov	A, Temp4					; 11-bit low byte
 	cpl	A
-	rr	A
-	anl	A, #((1 SHL (2-PWM_BITS_H))-1); Get index into dithering pattern table
+	anl	A, #((1 SHL (3 - PWM_BITS_H)) - 1); Get index into dithering pattern table
 
 	add	A, #Dithering_Patterns
 	mov	Temp1, A					; Reuse DShot pwm pointer since it is not currently in use.
@@ -3460,16 +3459,26 @@ decode_temp_done:
 	mov	Temp_Prot_Limit, A
 
 	; Initialize pwm dithering bit patterns
-IF PWM_BITS_H == 1
+IF PWM_BITS_H == 2
 	mov	Temp1, #Dithering_Patterns
 	Push_Mem	Temp1, #00h
 	Push_Mem	Temp1, #55h
-ELSEIF PWM_BITS_H == 0
+ELSEIF PWM_BITS_H == 1
 	mov	Temp1, #Dithering_Patterns
 	Push_Mem	Temp1, #00h
 	Push_Mem	Temp1, #11h
 	Push_Mem	Temp1, #55h
 	Push_Mem	Temp1, #77h
+ELSEIF PWM_BITS_H == 0
+	mov	Temp1, #Dithering_Patterns
+	Push_Mem	Temp1, #00h
+	Push_Mem	Temp1, #01h
+	Push_Mem	Temp1, #11h
+	Push_Mem	Temp1, #25h
+	Push_Mem	Temp1, #55h
+	Push_Mem	Temp1, #5Bh
+	Push_Mem	Temp1, #77h
+	Push_Mem	Temp1, #7fh
 ENDIF
 	ret
 
