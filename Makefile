@@ -1,75 +1,81 @@
-# set current revision
-REVISION		?= v0.8
+# Current version
+VERSION		?= v0.8
 
-# targets
-TARGETS			= A B C D E F G H I J K L M N O P Q R S T U V W
-MCUS			= H L
-FETON_DELAYS	= 0 5 10 15 20 25 30 40 50 70 90
-PWM_FREQUENCIES	= 24 48 96
+# Target parameters
+LAYOUTS		= A B C D E F G H I J K L M N O P Q R S T U V W
+MCUS		= H L
+DEADTIMES	= 0 5 10 15 20 25 30 40 50 70 90
+PWM_FREQS	= 24 48 96
 
-# example single target
-TARGET			?= F
-MCU				?= H
-FETON_DELAY		?= 40
-PWM_FREQUENCY	?= 24
+# Example single target
+LAYOUT		?= A
+MCU			?= H
+DEADTIME	?= 5
+PWM			?= 24
 
-WINE_BIN		?= /usr/local/bin/wine
+# Directory configuration
+OUTPUT_DIR	?= build
+HEX_DIR		?= $(OUTPUT_DIR)/hex
+LOG_DIR		?= $(OUTPUT_DIR)/logs
 
-# path to the keil binaries
-KEIL_PATH		?= ~/Downloads/keil_8051/9.60/BIN
 
-# directory config
-OUTPUT_DIR		?= build
-OUTPUT_DIR_HEX	?= $(OUTPUT_DIR)/hex
-LOG_DIR			?= $(OUTPUT_DIR)/logs
+# Path to the keil binaries
+KEIL_PATH	?= ~/Downloads/keil_8051/9.60/BIN
 
-# define the assembler/linker scripts
-AX51_BIN = $(KEIL_PATH)/AX51.exe
-LX51_BIN = $(KEIL_PATH)/LX51.exe
-OX51_BIN = $(KEIL_PATH)/Ohx51.exe
-AX51 = $(WINE_BIN) $(AX51_BIN)
-LX51 = $(WINE_BIN) $(LX51_BIN)
-OX51 = $(WINE_BIN) $(OX51_BIN)
+WINE_BIN	?= /usr/local/bin/wine
 
-# set up flags
-AX51_FLAGS = DEBUG NOMOD51
+# Assembler and linker binaries
+AX51_BIN	= $(KEIL_PATH)/AX51.exe
+LX51_BIN	= $(KEIL_PATH)/LX51.exe
+OX51_BIN	= $(KEIL_PATH)/Ohx51.exe
+AX51		= $(WINE_BIN) $(AX51_BIN)
+LX51		= $(WINE_BIN) $(LX51_BIN)
+OX51		= $(WINE_BIN) $(OX51_BIN)
+
+# Set up flags
+AX51_FLAGS	= DEBUG NOMOD51
 #AX51_FLAGS = NOMOD51 NOLIST
-LX51_FLAGS =
+LX51_FLAGS	=
 
-# set up sources
-ASM_SRC = Bluejay.asm
-ASM_INC = $(TARGETS:%=targets/%.inc) Common.inc BLHeliBootLoad.inc Silabs/SI_EFM8BB1_Defs.inc Silabs/SI_EFM8BB2_Defs.inc
+# Source files
+ASM_SRC		= Bluejay.asm
+ASM_INC		= $(LAYOUTS:%=targets/%.inc) Common.inc BLHeliBootLoad.inc Silabs/SI_EFM8BB1_Defs.inc Silabs/SI_EFM8BB2_Defs.inc
 
-# check that wine/simplicity studio is available
-EXECUTABLES = $(WINE_BIN) $(AX51_BIN) $(LX51_BIN) $(OX51_BIN)
-DUMMYVAR := $(foreach exec, $(EXECUTABLES), \
+# Check that wine/simplicity studio is available
+EXECUTABLES	= $(WINE_BIN) $(AX51_BIN) $(LX51_BIN) $(OX51_BIN)
+DUMMYVAR	:= $(foreach exec, $(EXECUTABLES), \
 				$(if $(wildcard $(exec)),found, \
 				$(error "Could not find $(exec). Make sure to set the correct paths to the simplicity install location")))
 
-# delete object files on error and warnings
+# Set up efm8load
+EFM8_LOAD_BIN	?= efm8load.py
+EFM8_LOAD_PORT	?= /dev/ttyUSB0
+EFM8_LOAD_BAUD	?= 57600
+
+# Delete object files on error and warnings
 .DELETE_ON_ERROR:
 
-# make sure the list of obj files is expanded twice
+# Make sure the list of obj files is expanded twice
 .SECONDEXPANSION:
 OBJS =
 
 define MAKE_OBJ
-OBJS += $(1)_$(2)_$(3)_$(4)_$(REVISION).OBJ
-$(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(REVISION).OBJ : $(ASM_SRC) $(ASM_INC)
+OBJS += $(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ
+$(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ : $(ASM_SRC) $(ASM_INC)
 	$(eval _ESC			:= $(1))
 	$(eval _ESC_INT		:= $(shell printf "%d" "'${_ESC}"))
 	$(eval _ESCNO		:= $(shell echo $$(( $(_ESC_INT) - 65 + 1))))
 	$(eval _MCU_48MHZ	:= $(subst L,0,$(subst H,1,$(2))))
-	$(eval _FETON_DELAY	:= $(3))
+	$(eval _DEADTIME	:= $(3))
 	$(eval _PWM_FREQ	:= $(subst 24,0,$(subst 48,1,$(subst 96,2,$(4)))))
-	$(eval _LOG			:= $(LOG_DIR)/$(1)_$(2)_$(3)_$(4)_$(REVISION).log)
+	$(eval _LOG			:= $(LOG_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).log)
 	@mkdir -p $(OUTPUT_DIR)
 	@mkdir -p $(LOG_DIR)
 	@echo "AX51 : $$@"
 	@$(AX51) $(ASM_SRC) \
 		"DEFINE(ESCNO=$(_ESCNO)) " \
 		"DEFINE(MCU_48MHZ=$(_MCU_48MHZ)) "\
-		"DEFINE(FETON_DELAY=$(_FETON_DELAY)) "\
+		"DEFINE(FETON_DELAY=$(_DEADTIME)) "\
 		"DEFINE(PWM_FREQ=$(_PWM_FREQ)) "\
 		"OBJECT($$@) "\
 		"$(AX51_FLAGS)" > $(_LOG) 2>&1 || (mv ./Bluejay.LST $(OUTPUT_DIR)/; tail $(_LOG); exit 1)
@@ -77,36 +83,31 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(REVISION).OBJ : $(ASM_SRC) $(ASM_INC)
 
 endef
 
-HEX_TARGETS = $(OBJS:%.OBJ=$(OUTPUT_DIR_HEX)/%.hex)
-
-EFM8_LOAD_BIN  ?= efm8load.py
-EFM8_LOAD_PORT ?= /dev/ttyUSB0
-EFM8_LOAD_BAUD ?= 57600
-
-SINGLE_TARGET_HEX = $(OUTPUT_DIR_HEX)/$(TARGET)_$(MCU)_$(FETON_DELAY)_$(PWM_FREQUENCY)_$(REVISION).hex
+SINGLE_TARGET_HEX = $(HEX_DIR)/$(LAYOUT)_$(MCU)_$(DEADTIME)_$(PWM)_$(VERSION).hex
 
 single_target : $(SINGLE_TARGET_HEX)
 
+HEX_TARGETS = $(OBJS:%.OBJ=$(HEX_DIR)/%.hex)
+
 all : $$(HEX_TARGETS)
-	@echo "\nbuild finished. built $(shell ls -Aq $(OUTPUT_DIR_HEX) | wc -l) hex targets\n"
+	@echo "\nbuild finished. built $(shell ls -Aq $(HEX_DIR) | wc -l) hex targets\n"
 
-# create all obj targets using macro expansion
-$(foreach _t,$(TARGETS), \
+# Create all obj targets using macro expansion
+$(foreach _t,$(LAYOUTS), \
 	$(foreach _m, $(MCUS), \
-		$(foreach _f, $(FETON_DELAYS), \
-			$(foreach _p, $(filter-out $(subst L,96,$(_m)), $(PWM_FREQUENCIES)), \
+		$(foreach _f, $(DEADTIMES), \
+			$(foreach _p, $(filter-out $(subst L,96,$(_m)), $(PWM_FREQS)), \
 				$(eval $(call MAKE_OBJ,$(_t),$(_m),$(_f),$(_p)))))))
-
 
 $(OUTPUT_DIR)/%.OMF : $(OUTPUT_DIR)/%.OBJ
 	$(eval LOG := $(LOG_DIR)/$(basename $(notdir $@)).log)
 	@echo "LX51 : linking $< to $@"
-#	# Linking should produce exactly 1 warning
+#	Linking should produce exactly 1 warning
 	@$(LX51) "$<" TO "$@" "$(LX51_FLAGS)" >> $(LOG) 2>&1; test $$? -lt 2 && grep -q "1 WARNING" $(LOG) || (tail $(LOG); exit 1)
 
-$(OUTPUT_DIR_HEX)/%.hex : $(OUTPUT_DIR)/%.OMF
+$(HEX_DIR)/%.hex : $(OUTPUT_DIR)/%.OMF
 	$(eval LOG := $(LOG_DIR)/$(basename $(notdir $@)).log)
-	@mkdir -p $(OUTPUT_DIR_HEX)
+	@mkdir -p $(HEX_DIR)
 	@echo "OHX  : generating hex file $@"
 	@$(OX51) "$<" "HEXFILE ($@)" >> $(LOG) 2>&1 || (tail $(LOG); exit 1)
 
@@ -116,10 +117,10 @@ changelog:
 
 help:
 	@echo ""
-	@echo "usage examples:"
+	@echo "Usage examples"
 	@echo "================================================================"
-	@echo "make all                              # build all targets"
-	@echo "make TARGET=A MCU=H FETON_DELAY=5     # to build a single target"
+	@echo "make all                                 # Build all targets"
+	@echo "make LAYOUT=A MCU=H DEADTIME=5 PWM=24    # Build a single target"
 	@echo
 
 clean:
@@ -130,4 +131,4 @@ efm8load: single_target
 	$(EFM8_LOAD_BIN) -p $(EFM8_LOAD_PORT) -b $(EFM8_LOAD_BAUD) -w $(SINGLE_TARGET_HEX)
 
 
-.PHONY: all clean help efm8load
+.PHONY: single_target all changelog help clean efm8load
