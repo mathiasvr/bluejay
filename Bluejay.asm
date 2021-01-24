@@ -896,26 +896,23 @@ IF PWM_BITS_H < 3
 	rl	A						; Rotate pattern
 	mov	@Temp1, A					; Store pattern
 
-	jnb	ACC.0, dithering_done
+	jnb	ACC.0, t1_int_set_pwm		; Increment if bit is set
 
 	mov	A, Temp2
 	add	A, #1
 	mov	Temp2, A
+	jnz	t1_int_set_pwm
 IF PWM_BITS_H != 0
 	mov	A, Temp3
 	addc	A, #0
 	mov	Temp3, A
-	jnb	ACC.PWM_BITS_H, dithering_done
-	dec	Temp2
-	dec	Temp3
-ELSE
-	jnz	dithering_done
+	jnb	ACC.PWM_BITS_H, t1_int_set_pwm
+	dec	Temp3					; Reset on overflow
+ENDIF
 	dec	Temp2
 ENDIF
 
-dithering_done:
-ENDIF
-
+t1_int_set_pwm:
 ; Set pwm registers
 IF FETON_DELAY != 0
 	clr	C
