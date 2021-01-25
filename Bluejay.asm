@@ -125,6 +125,8 @@ DEFAULT_PGM_ENABLE_POWER_PROT		EQU	1	; 1=Enabled	0=Disabled
 DEFAULT_PGM_BRAKE_ON_STOP		EQU	0	; 1=Enabled	0=Disabled
 DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2bits per LED, 0=Off, 1=On
 
+DEFAULT_PGM_STARTUP_BOOST		EQU	1	; 0=Off, 1=15 (10bit), 2, 3 ... 12 ~ full throttle
+
 ;**** **** **** **** ****
 ; Temporary register definitions
 Temp1		EQU	R0
@@ -254,7 +256,7 @@ DShot_GCR_Start_Delay:		DS	1
 ; Indirect addressing data segments
 ISEG AT 080h						; The variables below must be in this sequence
 _Pgm_Gov_P_Gain:			DS	1	; Governor P gain
-_Pgm_Gov_I_Gain:			DS	1	; Governor I gain
+Pgm_Startup_Boost:			DS	1	; Governor I gain
 _Pgm_Gov_Mode:				DS	1	; Governor mode
 _Pgm_Low_Voltage_Lim:		DS	1	; Low voltage limit
 _Pgm_Motor_Gain:			DS	1	; Motor gain
@@ -317,7 +319,7 @@ Eep_FW_Sub_Revision:		DB	EEPROM_FW_SUB_REVISION		; EEPROM firmware sub revision 
 Eep_Layout_Revision:		DB	EEPROM_LAYOUT_REVISION		; EEPROM layout revision number
 
 _Eep_Pgm_Gov_P_Gain:		DB	0FFh
-_Eep_Pgm_Gov_I_Gain:		DB	0FFh
+Eep_Pgm_Startup_Boost:		DB	DEFAULT_PGM_STARTUP_BOOST
 _Eep_Pgm_Gov_Mode:			DB	0FFh
 _Eep_Pgm_Low_Voltage_Lim:	DB	0FFh
 _Eep_Pgm_Motor_Gain:		DB	0FFh
@@ -767,9 +769,15 @@ t1_int_not_bidir:
 	mov	A, Flags_Startup			; Boost pwm during direct start
 	jz	t1_int_startup_boosted
 
-	mov	Temp6, Startup_Stall_Cnt		; Add more boost when failing to start motor
+	mov	Temp6, Startup_Stall_Cnt
 
-	inc	Temp6
+	; Read startup boost setting
+	mov	Temp2, #Pgm_Startup_Boost
+	mov	A, @Temp2
+	add	A, Startup_Stall_Cnt		; Add more boost when failing to start motor
+	jz	t1_int_startup_boosted		; No startup or stall boost
+
+	mov	Temp6, A
 	mov	B, #31
 
 t1_int_stall_boost_loop:
@@ -3343,7 +3351,7 @@ write_tag:
 set_default_parameters:
 	mov	Temp1, #_Pgm_Gov_P_Gain
 	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_P_Gain
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_I_Gain
+	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_BOOST		; Pgm_Startup_Boost
 	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Mode
 	Push_Mem	Temp1, #0FFh						; _Pgm_Low_Voltage_Lim
 	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Gain
