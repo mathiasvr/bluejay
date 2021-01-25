@@ -84,6 +84,9 @@ T_	EQU	20		; RC X  MA X  MB CC MC X 	X  X  Cp Bp Ap Ac Bc Cc
 U_	EQU	21		; MA MC CC MB RC L0 L1 L2	X  Cc Bc Ac Cp Bp Ap X	Like M, but with 3 LEDs
 V_	EQU	22		; Cc X  RC X  MC CC MB MA	X  Ap Ac Bp X  X  Bc Cp
 W_	EQU	23		; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
+X_	EQU	24
+Y_	EQU	25
+Z_	EQU	26		; X  X  RC X  CC MA MC MB	X  X  Cp Cc Bp Bc Ap Ac
 
 ;**** **** **** **** ****
 ; Select the port mapping to use (or unselect all for use with external batch compile file)

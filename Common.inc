@@ -87,6 +87,12 @@ ELSEIF ESCNO == V_
 $include (targets/V.inc)				; Select pinout V
 ELSEIF ESCNO == W_
 $include (targets/W.inc)				; Select pinout W
+;ELSEIF ESCNO == X_
+;$include (targets/X.inc)			; Select pinout X
+;ELSEIF ESCNO == Y_
+;$include (targets/Y.inc)			; Select pinout Y
+ELSEIF ESCNO == Z_
+$include (targets/Z.inc)				; Select pinout Z
 ENDIF
 
 SIGNATURE_001			EQU	0E8h		; Device signature
