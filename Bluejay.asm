@@ -117,8 +117,8 @@ DEFAULT_PGM_STARTUP_PWR			EQU	9	; 1=0.031 2=0.047 3=0.063 4=0.094 5=0.125 6=0.18
 DEFAULT_PGM_COMM_TIMING			EQU	3	; 1=Low		2=MediumLow	3=Medium		4=MediumHigh	5=High
 DEFAULT_PGM_DEMAG_COMP			EQU	2	; 1=Disabled	2=Low		3=High
 DEFAULT_PGM_DIRECTION			EQU	1	; 1=Normal	2=Reversed	3=Bidir		4=Bidir rev
-DEFAULT_PGM_BEEP_STRENGTH		EQU	40	; Beep strength
-DEFAULT_PGM_BEACON_STRENGTH		EQU	80	; Beacon strength
+DEFAULT_PGM_BEEP_STRENGTH		EQU	40	; 0-255 (BLHeli_S is 1-255)
+DEFAULT_PGM_BEACON_STRENGTH		EQU	80	; 0-255
 DEFAULT_PGM_BEACON_DELAY			EQU	4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
 DEFAULT_PGM_ENABLE_TEMP_PROT		EQU	7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
 DEFAULT_PGM_ENABLE_POWER_PROT		EQU	1	; 1=Enabled	0=Disabled
@@ -1261,7 +1261,7 @@ beep_f2_short:
 
 beep:
 	mov	A, Beep_Strength
-	djnz	ACC, beep_start			; Start if beep strength is not 1
+	jnz	beep_start				; Start if beep strength is not 0
 	ret
 
 beep_start:
