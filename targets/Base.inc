@@ -69,17 +69,17 @@ ENDM
 
 ; Set comparator multiplexer to phase A
 Set_Comp_Phase_A MACRO
-	mov CMP_MX, #((Mux_A SHL 4) + Comp_Com)
+	mov CMP_MX, #((A_Mux SHL 4) + Comp_Com)
 ENDM
 
 ; Set comparator multiplexer to phase B
 Set_Comp_Phase_B MACRO
-	mov CMP_MX, #((Mux_B SHL 4) + Comp_Com)
+	mov CMP_MX, #((B_Mux SHL 4) + Comp_Com)
 ENDM
 
 ; Set comparator multiplexer to phase C
 Set_Comp_Phase_C MACRO
-	mov CMP_MX, #((Mux_C SHL 4) + Comp_Com)
+	mov CMP_MX, #((C_Mux SHL 4) + Comp_Com)
 ENDM
 
 
@@ -169,27 +169,27 @@ IF ALL_FETS_ON_PORT1 == 1
 Set_Pwm_A MACRO
 IF FETON_DELAY == 0
 	cON	P_AcomFET
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL ApwmFET)))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL A_pwm)))
 ELSE
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL ApwmFET) + (1 SHL AcomFET))))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL A_pwm) + (1 SHL A_com))))
 ENDIF
 ENDM
 
 Set_Pwm_B MACRO
 IF FETON_DELAY == 0
 	cON	P_BcomFET
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL BpwmFET)))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL B_pwm)))
 ELSE
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL BpwmFET) + (1 SHL BcomFET))))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL B_pwm) + (1 SHL B_com))))
 ENDIF
 ENDM
 
 Set_Pwm_C MACRO
 IF FETON_DELAY == 0
 	cON	P_CcomFET
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL CpwmFET)))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL C_pwm)))
 ELSE
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL CpwmFET) + (1 SHL CcomFET))))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL C_pwm) + (1 SHL C_com))))
 ENDIF
 ENDM
 

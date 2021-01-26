@@ -27,7 +27,7 @@
 ;
 ;**** **** **** **** ****
 
-TEMP_LIMIT			EQU 	49	; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
+TEMP_LIMIT			EQU	49	; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
 TEMP_LIMIT_STEP		EQU	9	; Temperature measurement ADC value increment for another 10degC
 
 
@@ -36,20 +36,20 @@ TEMP_LIMIT_STEP		EQU	9	; Temperature measurement ADC value increment for another
 ;*********************
 ; PORT 0 definitions *
 ;*********************
-AcomFET		EQU	7	;o
-ApwmFET		EQU	6	;o
-Mux_C		EQU	5	;i
-Mux_B		EQU	4	;i
-Mux_A		EQU	3	;i
+A_com		EQU	7	;o
+A_pwm		EQU	6	;o
+C_Mux		EQU	5	;i
+B_Mux		EQU	4	;i
+A_Mux		EQU	3	;i
 Comp_Com		EQU	2	;i
 ;			EQU	1	;i
 Rcp_In		EQU	0	;i
 
 P0_SKIP_ALL	EQU	0FFh
 
-P0_DIGITAL	EQU	NOT((1 SHL Mux_A)+(1 SHL Mux_B)+(1 SHL Mux_C)+(1 SHL Comp_Com))
-P0_INIT		EQU	NOT((1 SHL ApwmFET)+(1 SHL AcomFET))
-P0_PUSHPULL	EQU	(1 SHL ApwmFET)+(1 SHL AcomFET)
+P0_DIGITAL	EQU	NOT((1 SHL A_Mux) + (1 SHL B_Mux) + (1 SHL C_Mux) + (1 SHL Comp_Com))
+P0_INIT		EQU	NOT((1 SHL A_pwm) + (1 SHL A_com))
+P0_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL A_com)
 P0_SKIP		EQU	P0_SKIP_ALL
 
 PWM_ACTIVE_HIGH	EQU	1
@@ -90,19 +90,19 @@ ENDIF
 ;			EQU	6	;i
 ;			EQU	5	;i
 ;			EQU	4	;i
-CcomFET		EQU	3	;o
-CpwmFET		EQU	2	;o
-BcomFET		EQU	1	;o
-BpwmFET		EQU	0	;o
+C_com		EQU	3	;o
+C_pwm		EQU	2	;o
+B_com		EQU	1	;o
+B_pwm		EQU	0	;o
 
-P1_SKIP_ALL	EQU 	((1 SHL BpwmFET)+(1 SHL BcomFET)+(1 SHL CpwmFET)+(1 SHL CcomFET))
+P1_SKIP_ALL	EQU	(1 SHL B_pwm) + (1 SHL B_com) + (1 SHL C_pwm) + (1 SHL C_com)
 
-P_ApwmFET		EQU	P0.ApwmFET
-P_AcomFET		EQU	P0.AcomFET
-P_BpwmFET		EQU	P1.BpwmFET
-P_BcomFET		EQU	P1.BcomFET
-P_CpwmFET		EQU	P1.CpwmFET
-P_CcomFET		EQU	P1.CcomFET
+P_ApwmFET		EQU	P0.A_pwm
+P_AcomFET		EQU	P0.A_com
+P_BpwmFET		EQU	P1.B_pwm
+P_BcomFET		EQU	P1.B_com
+P_CpwmFET		EQU	P1.C_pwm
+P_CcomFET		EQU	P1.C_com
 
 ; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
 COMP_PORT		EQU	0
@@ -111,9 +111,9 @@ ALL_FETS_ON_PORT1	EQU	0
 
 $include (Base.inc)
 
-P1_DIGITAL	EQU	(1 SHL BpwmFET)+(1 SHL CpwmFET)+(1 SHL BcomFET)+(1 SHL CcomFET)
-P1_INIT		EQU 	00h
-P1_PUSHPULL	EQU	(1 SHL BpwmFET)+(1 SHL CpwmFET)+(1 SHL BcomFET)+(1 SHL CcomFET)
+P1_DIGITAL	EQU	(1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL B_com) + (1 SHL C_com)
+P1_INIT		EQU	00h
+P1_PUSHPULL	EQU	(1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL B_com) + (1 SHL C_com)
 P1_SKIP		EQU	P1_SKIP_ALL
 
 
@@ -121,10 +121,10 @@ P1_SKIP		EQU	P1_SKIP_ALL
 Set_Pwm_A MACRO
 IF FETON_DELAY == 0
 	cON	P_AcomFET
-	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT (1 SHL ApwmFET)))
+	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT (1 SHL A_pwm)))
 	mov	P1SKIP, #P1_SKIP_ALL
 ELSE
-	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT ((1 SHL ApwmFET)+(1 SHL AcomFET))))
+	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT ((1 SHL A_pwm) + (1 SHL A_com))))
 	mov	P1SKIP, #P1_SKIP_ALL
 ENDIF
 ENDM
@@ -132,20 +132,20 @@ Set_Pwm_B MACRO
 IF FETON_DELAY == 0
 	cON	P_BcomFET
 	mov	P0SKIP, #P0_SKIP_ALL
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL BpwmFET)))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL B_pwm)))
 ELSE
 	mov	P0SKIP, #P0_SKIP_ALL
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL BpwmFET)+(1 SHL BcomFET))))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL B_pwm) + (1 SHL B_com))))
 ENDIF
 ENDM
 Set_Pwm_C MACRO
 IF FETON_DELAY == 0
 	cON	P_CcomFET
 	mov	P0SKIP, #P0_SKIP_ALL
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL CpwmFET)))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL C_pwm)))
 ELSE
 	mov	P0SKIP, #P0_SKIP_ALL
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL CpwmFET)+(1 SHL CcomFET))))
+	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL C_pwm) + (1 SHL C_com))))
 ENDIF
 ENDM
 Set_Pwms_Off MACRO

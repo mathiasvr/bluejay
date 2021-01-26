@@ -27,7 +27,7 @@
 ;
 ;**** **** **** **** ****
 
-TEMP_LIMIT			EQU 	49	; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
+TEMP_LIMIT			EQU	49	; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
 TEMP_LIMIT_STEP		EQU	9	; Temperature measurement ADC value increment for another 10degC
 
 
@@ -40,14 +40,14 @@ LED_1		EQU	7	;o
 LED_0		EQU	6	;o
 Rcp_In		EQU	5	;i
 ;			EQU	4	;i
-Mux_C		EQU	3	;i
-Mux_B		EQU	2	;i
-Mux_A		EQU	1	;i
+C_Mux		EQU	3	;i
+B_Mux		EQU	2	;i
+A_Mux		EQU	1	;i
 Comp_Com		EQU	0	;i
 
-P0_DIGITAL	EQU	NOT((1 SHL Mux_A)+(1 SHL Mux_B)+(1 SHL Mux_C)+(1 SHL Comp_Com))
-P0_INIT		EQU	NOT((1 SHL LED_0)+(1 SHL LED_1))
-P0_PUSHPULL	EQU	(1 SHL LED_0)+(1 SHL LED_1)
+P0_DIGITAL	EQU	NOT((1 SHL A_Mux) + (1 SHL B_Mux) + (1 SHL C_Mux) + (1 SHL Comp_Com))
+P0_INIT		EQU	NOT((1 SHL LED_0) + (1 SHL LED_1))
+P0_PUSHPULL	EQU	(1 SHL LED_0) + (1 SHL LED_1)
 P0_SKIP		EQU	0FFh
 
 PWM_ACTIVE_HIGH	EQU	1
@@ -86,21 +86,21 @@ ENDIF
 ;*********************
 ;			EQU	7	;i
 LED_2		EQU	6	;o
-CcomFET		EQU	5	;o
-CpwmFET		EQU	4	;o
-BcomFET		EQU	3	;o
-BpwmFET		EQU	2	;o
-AcomFET		EQU	1	;o
-ApwmFET		EQU	0	;o
+C_com		EQU	5	;o
+C_pwm		EQU	4	;o
+B_com		EQU	3	;o
+B_pwm		EQU	2	;o
+A_com		EQU	1	;o
+A_pwm		EQU	0	;o
 
-P1_SKIP_ALL	EQU 	((1 SHL ApwmFET)+(1 SHL AcomFET)+(1 SHL BpwmFET)+(1 SHL BcomFET)+(1 SHL CpwmFET)+(1 SHL CcomFET)+(1 SHL LED_2))
+P1_SKIP_ALL	EQU	(1 SHL A_pwm) + (1 SHL A_com) + (1 SHL B_pwm) + (1 SHL B_com) + (1 SHL C_pwm) + (1 SHL C_com) + (1 SHL LED_2)
 
-P_ApwmFET		EQU	P1.ApwmFET
-P_AcomFET		EQU	P1.AcomFET
-P_BpwmFET		EQU	P1.BpwmFET
-P_BcomFET		EQU	P1.BcomFET
-P_CpwmFET		EQU	P1.CpwmFET
-P_CcomFET		EQU	P1.CcomFET
+P_ApwmFET		EQU	P1.A_pwm
+P_AcomFET		EQU	P1.A_com
+P_BpwmFET		EQU	P1.B_pwm
+P_BcomFET		EQU	P1.B_com
+P_CpwmFET		EQU	P1.C_pwm
+P_CcomFET		EQU	P1.C_com
 
 ; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
 COMP_PORT		EQU	0
@@ -109,9 +109,9 @@ ALL_FETS_ON_PORT1	EQU	1
 
 $include (Base.inc)
 
-P1_DIGITAL	EQU	(1 SHL ApwmFET)+(1 SHL BpwmFET)+(1 SHL CpwmFET)+(1 SHL AcomFET)+(1 SHL BcomFET)+(1 SHL CcomFET)+(1 SHL LED_2)
-P1_INIT		EQU 	00h
-P1_PUSHPULL	EQU	(1 SHL ApwmFET)+(1 SHL BpwmFET)+(1 SHL CpwmFET)+(1 SHL AcomFET)+(1 SHL BcomFET)+(1 SHL CcomFET)+(1 SHL LED_2)
+P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com) + (1 SHL LED_2)
+P1_INIT		EQU	00h
+P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com) + (1 SHL LED_2)
 P1_SKIP		EQU	P1_SKIP_ALL
 
 
