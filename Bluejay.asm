@@ -126,6 +126,7 @@ DEFAULT_PGM_BRAKE_ON_STOP		EQU	0	; 1=Enabled	0=Disabled
 DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2bits per LED, 0=Off, 1=On
 
 DEFAULT_PGM_STARTUP_BOOST		EQU	1	; 0=Off, 1=15 (10bit), 2, 3 ... 12 ~ full throttle
+DEFAULT_PGM_STARTUP_BEEP			EQU	1	; 0=Short beep, 1=Melody
 
 ;**** **** **** **** ****
 ; Temporary register definitions
@@ -257,7 +258,7 @@ DShot_GCR_Start_Delay:		DS	1
 ISEG AT 080h						; The variables below must be in this sequence
 _Pgm_Gov_P_Gain:			DS	1	; Governor P gain
 Pgm_Startup_Boost:			DS	1	; Governor I gain
-_Pgm_Gov_Mode:				DS	1	; Governor mode
+Pgm_Startup_Beep:			DS	1	; Governor mode
 _Pgm_Low_Voltage_Lim:		DS	1	; Low voltage limit
 _Pgm_Motor_Gain:			DS	1	; Motor gain
 _Pgm_Motor_Idle:			DS	1	; Motor idle speed
@@ -320,7 +321,7 @@ Eep_Layout_Revision:		DB	EEPROM_LAYOUT_REVISION		; EEPROM layout revision number
 
 _Eep_Pgm_Gov_P_Gain:		DB	0FFh
 Eep_Pgm_Startup_Boost:		DB	DEFAULT_PGM_STARTUP_BOOST
-_Eep_Pgm_Gov_Mode:			DB	0FFh
+Eep_Pgm_Startup_Beep:		DB	DEFAULT_PGM_STARTUP_BEEP
 _Eep_Pgm_Low_Voltage_Lim:	DB	0FFh
 _Eep_Pgm_Motor_Gain:		DB	0FFh
 _Eep_Pgm_Motor_Idle:		DB	0FFh
@@ -3352,7 +3353,7 @@ set_default_parameters:
 	mov	Temp1, #_Pgm_Gov_P_Gain
 	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_P_Gain
 	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_BOOST		; Pgm_Startup_Boost
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Mode
+	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_BEEP		; Pgm_Startup_Beep
 	Push_Mem	Temp1, #0FFh						; _Pgm_Low_Voltage_Lim
 	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Gain
 	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Idle
@@ -3539,10 +3540,20 @@ pgm_start:
 	call	read_all_eeprom_parameters	; Read all programmed parameters
 	mov	Temp1, #Pgm_Beep_Strength	; Read programmed beep strength
 	mov	Beep_Strength, @Temp1		; Set beep strength
+
 	; Initializing beeps
 	clr	IE_EA					; Disable interrupts explicitly
-	call	wait100ms
-	call	beep_f1
+	call	wait100ms					; Wait a bit to avoid audible resets if not properly powered
+
+	mov	Temp1, #Pgm_Startup_Beep		; Read programmed startup beep setting
+	mov	A, @Temp1
+	jnz	startup_beep_melody
+	call	beep_f2_short				; Short startup beep
+	call	wait250ms
+	sjmp	startup_beep_done
+
+startup_beep_melody:
+	call	beep_f1					; Normal startup melody
 	call	wait5ms
 	call	beep_f2
 	call	wait5ms
@@ -3554,6 +3565,7 @@ pgm_start:
 	call	beep_f4
 	call	beep_f4
 
+startup_beep_done:
 	call	led_control				; Set LEDs to programmed values
 
 	call	wait250ms					; Wait for flight controller to get ready
