@@ -127,6 +127,7 @@ DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2bits per LED, 0=Off, 1=
 
 DEFAULT_PGM_STARTUP_BOOST		EQU	1	; 0=Off, 1=15 (10bit), 2, 3 ... 12 ~ full throttle
 DEFAULT_PGM_STARTUP_BEEP			EQU	1	; 0=Short beep, 1=Melody
+DEFAULT_PGM_DITHERING			EQU	1	; 0=Disabled, 1=Enabled
 
 ;**** **** **** **** ****
 ; Temporary register definitions
@@ -173,6 +174,7 @@ Flag_Rcp_DShot_Inverted		BIT	Flags2.7			; DShot RC pulse input is inverted (and 
 
 Flags3:					DS	1				; State flags. NOT reset upon init_start
 Flag_Telemetry_Pending		BIT	Flags3.0			; DShot telemetry data packet is ready to be sent
+Flag_Dithering				BIT	Flags3.1			; Dithering enabled
 
 Tlm_Data_L:				DS	1				; DShot telemetry data (lo byte)
 Tlm_Data_H:				DS	1				; DShot telemetry data (hi byte)
@@ -259,7 +261,7 @@ ISEG AT 080h						; The variables below must be in this sequence
 _Pgm_Gov_P_Gain:			DS	1	; Governor P gain
 Pgm_Startup_Boost:			DS	1	; Governor I gain
 Pgm_Startup_Beep:			DS	1	; Governor mode
-_Pgm_Low_Voltage_Lim:		DS	1	; Low voltage limit
+Pgm_Dithering:				DS	1	; Low voltage limit
 _Pgm_Motor_Gain:			DS	1	; Motor gain
 _Pgm_Motor_Idle:			DS	1	; Motor idle speed
 Pgm_Startup_Pwr:			DS	1	; Startup power
@@ -322,7 +324,7 @@ Eep_Layout_Revision:		DB	EEPROM_LAYOUT_REVISION		; EEPROM layout revision number
 _Eep_Pgm_Gov_P_Gain:		DB	0FFh
 Eep_Pgm_Startup_Boost:		DB	DEFAULT_PGM_STARTUP_BOOST
 Eep_Pgm_Startup_Beep:		DB	DEFAULT_PGM_STARTUP_BEEP
-_Eep_Pgm_Low_Voltage_Lim:	DB	0FFh
+Eep_Pgm_Dithering:			DB	DEFAULT_PGM_DITHERING
 _Eep_Pgm_Motor_Gain:		DB	0FFh
 _Eep_Pgm_Motor_Idle:		DB	0FFh
 Eep_Pgm_Startup_Pwr:		DB	DEFAULT_PGM_STARTUP_PWR		; EEPROM copy of programmed startup power
@@ -895,6 +897,8 @@ ENDIF
 
 ; 11-bit effective dithering of 8/9/10-bit pwm
 IF PWM_BITS_H < 3
+	jnb	Flag_Dithering, t1_int_set_pwm
+
 	mov	A, Temp4					; 11-bit low byte
 	cpl	A
 	anl	A, #((1 SHL (3 - PWM_BITS_H)) - 1); Get index into dithering pattern table
@@ -3354,7 +3358,7 @@ set_default_parameters:
 	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_P_Gain
 	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_BOOST		; Pgm_Startup_Boost
 	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_BEEP		; Pgm_Startup_Beep
-	Push_Mem	Temp1, #0FFh						; _Pgm_Low_Voltage_Lim
+	Push_Mem	Temp1, #DEFAULT_PGM_DITHERING			; Pgm_Dithering
 	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Gain
 	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Idle
 	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_PWR		; Pgm_Startup_Pwr
@@ -3464,8 +3468,14 @@ decode_temp_step:
 decode_temp_done:
 	mov	Temp_Prot_Limit, A
 
-	; Initialize pwm dithering bit patterns
-IF PWM_BITS_H == 2
+	mov	Temp1, #Pgm_Dithering		; Read programmed dithering setting
+	mov	A, @Temp1
+	clr	Flag_Dithering
+	jz	decode_dithering
+	setb Flag_Dithering
+
+decode_dithering:
+IF PWM_BITS_H == 2					; Initialize pwm dithering bit patterns
 	mov	Temp1, #Dithering_Patterns
 	Push_Mem	Temp1, #00h
 	Push_Mem	Temp1, #55h
