@@ -92,7 +92,7 @@ A_pwm		EQU	2	;o
 B_pwm		EQU	1	;o
 C_pwm		EQU	0	;o
 
-P1_SKIP_ALL	EQU	(1 SHL A_pwm) + (1 SHL A_com) + (1 SHL B_pwm) + (1 SHL B_com) + (1 SHL C_pwm) + (1 SHL C_com)
+
 
 P_ApwmFET		EQU	P1.A_pwm
 P_AcomFET		EQU	P1.A_com
@@ -104,44 +104,14 @@ P_CcomFET		EQU	P1.C_com
 ; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
 COMP_PORT		EQU	0
 
-ALL_FETS_ON_PORT1	EQU	0 ; yes if fixing discrepancy
+ALL_FETS_ON_PORT1	EQU	1
 
 $include (Base.inc)
 
 P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
 P1_INIT		EQU	00h
 P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
-P1_SKIP		EQU	P1_SKIP_ALL
-
-
-
-Set_Pwm_A MACRO
-IF FETON_DELAY == 0
-	cON	P_AcomFET
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL A_pwm)))
-ELSE
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL A_pwm) + (1 SHL A_com))))
-ENDIF
-ENDM
-Set_Pwm_B MACRO
-IF FETON_DELAY == 0
-	cON	P_BcomFET
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL B_pwm)))
-ELSE
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL B_pwm) + (1 SHL B_com))))
-ENDIF
-ENDM
-Set_Pwm_C MACRO
-IF FETON_DELAY == 0
-	cON	P_CcomFET
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL C_pwm)))
-ELSE
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL C_pwm) + (1 SHL C_com))))
-ENDIF
-ENDM
-Set_Pwms_Off MACRO
-	mov	P1SKIP, #(P1_SKIP_ALL + (1 SHL 6)) ; hack: extra skip?
-ENDM
+P1_SKIP		EQU	0FFh
 
 
 

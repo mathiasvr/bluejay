@@ -98,7 +98,7 @@ B_com		EQU	2	;o
 C_pwm		EQU	1	;o
 C_com		EQU	0	;o
 
-P1_SKIP_ALL	EQU	(1 SHL A_pwm) + (1 SHL A_com) + (1 SHL B_pwm) + (1 SHL B_com) + (1 SHL C_pwm) + (1 SHL C_com)
+
 
 P_ApwmFET		EQU	P1.A_pwm
 P_AcomFET		EQU	P1.A_com
@@ -117,7 +117,7 @@ $include (Base.inc)
 P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
 P1_INIT		EQU	00h
 P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
-P1_SKIP		EQU	P1_SKIP_ALL
+P1_SKIP		EQU	0FFh
 
 
 

@@ -169,32 +169,32 @@ IF ALL_FETS_ON_PORT1 == 1
 Set_Pwm_A MACRO
 IF FETON_DELAY == 0
 	cON	P_AcomFET
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL A_pwm)))
+	mov	P1SKIP, #(NOT (1 SHL A_pwm))
 ELSE
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL A_pwm) + (1 SHL A_com))))
+	mov	P1SKIP, #(NOT ((1 SHL A_pwm) + (1 SHL A_com)))
 ENDIF
 ENDM
 
 Set_Pwm_B MACRO
 IF FETON_DELAY == 0
 	cON	P_BcomFET
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL B_pwm)))
+	mov	P1SKIP, #(NOT (1 SHL B_pwm))
 ELSE
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL B_pwm) + (1 SHL B_com))))
+	mov	P1SKIP, #(NOT ((1 SHL B_pwm) + (1 SHL B_com)))
 ENDIF
 ENDM
 
 Set_Pwm_C MACRO
 IF FETON_DELAY == 0
 	cON	P_CcomFET
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL C_pwm)))
+	mov	P1SKIP, #(NOT (1 SHL C_pwm))
 ELSE
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT ((1 SHL C_pwm) + (1 SHL C_com))))
+	mov	P1SKIP, #(NOT ((1 SHL C_pwm) + (1 SHL C_com)))
 ENDIF
 ENDM
 
 Set_Pwms_Off MACRO
-	mov	P1SKIP, #P1_SKIP_ALL
+	mov	P1SKIP, #0FFh
 ENDM
 
 ENDIF

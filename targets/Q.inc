@@ -45,12 +45,12 @@ LED_0		EQU	3	;i
 Rcp_In		EQU	1	;i
 ;			EQU	0	;i
 
-P0_SKIP_ALL	EQU	0FFh
+
 
 P0_DIGITAL	EQU	0FFh
 P0_INIT		EQU	(1 SHL Rcp_In)
 P0_PUSHPULL	EQU	(1 SHL LED_0) + (1 SHL LED_1) + (1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)
-P0_SKIP		EQU	P0_SKIP_ALL
+P0_SKIP		EQU	0FFh
 
 PWM_ACTIVE_HIGH	EQU	1
 COMPWM_ACTIVE_HIGH	EQU	1
@@ -95,7 +95,7 @@ C_com		EQU	2	;o
 B_com		EQU	1	;o
 A_com		EQU	0	;o
 
-P1_SKIP_ALL	EQU	(1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
+
 
 P_ApwmFET		EQU	P0.A_pwm
 P_AcomFET		EQU	P1.A_com
@@ -114,43 +114,43 @@ $include (Base.inc)
 P1_DIGITAL	EQU	(1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
 P1_INIT		EQU	00h
 P1_PUSHPULL	EQU	(1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
-P1_SKIP		EQU	P1_SKIP_ALL
+P1_SKIP		EQU	0FFh
 
 
 
 Set_Pwm_A MACRO
 IF FETON_DELAY == 0
 	cON	P_AcomFET
-	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT (1 SHL A_pwm)))
-	mov	P1SKIP, #P1_SKIP_ALL
+	mov	P0SKIP, #(NOT (1 SHL A_pwm))
+	mov	P1SKIP, #0FFh
 ELSE
-	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT (1 SHL A_pwm)))
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL A_com)))
+	mov	P0SKIP, #(NOT (1 SHL A_pwm))
+	mov	P1SKIP, #(NOT (1 SHL A_com))
 ENDIF
 ENDM
 Set_Pwm_B MACRO
 IF FETON_DELAY == 0
 	cON	P_BcomFET
-	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT (1 SHL B_pwm)))
-	mov	P1SKIP, #P1_SKIP_ALL
+	mov	P0SKIP, #(NOT (1 SHL B_pwm))
+	mov	P1SKIP, #0FFh
 ELSE
-	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT (1 SHL B_pwm)))
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL B_com)))
+	mov	P0SKIP, #(NOT (1 SHL B_pwm))
+	mov	P1SKIP, #(NOT (1 SHL B_com))
 ENDIF
 ENDM
 Set_Pwm_C MACRO
 IF FETON_DELAY == 0
 	cON	P_CcomFET
-	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT (1 SHL C_pwm)))
-	mov	P1SKIP, #P1_SKIP_ALL
+	mov	P0SKIP, #(NOT (1 SHL C_pwm))
+	mov	P1SKIP, #0FFh
 ELSE
-	mov	P0SKIP, #(P0_SKIP_ALL AND (NOT (1 SHL C_pwm)))
-	mov	P1SKIP, #(P1_SKIP_ALL AND (NOT (1 SHL C_com)))
+	mov	P0SKIP, #(NOT (1 SHL C_pwm))
+	mov	P1SKIP, #(NOT (1 SHL C_com))
 ENDIF
 ENDM
 Set_Pwms_Off MACRO
-	mov	P0SKIP, #P0_SKIP_ALL
-	mov	P1SKIP, #P1_SKIP_ALL
+	mov	P0SKIP, #0FFh
+	mov	P1SKIP, #0FFh
 ENDM
 
 
