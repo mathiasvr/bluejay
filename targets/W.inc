@@ -192,7 +192,9 @@ ENDM
 ;*********************
 DebugPin		EQU	0	;o
 
+P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)
+P2_SKIP		EQU	0FFh
 
 
 ;**********************

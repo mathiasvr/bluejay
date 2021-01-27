@@ -3512,6 +3512,11 @@ pgm_start:
 	mov	P1, #P1_INIT
 	mov	P1SKIP, #P1_SKIP
 	mov	P2MDOUT, #P2_PUSHPULL
+IF MCU_48MHZ == 1
+	; Not available on BB1
+	mov	P2MDIN, #P2_DIGITAL
+	mov	P2SKIP, #P2_SKIP
+ENDIF
 	Initialize_Xbar				; Initialize the XBAR and related functionality
 	call	switch_power_off			; Switch power off again, after initializing ports
 
