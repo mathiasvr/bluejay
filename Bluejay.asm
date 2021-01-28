@@ -315,7 +315,7 @@ Temp_Storage:				DS	48	; Temporary storage
 CSEG AT 1A00h
 EEPROM_FW_MAIN_REVISION		EQU	0	; Main revision of the firmware
 EEPROM_FW_SUB_REVISION		EQU	9	; Sub revision of the firmware
-EEPROM_LAYOUT_REVISION		EQU	0	; Revision of the EEPROM layout
+EEPROM_LAYOUT_REVISION		EQU	200	; Revision of the EEPROM layout
 
 Eep_FW_Main_Revision:		DB	EEPROM_FW_MAIN_REVISION		; EEPROM firmware main revision number
 Eep_FW_Sub_Revision:		DB	EEPROM_FW_SUB_REVISION		; EEPROM firmware sub revision number
