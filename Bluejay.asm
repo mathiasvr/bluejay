@@ -117,15 +117,15 @@ DEFAULT_PGM_STARTUP_PWR			EQU	9	; 1=0.031 2=0.047 3=0.063 4=0.094 5=0.125 6=0.18
 DEFAULT_PGM_COMM_TIMING			EQU	3	; 1=Low		2=MediumLow	3=Medium		4=MediumHigh	5=High
 DEFAULT_PGM_DEMAG_COMP			EQU	2	; 1=Disabled	2=Low		3=High
 DEFAULT_PGM_DIRECTION			EQU	1	; 1=Normal	2=Reversed	3=Bidir		4=Bidir rev
-DEFAULT_PGM_BEEP_STRENGTH		EQU	40	; 0-255 (BLHeli_S is 1-255)
-DEFAULT_PGM_BEACON_STRENGTH		EQU	80	; 0-255
+DEFAULT_PGM_BEEP_STRENGTH		EQU	40	; 0..255 (BLHeli_S is 1..255)
+DEFAULT_PGM_BEACON_STRENGTH		EQU	80	; 0..255
 DEFAULT_PGM_BEACON_DELAY			EQU	4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
 DEFAULT_PGM_ENABLE_TEMP_PROT		EQU	7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
 DEFAULT_PGM_ENABLE_POWER_PROT		EQU	1	; 1=Enabled	0=Disabled
 DEFAULT_PGM_BRAKE_ON_STOP		EQU	0	; 1=Enabled	0=Disabled
 DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2bits per LED, 0=Off, 1=On
 
-DEFAULT_PGM_STARTUP_BOOST		EQU	1	; 0=Off, 1=15 (10bit), 2, 3 ... 12 ~ full throttle
+DEFAULT_PGM_STARTUP_BOOST		EQU	51	; 0..255 (1000..1125 Throttle): value * (1000 / 2047) + 1000
 DEFAULT_PGM_STARTUP_BEEP			EQU	1	; 0=Short beep, 1=Melody
 DEFAULT_PGM_DITHERING			EQU	1	; 0=Disabled, 1=Enabled
 
@@ -772,31 +772,30 @@ t1_int_not_bidir:
 	mov	A, Flags_Startup			; Boost pwm during direct start
 	jz	t1_int_startup_boosted
 
-	mov	Temp6, Startup_Stall_Cnt
+	mov	A, Temp5
+	jnz	t1_int_stall_boost			; Already more power than minimum at startup
 
-	; Read startup boost setting
-	mov	Temp2, #Pgm_Startup_Boost
-	mov	A, @Temp2
-	add	A, Startup_Stall_Cnt		; Add more boost when failing to start motor
-	jz	t1_int_startup_boosted		; No startup or stall boost
+	mov	Temp2, #Pgm_Startup_Boost	; Read startup boost setting (power at startup)
+	mov	B, @Temp2
 
-	mov	Temp6, A
-	mov	B, #31
-
-t1_int_stall_boost_loop:
+	clr	C						; Set power to at least be minimum startup power
 	mov	A, Temp4
-	add	A, B
+	subb	A, B
+	jnc	t1_int_stall_boost
+	mov	Temp4, B
+
+t1_int_stall_boost:
+	mov	A, Startup_Stall_Cnt		; Check stall count
+	jz	t1_int_startup_boosted
+	mov	B, #40					; Note: Stall count should be less than 6
+	mul	AB
+
+	add	A, Temp4					; Add more power when failing to start motor (stalling)
 	mov	Temp4, A
 	mov	A, Temp5
 	addc	A, #0
 	mov	Temp5, A
-
-	rla	B						; Nonlinear increase
-
-	djnz	Temp6, t1_int_stall_boost_loop
-
-	mov	A, Temp5					; Limit to 11-bit maximum
-	jnb	ACC.3, ($+7)
+	jnb	ACC.3, ($+7)				; Limit to 11-bit maximum
 	mov	Temp4, #0FFh
 	mov	Temp5, #07h
 
@@ -853,7 +852,7 @@ ELSE
 ENDIF
 
 t1_int_scale_pwm_resolution:
-; Scale pwm resolution and invert
+; Scale pwm resolution and invert (duty cycle is defined inversely)
 IF PWM_BITS_H == 3					; 11-bit pwm
 	mov	A, Temp5
 	cpl	A
