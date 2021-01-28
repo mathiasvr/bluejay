@@ -114,7 +114,7 @@ $include (Common.inc)					; Include common source code for EFM8BBx based ESCs
 ;**** **** **** **** ****
 ; Programming defaults
 DEFAULT_PGM_STARTUP_PWR			EQU	9	; 1=0.031 2=0.047 3=0.063 4=0.094 5=0.125 6=0.188 7=0.25 8=0.38 9=0.50 10=0.75 11=1.00 12=1.25 13=1.50
-DEFAULT_PGM_COMM_TIMING			EQU	3	; 1=Low		2=MediumLow	3=Medium		4=MediumHigh	5=High
+DEFAULT_PGM_COMM_TIMING			EQU	4	; 1=Low		2=MediumLow	3=Medium		4=MediumHigh	5=High
 DEFAULT_PGM_DEMAG_COMP			EQU	2	; 1=Disabled	2=Low		3=High
 DEFAULT_PGM_DIRECTION			EQU	1	; 1=Normal	2=Reversed	3=Bidir		4=Bidir rev
 DEFAULT_PGM_BEEP_STRENGTH		EQU	40	; 0..255 (BLHeli_S is 1..255)
