@@ -3557,7 +3557,11 @@ pgm_start:
 	mov	Temp1, #Pgm_Startup_Beep		; Read programmed startup beep setting
 	mov	A, @Temp1
 	jnz	startup_beep_melody
+
 	call	beep_f2_short				; Short startup beep
+	call	wait250ms
+	call	wait250ms
+	call	wait250ms
 	call	wait250ms
 	sjmp	startup_beep_done
 
