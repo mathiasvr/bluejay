@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9](https://github.com/mathiasvr/bluejay/compare/v0.8...v0.9) (2021-01-29)
+
+### ⚠ BREAKING CHANGES
+
+* Change eeprom layout version for beta ([3d30c6c](https://github.com/mathiasvr/bluejay/commit/3d30c6cb590188f9353a2a08b4c336f2acd72c13))
+
+### Features
+
+* Add dithering setting ([4769b19](https://github.com/mathiasvr/bluejay/commit/4769b19696828483365e62d98f4ca3b9fab86ac2))
+* Add startup beep setting ([09ff60c](https://github.com/mathiasvr/bluejay/commit/09ff60cbc605a8d3d0ee3e3f68023421184b6e3d))
+* Default to medium high timing ([c1b6d3d](https://github.com/mathiasvr/bluejay/commit/c1b6d3dfcb173986463c669763c023980193b698))
+* Increase dithering to 11-bit ([054d1d9](https://github.com/mathiasvr/bluejay/commit/054d1d9a2bc7fe783d7bf606d0ae20f7df57185a))
+* Startup boost setting ([03544f9](https://github.com/mathiasvr/bluejay/commit/03544f91174244a842f241113984197d49affb64))
+
+### Bug Fixes
+
+* Update telemetry timings ([98ae2d5](https://github.com/mathiasvr/bluejay/commit/98ae2d5706f6908b74358bc19a08176ba097b567))
+
+
 ## [0.8](https://github.com/mathiasvr/bluejay/compare/v0.7...v0.8) (2021-01-21)
 
 ### Features
