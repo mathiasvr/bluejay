@@ -78,7 +78,7 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ : $(ASM_SRC) $(ASM_INC)
 		"DEFINE(FETON_DELAY=$(_DEADTIME)) "\
 		"DEFINE(PWM_FREQ=$(_PWM_FREQ)) "\
 		"OBJECT($$@) "\
-		"$(AX51_FLAGS)" > $(_LOG) 2>&1 || (grep "\*\*\* ERROR" Bluejay.LST; mv ./Bluejay.LST $(OUTPUT_DIR)/; exit 1)
+		"$(AX51_FLAGS)" > $(_LOG) 2>&1 || (grep -B 3 -E "\*\*\* (ERROR|WARNING)" Bluejay.LST; mv ./Bluejay.LST $(OUTPUT_DIR)/; exit 1)
 	@mv ./Bluejay.LST $(OUTPUT_DIR)/
 
 endef
