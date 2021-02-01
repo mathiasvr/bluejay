@@ -18,7 +18,6 @@ OUTPUT_DIR	?= build
 HEX_DIR		?= $(OUTPUT_DIR)/hex
 LOG_DIR		?= $(OUTPUT_DIR)/logs
 
-
 # Path to the keil binaries
 KEIL_PATH	?= ~/Downloads/keil_8051/9.60/BIN
 
@@ -33,8 +32,8 @@ LX51		= $(WINE_BIN) $(LX51_BIN)
 OX51		= $(WINE_BIN) $(OX51_BIN)
 
 # Set up flags
-AX51_FLAGS	= DEBUG NOMOD51
-#AX51_FLAGS = NOMOD51 NOLIST
+#AX51_FLAGS	= DEBUG NOMOD51
+AX51_FLAGS	= NOMOD51 NOLIST NOSYMBOLS
 LX51_FLAGS	=
 
 # Source files
@@ -55,9 +54,8 @@ EFM8_LOAD_BAUD	?= 57600
 # Delete object files on error and warnings
 .DELETE_ON_ERROR:
 
-# Make sure the list of obj files is expanded twice
-.SECONDEXPANSION:
-OBJS =
+# AX51 mixes up input defines when run in parallel. Maybe because you cannot change the TMP directory per invocation.
+.NOTPARALLEL:
 
 define MAKE_OBJ
 OBJS += $(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ
@@ -69,6 +67,7 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ : $(ASM_SRC) $(ASM_INC)
 	$(eval _DEADTIME	:= $(3))
 	$(eval _PWM_FREQ	:= $(subst 24,0,$(subst 48,1,$(subst 96,2,$(4)))))
 	$(eval _LOG			:= $(LOG_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).log)
+	$$(eval _LST		:= $$(patsubst %.OBJ,%.LST,$$@))
 	@mkdir -p $(OUTPUT_DIR)
 	@mkdir -p $(LOG_DIR)
 	@echo "AX51 : $$@"
@@ -78,19 +77,13 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ : $(ASM_SRC) $(ASM_INC)
 		"DEFINE(FETON_DELAY=$(_DEADTIME)) "\
 		"DEFINE(PWM_FREQ=$(_PWM_FREQ)) "\
 		"OBJECT($$@) "\
-		"$(AX51_FLAGS)" > $(_LOG) 2>&1 || (grep -B 3 -E "\*\*\* (ERROR|WARNING)" Bluejay.LST; mv ./Bluejay.LST $(OUTPUT_DIR)/; exit 1)
-	@mv ./Bluejay.LST $(OUTPUT_DIR)/
-
+		"PRINT($$(_LST)) "\
+		"$(AX51_FLAGS)" > $(_LOG) 2>&1 || (grep -B 3 -E "\*\*\* (ERROR|WARNING)" $$(_LST); exit 1)
 endef
 
 SINGLE_TARGET_HEX = $(HEX_DIR)/$(LAYOUT)_$(MCU)_$(DEADTIME)_$(PWM)_$(VERSION).hex
 
 single_target : $(SINGLE_TARGET_HEX)
-
-HEX_TARGETS = $(OBJS:%.OBJ=$(HEX_DIR)/%.hex)
-
-all : $$(HEX_TARGETS)
-	@echo "\nbuild finished. built $(shell ls -Aq $(HEX_DIR) | wc -l) hex targets\n"
 
 # Create all obj targets using macro expansion
 $(foreach _t,$(LAYOUTS), \
@@ -98,6 +91,11 @@ $(foreach _t,$(LAYOUTS), \
 		$(foreach _f, $(DEADTIMES), \
 			$(foreach _p, $(filter-out $(subst L,96,$(_m)), $(PWM_FREQS)), \
 				$(eval $(call MAKE_OBJ,$(_t),$(_m),$(_f),$(_p)))))))
+
+HEX_TARGETS = $(OBJS:%.OBJ=$(HEX_DIR)/%.hex)
+
+all : $(HEX_TARGETS)
+	@echo "\nbuild finished. built $(shell ls -Aq $(HEX_DIR) | wc -l) hex targets\n"
 
 $(OUTPUT_DIR)/%.OMF : $(OUTPUT_DIR)/%.OBJ
 	$(eval LOG := $(LOG_DIR)/$(basename $(notdir $@)).log)
