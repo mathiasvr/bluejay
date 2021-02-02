@@ -107,23 +107,29 @@ ApwmFET_on MACRO
 	setb     P1.A_pwm		; set pin to high
 	orl P1MDIN, #(1 SHL A_pwm)	; enable pin driver
 ENDM
+
 ApwmFET_off MACRO
 	anl P1MDIN, #(NOT(1 SHL A_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
+
 BpwmFET_on MACRO
 	setb P1.B_pwm		; set pin to high
 	orl P1MDIN, #(1 SHL B_pwm)	; enable pin driver
 ENDM
+
 BpwmFET_off MACRO
 	anl P1MDIN, #(NOT(1 SHL B_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
+
 CpwmFET_on MACRO
 	setb     P1.C_pwm		; set pin to high
 	orl P1MDIN, #(1 SHL C_pwm)	; enable pin driver
 ENDM
+
 CpwmFET_off MACRO
 	anl P1MDIN, #(NOT(1 SHL C_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
+
 All_pwmFETs_Off MACRO
 	anl P1MDIN, #(NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
@@ -132,38 +138,48 @@ AcomFET_on MACRO
 	clr P1.A_pwm			; set pin to low
 	orl P1MDIN, #(1 SHL A_pwm)	; enable pin driver
 ENDM
+
 AcomFET_off MACRO
 	anl P1MDIN, #(NOT(1 SHL A_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
+
 BcomFET_on MACRO
 	clr P1.B_pwm			; set pin to low
 	orl P1MDIN, #(1 SHL B_pwm)	; enable pin driver
 ENDM
+
 BcomFET_off MACRO
 	anl P1MDIN, #(NOT(1 SHL B_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
+
 CcomFET_on MACRO
 	clr P1.C_pwm			; set pin to low
 	orl P1MDIN, #(1 SHL C_pwm)	; enable pin driver
 ENDM
+
 CcomFET_off MACRO
 	anl P1MDIN, #(NOT(1 SHL C_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
+
 All_comFETs_Off MACRO
 	anl P1MDIN, #(NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
+
 Set_Pwm_A MACRO
 	mov	P1SKIP, #(NOT(1 SHL A_pwm));
 	orl	P1MDIN, #(1 SHL A_pwm)	; enable pin driver
 ENDM
+
 Set_Pwm_B MACRO
 	mov	P1SKIP, #(NOT(1 SHL B_pwm));
 	orl	P1MDIN, #(1 SHL B_pwm)	; enable pin driver
 ENDM
+
 Set_Pwm_C MACRO
 	mov	P1SKIP, #(NOT(1 SHL C_pwm));
 	orl	P1MDIN, #(1 SHL C_pwm)	; enable pin driver
 ENDM
+
 Set_Pwms_Off MACRO
 	mov	P1SKIP, #P1_SKIP;
 ENDM
@@ -209,17 +225,24 @@ ENDM
 
 Set_LED_0 MACRO
 ENDM
+
 Clear_LED_0 MACRO
 ENDM
+
 Set_LED_1 MACRO
 ENDM
+
 Clear_LED_1 MACRO
 ENDM
+
 Set_LED_2 MACRO
 ENDM
+
 Clear_LED_2 MACRO
 ENDM
+
 Set_LED_3 MACRO
 ENDM
+
 Clear_LED_3 MACRO
 ENDM

@@ -50,11 +50,8 @@ P0_INIT		EQU	(1 SHL Rcp_In)
 P0_PUSHPULL	EQU	(1 SHL LED_0) + (1 SHL LED_1) + (1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)
 P0_SKIP		EQU	0FFh
 
-PWM_ACTIVE_HIGH	EQU	1
-COMPWM_ACTIVE_HIGH	EQU	1
-
-
-; Damping inverted, pwm noninverted
+PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
+COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 
 IF FETON_DELAY == 0
@@ -121,6 +118,7 @@ ELSE
 	mov	P1SKIP, #(NOT (1 SHL A_com))
 ENDIF
 ENDM
+
 Set_Pwm_B MACRO
 IF FETON_DELAY == 0
 	cON	P_BcomFET
@@ -131,6 +129,7 @@ ELSE
 	mov	P1SKIP, #(NOT (1 SHL B_com))
 ENDIF
 ENDM
+
 Set_Pwm_C MACRO
 IF FETON_DELAY == 0
 	cON	P_CcomFET
@@ -141,6 +140,7 @@ ELSE
 	mov	P1SKIP, #(NOT (1 SHL C_com))
 ENDIF
 ENDM
+
 Set_Pwms_Off MACRO
 	mov	P0SKIP, #0FFh
 	mov	P1SKIP, #0FFh
@@ -167,20 +167,27 @@ P2_SKIP		EQU	0FFh
 Set_LED_0 MACRO
 	setb	P0.LED_0
 ENDM
+
 Clear_LED_0 MACRO
 	clr	P0.LED_0
 ENDM
+
 Set_LED_1 MACRO
 	setb	P0.LED_1
 ENDM
+
 Clear_LED_1 MACRO
 	clr	P0.LED_1
 ENDM
+
 Set_LED_2 MACRO
 ENDM
+
 Clear_LED_2 MACRO
 ENDM
+
 Set_LED_3 MACRO
 ENDM
+
 Clear_LED_3 MACRO
 ENDM

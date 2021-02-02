@@ -48,11 +48,8 @@ P0_INIT		EQU	NOT((1 SHL LED_0) + (1 SHL LED_1))
 P0_PUSHPULL	EQU	(1 SHL LED_0) + (1 SHL LED_1)
 P0_SKIP		EQU	0FFh
 
-PWM_ACTIVE_HIGH	EQU	1
-COMPWM_ACTIVE_HIGH	EQU	1
-
-
-; Damping inverted, pwm noninverted
+PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
+COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 
 IF FETON_DELAY == 0
@@ -127,22 +124,29 @@ P2_SKIP		EQU	0FFh
 Set_LED_0 MACRO
 	setb	P0.LED_0
 ENDM
+
 Clear_LED_0 MACRO
 	clr	P0.LED_0
 ENDM
+
 Set_LED_1 MACRO
 	setb	P0.LED_1
 ENDM
+
 Clear_LED_1 MACRO
 	clr	P0.LED_1
 ENDM
+
 Set_LED_2 MACRO
 	setb	P1.LED_2
 ENDM
+
 Clear_LED_2 MACRO
 	clr	P1.LED_2
 ENDM
+
 Set_LED_3 MACRO
 ENDM
+
 Clear_LED_3 MACRO
 ENDM

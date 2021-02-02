@@ -50,11 +50,8 @@ P0_INIT		EQU	NOT((1 SHL A_pwm) + (1 SHL A_com))
 P0_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL A_com)
 P0_SKIP		EQU	0FFh
 
-PWM_ACTIVE_HIGH	EQU	1
-COMPWM_ACTIVE_HIGH	EQU	1
-
-
-; Damping inverted, pwm noninverted
+PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
+COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 
 IF FETON_DELAY == 0
@@ -121,6 +118,7 @@ ELSE
 	mov	P1SKIP, #0FFh
 ENDIF
 ENDM
+
 Set_Pwm_B MACRO
 IF FETON_DELAY == 0
 	cON	P_BcomFET
@@ -131,6 +129,7 @@ ELSE
 	mov	P1SKIP, #(NOT ((1 SHL B_pwm) + (1 SHL B_com)))
 ENDIF
 ENDM
+
 Set_Pwm_C MACRO
 IF FETON_DELAY == 0
 	cON	P_CcomFET
@@ -141,6 +140,7 @@ ELSE
 	mov	P1SKIP, #(NOT ((1 SHL C_pwm) + (1 SHL C_com)))
 ENDIF
 ENDM
+
 Set_Pwms_Off MACRO
 	mov	P0SKIP, #0FFh
 	mov	P1SKIP, #0FFh

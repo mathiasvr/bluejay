@@ -184,9 +184,11 @@ ENDM
 Clear_COVF_Interrupt MACRO
 	anl	PCA0PWM, #0DFh
 ENDM
+
 Enable_COVF_Interrupt MACRO
 	orl	PCA0PWM, #40h
 ENDM
+
 Disable_COVF_Interrupt MACRO
 	anl	PCA0PWM, #0BFh
 ENDM
@@ -195,9 +197,11 @@ ENDM
 Clear_CCF_Interrupt MACRO
 	anl	PCA0CN0, #0FEh
 ENDM
+
 Enable_CCF_Interrupt MACRO
 	orl	PCA0CPM0,#01h
 ENDM
+
 Disable_CCF_Interrupt MACRO
 	anl	PCA0CPM0,#0FEh
 ENDM
@@ -241,5 +245,6 @@ ENDM
 
 Set_RPM_Out MACRO
 ENDM
+
 Clear_RPM_Out MACRO
 ENDM

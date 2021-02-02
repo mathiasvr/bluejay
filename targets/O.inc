@@ -48,11 +48,8 @@ P0_INIT		EQU	0FFh
 P0_PUSHPULL	EQU	0
 P0_SKIP		EQU	0FFh
 
-PWM_ACTIVE_HIGH	EQU	1
-COMPWM_ACTIVE_HIGH	EQU	0
-
-
-; Damping noninverted, pwm noninverted
+PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
+COMPWM_ACTIVE_HIGH	EQU	0		; Damping non-inverted
 
 
 IF FETON_DELAY == 0
