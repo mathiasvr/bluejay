@@ -11,41 +11,10 @@ RTX_SKIP				EQU	P0SKIP	; Set to 1 for SKIP
 RTX_PIN				EQU	Rcp_In	; RTX pin
 
 
-
-
-IF PWM_ACTIVE_HIGH == 1		; fet active high
-pON	LIT	'setb'
-pOFF	LIT	'clr'
-ELSE						; fet active low
-pON	LIT	'clr'
-pOFF	LIT	'setb'
-ENDIF
-
-IF COMPWM_ACTIVE_HIGH == 1	; comfet active high
-cON	LIT	'setb'
-cOFF	LIT	'clr'
-ELSE						; comfet active low
-cON	LIT	'clr'
-cOFF	LIT	'setb'
-ENDIF
-
-Set_Pwm_Polarity MACRO
-IF PCA0_POWER_MODULE == PCA0CPM0
-	mov	PCA0POL, #((COMPWM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
-ELSE
-	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COMPWM_ACTIVE_HIGH)
-ENDIF
-ENDM
-
-IF COMP_PORT == 0
-CMP_CN0	EQU	CMP0CN0
-CMP_MD	EQU	CMP0MD
-CMP_MX	EQU	CMP0MX
-ELSE
-CMP_CN0	EQU	CMP1CN0
-CMP_MD	EQU	CMP1MD
-CMP_MX	EQU	CMP1MX
-ENDIF
+;**** **** **** **** ****
+; PWM pin routing and polarity setup
+;**** **** **** **** ****
+$if NOT CUSTOM_PWM_SETUP
 
 Initialize_Xbar MACRO
 	mov	XBR2, #40h	;; Xbar enabled
@@ -61,11 +30,34 @@ IF ESCNO = E_
 ENDIF
 ENDM
 
+Set_Pwm_Polarity MACRO
+IF PCA0_POWER_MODULE == PCA0CPM0
+	mov	PCA0POL, #((COMPWM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
+ELSE
+	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COMPWM_ACTIVE_HIGH)
+ENDIF
+ENDM
+
+$endif
+
+
+;**** **** **** **** ****
+; Comparator setup and phase change
+;**** **** **** **** ****
+IF COMP_PORT == 0
+CMP_CN0	EQU	CMP0CN0
+CMP_MD	EQU	CMP0MD
+CMP_MX	EQU	CMP0MX
+ELSE
+CMP_CN0	EQU	CMP1CN0
+CMP_MD	EQU	CMP1MD
+CMP_MX	EQU	CMP1MX
+ENDIF
+
 Initialize_Comparator MACRO
 	mov	CMP_CN0, #80h	;; Comparator enabled, no hysteresis
 	mov	CMP_MD, #00h	;; Comparator response time 100ns
 ENDM
-
 
 Read_Comp_Out MACRO
 	mov	A, CMP_CN0	;; Read comparator output
@@ -90,7 +82,73 @@ Set_Comp_Phase_C MACRO
 ENDM
 
 
+;**** **** **** **** ****
+; PWM phase change
+;**** **** **** **** ****
+$if NOT CUSTOM_PWM_PHASE
 
+; All pwm and com pins must be on port 1
+P_ApwmFET		EQU	P1.A_pwm
+P_AcomFET		EQU	P1.A_com
+P_BpwmFET		EQU	P1.B_pwm
+P_BcomFET		EQU	P1.B_com
+P_CpwmFET		EQU	P1.C_pwm
+P_CcomFET		EQU	P1.C_com
+
+Set_Pwm_A MACRO
+IF FETON_DELAY == 0
+	cON	P_AcomFET
+	mov	P1SKIP, #(NOT (1 SHL A_pwm))
+ELSE
+	mov	P1SKIP, #(NOT ((1 SHL A_pwm) + (1 SHL A_com)))
+ENDIF
+ENDM
+
+Set_Pwm_B MACRO
+IF FETON_DELAY == 0
+	cON	P_BcomFET
+	mov	P1SKIP, #(NOT (1 SHL B_pwm))
+ELSE
+	mov	P1SKIP, #(NOT ((1 SHL B_pwm) + (1 SHL B_com)))
+ENDIF
+ENDM
+
+Set_Pwm_C MACRO
+IF FETON_DELAY == 0
+	cON	P_CcomFET
+	mov	P1SKIP, #(NOT (1 SHL C_pwm))
+ELSE
+	mov	P1SKIP, #(NOT ((1 SHL C_pwm) + (1 SHL C_com)))
+ENDIF
+ENDM
+
+Set_Pwms_Off MACRO
+	mov	P1SKIP, #0FFh
+ENDM
+
+$endif
+
+
+;**** **** **** **** ****
+; Fets on/off toggling
+;**** **** **** **** ****
+$if NOT CUSTOM_FET_TOGGLING
+
+IF PWM_ACTIVE_HIGH == 1		; fet active high
+pON	LIT	'setb'
+pOFF	LIT	'clr'
+ELSE						; fet active low
+pON	LIT	'clr'
+pOFF	LIT	'setb'
+ENDIF
+
+IF COMPWM_ACTIVE_HIGH == 1	; comfet active high
+cON	LIT	'setb'
+cOFF	LIT	'clr'
+ELSE						; comfet active low
+cON	LIT	'clr'
+cOFF	LIT	'setb'
+ENDIF
 
 ApwmFET_on MACRO
 	pON	P_ApwmFET
@@ -170,38 +228,58 @@ All_comFETs_Off MACRO
 	CcomFET_off
 ENDM
 
+$endif
 
-IF ALL_FETS_ON_PORT1 == 1
 
-Set_Pwm_A MACRO
-IF FETON_DELAY == 0
-	cON	P_AcomFET
-	mov	P1SKIP, #(NOT (1 SHL A_pwm))
+$if NOT CUSTOM_LED
+
+Set_LED_0 MACRO
+ENDM
+Clear_LED_0 MACRO
+ENDM
+Set_LED_1 MACRO
+ENDM
+Clear_LED_1 MACRO
+ENDM
+Set_LED_2 MACRO
+ENDM
+Clear_LED_2 MACRO
+ENDM
+Set_LED_3 MACRO
+ENDM
+Clear_LED_3 MACRO
+ENDM
+
+$endif
+
+;**** **** **** **** ****
+; ADC and temperature measurement
+;**** **** **** **** ****
+TEMP_LIMIT			EQU	49		; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
+TEMP_LIMIT_STEP		EQU	9		; Temperature measurement ADC value increment for another 10degC
+
+Initialize_Adc MACRO
+	mov	REF0CN, #0Ch				;; Set vdd (3.3V) as reference. Enable temp sensor and bias
+IF MCU_48MHZ == 0
+	mov	ADC0CF, #59h				;; ADC clock 2MHz, PGA gain 1
 ELSE
-	mov	P1SKIP, #(NOT ((1 SHL A_pwm) + (1 SHL A_com)))
+	mov	ADC0CF, #0B9h				;; ADC clock 2MHz, PGA gain 1
 ENDIF
+	mov	ADC0MX, #10h				;; Select temp sensor input
+	mov	ADC0CN0, #80h				;; ADC enabled
+	mov	ADC0CN1, #01h				;; Common mode buffer enabled
 ENDM
 
-Set_Pwm_B MACRO
-IF FETON_DELAY == 0
-	cON	P_BcomFET
-	mov	P1SKIP, #(NOT (1 SHL B_pwm))
-ELSE
-	mov	P1SKIP, #(NOT ((1 SHL B_pwm) + (1 SHL B_com)))
-ENDIF
+Start_Adc MACRO
+	mov	ADC0CN0, #90h				;; ADC start
 ENDM
 
-Set_Pwm_C MACRO
-IF FETON_DELAY == 0
-	cON	P_CcomFET
-	mov	P1SKIP, #(NOT (1 SHL C_pwm))
-ELSE
-	mov	P1SKIP, #(NOT ((1 SHL C_pwm) + (1 SHL C_com)))
-ENDIF
+Read_Adc_Result MACRO
+	mov	Temp1, ADC0L
+	mov	Temp2, ADC0H
 ENDM
 
-Set_Pwms_Off MACRO
-	mov	P1SKIP, #0FFh
+Stop_Adc MACRO
 ENDM
 
-ENDIF
+

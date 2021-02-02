@@ -27,8 +27,6 @@
 ;
 ;**** **** **** **** ****
 
-TEMP_LIMIT			EQU	49	; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
-TEMP_LIMIT_STEP		EQU	9	; Temperature measurement ADC value increment for another 10degC
 
 
 
@@ -90,17 +88,12 @@ A_pwm		EQU	0	;o
 
 
 
-P_ApwmFET		EQU	P1.A_pwm
-P_AcomFET		EQU	P1.A_com
-P_BpwmFET		EQU	P1.B_pwm
-P_BcomFET		EQU	P1.B_com
-P_CpwmFET		EQU	P1.C_pwm
-P_CcomFET		EQU	P1.C_com
+
 
 ; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
 COMP_PORT		EQU	0
 
-ALL_FETS_ON_PORT1	EQU	1
+
 
 $include (Base.inc)
 
@@ -128,26 +121,3 @@ P2_PUSHPULL	EQU	(1 SHL DebugPin)
 P2_SKIP		EQU	0FFh
 
 
-;**********************
-; MCU specific macros *
-;**********************
-
-
-
-
-Set_LED_0 MACRO
-ENDM
-Clear_LED_0 MACRO
-ENDM
-Set_LED_1 MACRO
-ENDM
-Clear_LED_1 MACRO
-ENDM
-Set_LED_2 MACRO
-ENDM
-Clear_LED_2 MACRO
-ENDM
-Set_LED_3 MACRO
-ENDM
-Clear_LED_3 MACRO
-ENDM

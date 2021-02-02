@@ -239,29 +239,6 @@ Set_MCU_Clk_48MHz MACRO
 	setb	Flag_Clock_At_48MHz
 ENDM
 
-Initialize_Adc MACRO
-	mov	REF0CN, #0Ch				;; Set vdd (3.3V) as reference. Enable temp sensor and bias
-IF MCU_48MHZ == 0
-	mov	ADC0CF, #59h				;; ADC clock 2MHz, PGA gain 1
-ELSE
-	mov	ADC0CF, #0B9h				;; ADC clock 2MHz, PGA gain 1
-ENDIF
-	mov	ADC0MX, #10h				;; Select temp sensor input
-	mov	ADC0CN0, #80h				;; ADC enabled
-	mov	ADC0CN1, #01h				;; Common mode buffer enabled
-ENDM
-
-Start_Adc MACRO
-	mov	ADC0CN0, #90h				;; ADC start
-ENDM
-
-Read_Adc_Result MACRO
-	mov	Temp1, ADC0L
-	mov	Temp2, ADC0H
-ENDM
-
-Stop_Adc MACRO
-ENDM
 Set_RPM_Out MACRO
 ENDM
 Clear_RPM_Out MACRO
