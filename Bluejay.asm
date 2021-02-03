@@ -2652,12 +2652,9 @@ dshot_cmd_direction_normal:
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
 	rrc	A						; Lsb to carry
-	clr	Flag_Pgm_Dir_Rev
-	clr	Flag_Pgm_Bidir_Rev
-	jc	($+4)
-	setb	Flag_Pgm_Dir_Rev
-	jc	($+4)
-	setb	Flag_Pgm_Bidir_Rev
+	cpl	C
+	mov	Flag_Pgm_Dir_Rev, C
+	mov	Flag_Pgm_Bidir_Rev, C
 
 	sjmp	dshot_cmd_exit
 
@@ -2675,24 +2672,16 @@ dshot_cmd_direction_reverse:			; Temporary reverse
 	mov	A, #0
 	movc	A, @A+DPTR
 	setb	IE_EA
-	mov	Temp1, A
-	cjne	Temp1, #1, ($+5)
-	mov	A, #2
-	cjne	Temp1, #2, ($+5)
-	mov	A, #1
-	cjne	Temp1, #3, ($+5)
-	mov	A, #4
-	cjne	Temp1, #4, ($+5)
-	mov	A, #3
+
+	dec	A
+	cpl	ACC.0
+	inc	A
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
 	rrc	A						; Lsb to carry
-	clr	Flag_Pgm_Dir_Rev
-	clr	Flag_Pgm_Bidir_Rev
-	jc	($+4)
-	setb	Flag_Pgm_Dir_Rev
-	jc	($+4)
-	setb	Flag_Pgm_Bidir_Rev
+	cpl	C
+	mov	Flag_Pgm_Dir_Rev, C
+	mov	Flag_Pgm_Bidir_Rev, C
 
 	sjmp	dshot_cmd_exit
 
@@ -2714,7 +2703,7 @@ dshot_cmd_save_settings:
 
 	setb	IE_EA
 
-	jmp	dshot_cmd_exit
+	sjmp	dshot_cmd_exit
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -3406,22 +3395,15 @@ set_default_parameters:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 decode_settings:
-	; Load programmed direction
-	mov	Temp1, #Pgm_Direction
+	mov	Temp1, #Pgm_Direction		; Load programmed direction
 	mov	A, @Temp1
-	clr	C
-	subb	A, #3
-	setb	Flag_Pgm_Bidir
-	jnc	($+4)
-
-	clr	Flag_Pgm_Bidir
-
-	clr	Flag_Pgm_Dir_Rev
-	mov	A, @Temp1
-	jnb	ACC.1, ($+5)
-	setb	Flag_Pgm_Dir_Rev
-	mov	C, Flag_Pgm_Dir_Rev
+	dec	A
+	mov	C, ACC.1					; Set bidirectional mode
+	mov	Flag_Pgm_Bidir, C
+	mov	C, ACC.0					; Set direction (Normal / Reversed)
+	mov	Flag_Pgm_Dir_Rev, C
 	mov	Flag_Pgm_Bidir_Rev, C
+
 	; Decode startup power
 	mov	Temp1, #Pgm_Startup_Pwr
 	mov	A, @Temp1
@@ -3862,9 +3844,8 @@ IF MCU_48MHZ == 1
 ENDIF
 	jnb	Flag_Pgm_Bidir, init_start_bidir_done	; Check if bidirectional operation
 
-	clr	Flag_Pgm_Dir_Rev			; Set spinning direction. Default fwd
-	jnb	Flag_Rcp_Dir_Rev, ($+5)		; Check force direction
-	setb	Flag_Pgm_Dir_Rev			; Set spinning direction
+	mov	C, Flag_Rcp_Dir_Rev			; Read force direction
+	mov	Flag_Pgm_Dir_Rev, C			; Set spinning direction
 
 ;**** **** **** **** ****
 ; Motor start beginning
@@ -4077,10 +4058,9 @@ run6_brake_done:
 	jnb	Flag_Dir_Change_Brake, run_to_wait_for_power_on	; If it is not a direction change - stop
 
 	; Turn spinning direction
-	clr	Flag_Dir_Change_Brake		; Clear brake flag
-	clr	Flag_Pgm_Dir_Rev			; Set spinning direction. Default fwd
-	jnb	Flag_Rcp_Dir_Rev, ($+5)		; Check force direction
-	setb	Flag_Pgm_Dir_Rev			; Set spinning direction
+	clr	Flag_Dir_Change_Brake		; Clear brake
+	mov	C, Flag_Rcp_Dir_Rev			; Read force direction
+	mov	Flag_Pgm_Dir_Rev, C			; Set spinning direction
 	setb	Flag_Initial_Run_Phase
 	mov	Initial_Run_Rot_Cntd, #18
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
