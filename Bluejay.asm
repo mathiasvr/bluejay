@@ -218,7 +218,7 @@ Wt_Comm_Start_L:			DS	1	; Timer 3 start point from zero cross to commutation (lo
 Wt_Comm_Start_H:			DS	1	; Timer 3 start point from zero cross to commutation (hi byte)
 
 Power_Pwm_Reg_L:			DS	1	; Power pwm register setting (lo byte)
-Power_Pwm_Reg_H:			DS	1	; Power pwm register setting (hi byte). 0x3F is minimum power
+Power_Pwm_Reg_H:			DS	1	; Power pwm register setting (hi byte)
 Damp_Pwm_Reg_L:			DS	1	; Damping pwm register setting (lo byte)
 Damp_Pwm_Reg_H:			DS	1	; Damping pwm register setting (hi byte)
 
@@ -940,7 +940,7 @@ ENDIF
 	mov	Temp5, A
 	jnc	t1_int_set_pwm_damp_set
 
-	clr	A
+	clr	A						; Set to minimum value
 	mov	Temp4, A
 	mov	Temp5, A
 
@@ -1097,6 +1097,8 @@ reti
 ; PCA interrupt routine
 ;
 ; Update pwm registers according to PCA clock signal
+;
+; Requirements: Temp variables can NOT be used since PSW.x is not set
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 pca_int:
@@ -2368,7 +2370,7 @@ wait_for_comm_wait:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ; Comm phase 1 to comm phase 2
-comm1_comm2:
+comm1_comm2:						; C->A
 	Set_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm1_comm2_rev
 
@@ -2380,7 +2382,7 @@ comm1_comm2:
 	Set_Comp_Phase_B				; Set comparator phase
 	ret
 
-comm1_comm2_rev:
+comm1_comm2_rev:					; A->C
 	clr	IE_EA					; Disable all interrupts
 	BcomFET_off					; Turn off comfet
 	CcomFET_on					; Turn on comfet (reverse)
@@ -2390,7 +2392,7 @@ comm1_comm2_rev:
 	ret
 
 ; Comm phase 2 to comm phase 3
-comm2_comm3:
+comm2_comm3:						; B->A
 	Clear_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm2_comm3_rev
 
@@ -2402,7 +2404,7 @@ comm2_comm3:
 	Set_Comp_Phase_C				; Set comparator phase
 	ret
 
-comm2_comm3_rev:
+comm2_comm3_rev:					; B->C
 	clr	IE_EA					; Disable all interrupts
 	ApwmFET_off					; Turn off pwmfet (reverse)
 	Set_Pwm_B						; To reapply power after a demag cut
@@ -2412,7 +2414,7 @@ comm2_comm3_rev:
 	ret
 
 ; Comm phase 3 to comm phase 4
-comm3_comm4:
+comm3_comm4:						; B->C
 	Set_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm3_comm4_rev
 
@@ -2424,7 +2426,7 @@ comm3_comm4:
 	Set_Comp_Phase_A				; Set comparator phase
 	ret
 
-comm3_comm4_rev:
+comm3_comm4_rev:					; B->A
 	clr	IE_EA					; Disable all interrupts
 	CcomFET_off					; Turn off comfet (reverse)
 	AcomFET_on					; Turn on comfet (reverse)
@@ -2434,7 +2436,7 @@ comm3_comm4_rev:
 	ret
 
 ; Comm phase 4 to comm phase 5
-comm4_comm5:
+comm4_comm5:						; A->C
 	Clear_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm4_comm5_rev
 
@@ -2446,7 +2448,7 @@ comm4_comm5:
 	Set_Comp_Phase_B				; Set comparator phase
 	ret
 
-comm4_comm5_rev:
+comm4_comm5_rev:					; C->A
 	clr	IE_EA					; Disable all interrupts
 	BpwmFET_off					; Turn off pwmfet
 	Set_Pwm_C
@@ -2456,7 +2458,7 @@ comm4_comm5_rev:
 	ret
 
 ; Comm phase 5 to comm phase 6
-comm5_comm6:
+comm5_comm6:						; A->B
 	Set_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm5_comm6_rev
 
@@ -2468,7 +2470,7 @@ comm5_comm6:
 	Set_Comp_Phase_C				; Set comparator phase
 	ret
 
-comm5_comm6_rev:
+comm5_comm6_rev:					; C->B
 	clr	IE_EA					; Disable all interrupts
 	AcomFET_off					; Turn off comfet (reverse)
 	BcomFET_on					; Turn on comfet
@@ -2478,7 +2480,7 @@ comm5_comm6_rev:
 	ret
 
 ; Comm phase 6 to comm phase 1
-comm6_comm1:
+comm6_comm1:						; C->B
 	Clear_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm6_comm1_rev
 
@@ -2490,7 +2492,7 @@ comm6_comm1:
 	Set_Comp_Phase_A				; Set comparator phase
 	ret
 
-comm6_comm1_rev:
+comm6_comm1_rev:					; A->B
 	clr	IE_EA					; Disable all interrupts
 	CpwmFET_off					; Turn off pwmfet (reverse)
 	Set_Pwm_A
