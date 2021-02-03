@@ -438,7 +438,7 @@ ENDM
 ; Used for subdividing the DShot telemetry routine into chunks,
 ; that will return if timer 3 has wrapped
 Early_Return_Packet_Stage MACRO num
-	Early_Return_Packet_Stage_ num, %(num+1)
+	Early_Return_Packet_Stage_ num, %(num + 1)
 ENDM
 
 Early_Return_Packet_Stage_ MACRO num next
@@ -539,7 +539,7 @@ t0_int:
 	mov	PSW, #10h					; Select register bank 2 for this interrupt
 
 	dec	Temp1
-	cjne	Temp1, #(Temp_Storage-1), t0_int_dshot_tlm_transition
+	cjne	Temp1, #(Temp_Storage - 1), t0_int_dshot_tlm_transition
 
 	inc	Temp1					; Set pointer to uncritical position
 
@@ -930,7 +930,7 @@ IF FETON_DELAY != 0
 	clr	C
 	mov	A, Temp2					; Skew damping fet timing
 IF MCU_48MHZ == 0
-	subb	A, #((FETON_DELAY+1) SHR 1)
+	subb	A, #((FETON_DELAY + 1) SHR 1)
 ELSE
 	subb	A, #(FETON_DELAY)
 ENDIF
@@ -1150,7 +1150,7 @@ ENDIF
 	setb	Flag_Low_Pwm_Power
 IF PWM_BITS_H != 0
 	mov	A, Power_Pwm_Reg_H
-	jb	ACC.(PWM_BITS_H-1), ($+5)
+	jb	ACC.(PWM_BITS_H - 1), ($+5)
 ELSE
 	mov	A, Power_Pwm_Reg_L
 	jb	ACC.7, ($+5)
@@ -1524,19 +1524,19 @@ temp_average_updated:
 	mov	Pwm_Limit, #192			; No - limit pwm
 
 	clr	C
-	subb	A, #(TEMP_LIMIT_STEP/2)		; Is temperature below second limit
+	subb	A, #(TEMP_LIMIT_STEP / 2)	; Is temperature below second limit
 	jc	temp_check_exit			; Yes - exit
 
 	mov	Pwm_Limit, #128			; No - limit pwm
 
 	clr	C
-	subb	A, #(TEMP_LIMIT_STEP/2)		; Is temperature below third limit
+	subb	A, #(TEMP_LIMIT_STEP / 2)	; Is temperature below third limit
 	jc	temp_check_exit			; Yes - exit
 
 	mov	Pwm_Limit, #64				; No - limit pwm
 
 	clr	C
-	subb	A, #(TEMP_LIMIT_STEP/2)		; Is temperature below final limit
+	subb	A, #(TEMP_LIMIT_STEP / 2)	; Is temperature below final limit
 	jc	temp_check_exit			; Yes - exit
 
 	mov	Pwm_Limit, #0				; No - limit pwm
