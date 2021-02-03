@@ -3467,6 +3467,9 @@ decode_temp_step:
 decode_temp_done:
 	mov	Temp_Prot_Limit, A
 
+	mov	Temp1, #Pgm_Beep_Strength	; Set beep strength
+	mov	Beep_Strength, @Temp1
+
 	mov	Temp1, #Pgm_Dithering		; Read programmed dithering setting
 	mov	A, @Temp1
 	clr	Flag_Dithering
@@ -3606,8 +3609,6 @@ input_high_check_2:
 
 bootloader_done:
 	call	decode_settings
-	mov	Temp1, #Pgm_Beep_Strength	; Set beep strength
-	mov	Beep_Strength, @Temp1
 	call	switch_power_off
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz				; Set clock frequency
