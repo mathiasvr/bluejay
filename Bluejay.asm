@@ -2607,7 +2607,9 @@ dshot_cmd_direction_bidir_off:
 	clr	C
 	mov	Temp1, #Pgm_Direction
 	mov	A, @Temp1
-	subb	A, #2
+	dec	A
+	clr	ACC.1
+	inc	A
 	mov	@Temp1, A
 	clr	Flag_Pgm_Bidir
 
@@ -2626,7 +2628,9 @@ dshot_cmd_direction_bidir_on:
 
 	mov	Temp1, #Pgm_Direction
 	mov	A, @Temp1
-	add	A, #2
+	dec	A
+	setb	ACC.1
+	inc	A
 	mov	@Temp1, A
 	setb	Flag_Pgm_Bidir
 
