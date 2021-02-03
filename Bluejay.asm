@@ -175,6 +175,7 @@ Flag_Rcp_DShot_Inverted		BIT	Flags2.7			; DShot RC pulse input is inverted (and 
 Flags3:					DS	1				; State flags. NOT reset upon init_start
 Flag_Telemetry_Pending		BIT	Flags3.0			; DShot telemetry data packet is ready to be sent
 Flag_Dithering				BIT	Flags3.1			; Dithering enabled
+Flag_Had_Signal			BIT	Flags3.2			; Used to detect reset after having had a valid signal
 
 Tlm_Data_L:				DS	1				; DShot telemetry data (lo byte)
 Tlm_Data_H:				DS	1				; DShot telemetry data (hi byte)
@@ -3601,6 +3602,17 @@ bootloader_done:
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz				; Set clock frequency
 ENDIF
+
+	jnb	Flag_Had_Signal, setup_dshot
+	call	beep_f2					; Beep on signal loss or stall
+	call	beep_f2
+	call	beep_f2
+	call	beep_f2
+	call	beep_f2
+	call wait200ms
+	clr	Flag_Had_Signal
+
+setup_dshot:
 	; Setup timers for DShot
 	mov	TCON, #51h				; Timer 0/1 run and INT0 edge triggered
 	mov	CKCON0, #01h				; Timer 0/1 clock is system clock divided by 4 (for DShot150)
@@ -3695,6 +3707,8 @@ arming_begin:
 	mov	PSW, #10h					; Temp8 in register bank 2 holds value
 	mov	Temp8, CKCON0				; Save DShot clock settings for telemetry
 	pop	PSW
+
+	setb	Flag_Had_Signal			; Mark that a signal has been detected
 
 	clr	IE_EA
 	call	beep_f1_short				; Beep signal that RC pulse is ready
