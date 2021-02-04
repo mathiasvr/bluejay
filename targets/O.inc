@@ -91,7 +91,7 @@ A_pwm		EQU	0	;o
 COMP_PORT		EQU	0
 
 
-
+$set(CUSTOM_COMP_SETUP)
 $include (Base.inc)
 
 P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
@@ -100,6 +100,14 @@ P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + 
 P1_SKIP		EQU	0FFh
 
 
+Initialize_Comparator MACRO
+	mov	CMP_CN0, #80h	;; Comparator enabled, no hysteresis
+	mov	CMP_MD, #40h	;; Comparator response time 100ns, Output polarity inverted
+ENDM
+
+Read_Comp_Out MACRO
+	mov	A, CMP_CN0	;; Read comparator output
+ENDM
 
 
 

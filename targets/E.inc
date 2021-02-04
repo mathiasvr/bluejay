@@ -91,7 +91,7 @@ A_pwm		EQU	0	;o
 COMP_PORT		EQU	0
 
 
-$set(CUSTOM_LED)
+$set(CUSTOM_PWM_SETUP, CUSTOM_LED)
 
 $include (Base.inc)
 
@@ -120,6 +120,27 @@ P2_SKIP		EQU	0FFh
 ;**********************
 ; MCU specific macros *
 ;**********************
+
+Initialize_Xbar MACRO
+	mov	XBR2, #40h	;; Xbar enabled
+	mov	XBR1, #02h	;; CEX0 and CEX1 routed to pins
+
+	All_pwmFETs_off	;; For unlocking of HIP2103/4 driver circuits
+	call wait100ms
+	AcomFET_on
+	BcomFET_on
+	CcomFET_on
+	call wait1ms
+	All_comFETs_off
+ENDM
+
+Set_Pwm_Polarity MACRO
+IF PCA0_POWER_MODULE == PCA0CPM0
+	mov	PCA0POL, #((COMPWM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
+ELSE
+	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COMPWM_ACTIVE_HIGH)
+ENDIF
+ENDM
 
 Set_LED_0 MACRO
 	setb	P0.LED_0

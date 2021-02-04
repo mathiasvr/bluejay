@@ -28,14 +28,6 @@
 ;**** **** **** **** ****
 
 
-;**** **** **** **** ****
-; Bootloader definitions
-;**** **** **** **** ****
-RTX_PORT		  		EQU 	P0		; Receive/Transmit port
-RTX_MDOUT				EQU	P0MDOUT	; Set to 1 for PUSHPULL
-RTX_MDIN				EQU	P0MDIN	; Set to 1 for DIGITAL
-RTX_SKIP				EQU	P0SKIP	; Set to 1 for SKIP
-RTX_PIN				EQU 	7		; RTX pin
 
 
 ;*********************
@@ -56,13 +48,8 @@ P0_PUSHPULL	EQU	0
 P0_SKIP		EQU	0FFh
 
 
-Set_Pwm_Polarity MACRO
-IF FETON_DELAY == 0
-	mov	PCA0POL, #00h				; Pwm noninverted
-ELSE
-	mov	PCA0POL, #01h				; Damping inverted, pwm noninverted
-ENDIF
-ENDM
+PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
+COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 IF FETON_DELAY == 0
 	PCA0_POWER_MODULE	EQU	PCA0CPM0
@@ -94,6 +81,14 @@ C_pwm		EQU	4	;o
 ;		EQU	2	;i
 ;		EQU	1	;i
 ;		EQU	0	;i
+
+; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
+COMP_PORT		EQU	0
+
+$set(CUSTOM_PWM_PHASE, CUSTOM_FET_TOGGLING)
+
+$include (Base.inc)
+
 ; pwm outputs start as analog in -> floating
 ; this ensures all mosfet drivers start with floating outputs
 P1_DIGITAL	EQU	NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm))
@@ -186,20 +181,6 @@ ENDM
 
 
 
-Set_Comp_Phase_A MACRO
-	mov	CMP0MX, #((A_Mux) SHL 4)+((Comp_Com) SHL 0);
-ENDM
-Set_Comp_Phase_B MACRO
-	mov	CMP0MX, #((B_Mux) SHL 4)+((Comp_Com) SHL 0);
-ENDM
-Set_Comp_Phase_C MACRO
-	mov	CMP0MX, #((C_Mux) SHL 4)+((Comp_Com) SHL 0);
-ENDM
-Read_Comp_Out MACRO
-	mov	A, CMP0CN0	; Read comparator output
-ENDM
-
-
 
 ;*********************
 ; PORT 2 definitions *
@@ -209,40 +190,3 @@ DebugPin		EQU	0	;o
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)
 P2_SKIP		EQU	0FFh
-
-
-;**********************
-; MCU specific macros *
-;**********************
-Initialize_Xbar MACRO
-	mov	XBR2, #40h	; Xbar enabled
-	mov	XBR1, #02h	; CEX0 and CEX1 routed to pins
-ENDM
-Initialize_Comparator MACRO
-	mov	CMP0CN0, #80h	; Comparator enabled, no hysteresis
-	mov	CMP0MD, #00h	; Comparator response time 100ns
-ENDM
-
-Set_LED_0 MACRO
-ENDM
-
-Clear_LED_0 MACRO
-ENDM
-
-Set_LED_1 MACRO
-ENDM
-
-Clear_LED_1 MACRO
-ENDM
-
-Set_LED_2 MACRO
-ENDM
-
-Clear_LED_2 MACRO
-ENDM
-
-Set_LED_3 MACRO
-ENDM
-
-Clear_LED_3 MACRO
-ENDM

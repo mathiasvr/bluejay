@@ -19,15 +19,6 @@ $if NOT CUSTOM_PWM_SETUP
 Initialize_Xbar MACRO
 	mov	XBR2, #40h	;; Xbar enabled
 	mov	XBR1, #02h	;; CEX0 and CEX1 routed to pins
-IF ESCNO = E_
-	All_pwmFETs_off	; For unlocking of HIP2103/4 driver circuits
-	call wait100ms
-	AcomFET_on
-	BcomFET_on
-	CcomFET_on
-	call wait1ms
-	All_comFETs_off
-ENDIF
 ENDM
 
 Set_Pwm_Polarity MACRO
@@ -54,6 +45,8 @@ CMP_MD	EQU	CMP1MD
 CMP_MX	EQU	CMP1MX
 ENDIF
 
+$if NOT CUSTOM_COMP_SETUP
+
 Initialize_Comparator MACRO
 	mov	CMP_CN0, #80h	;; Comparator enabled, no hysteresis
 	mov	CMP_MD, #00h	;; Comparator response time 100ns
@@ -61,10 +54,9 @@ ENDM
 
 Read_Comp_Out MACRO
 	mov	A, CMP_CN0	;; Read comparator output
-IF ESCNO == O_
-	cpl	A
-ENDIF
 ENDM
+
+$endif
 
 ; Set comparator multiplexer to phase A
 Set_Comp_Phase_A MACRO
