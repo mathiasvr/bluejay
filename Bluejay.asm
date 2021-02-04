@@ -3972,28 +3972,21 @@ run6:
 	; Check if it is direct startup
 	jnb	Flag_Startup_Phase, normal_run_checks
 
-	; Set spoolup power variables
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
-	; Check startup counter
-	mov	Temp2, #24				; Set nominal startup parameters
-	mov	Temp3, #12
 	clr	C
-	mov	A, Startup_Cnt				; Load counter
-	subb	A, Temp2					; Is counter above requirement?
-	jc	direct_start_check_rcp		; No - proceed
+	mov	A, Startup_Cnt				; Load startup counter
+	subb	A, #24					; Is counter above requirement?
+	jnc	startup_phase_done
 
-	clr	Flag_Startup_Phase			; Clear startup phase flag
-	setb	Flag_Initial_Run_Phase		; Set initial run phase flag
-	mov	Initial_Run_Rot_Cntd, Temp3	; Set initial run rotation count
-	mov	Pwm_Limit, Pwm_Limit_Beg
-	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
-	sjmp	normal_run_checks
-
-direct_start_check_rcp:
 	jnb	Flag_Rcp_Stop, run1			; If pulse is above stop value - Continue to run
-
 	ajmp	run_to_wait_for_power_on
 
+startup_phase_done:
+	clr	Flag_Startup_Phase			; Clear startup phase flag
+	setb	Flag_Initial_Run_Phase		; Set initial run phase flag
+	mov	Initial_Run_Rot_Cntd, #12	; Set initial run rotation count
+	mov	Pwm_Limit, Pwm_Limit_Beg
+	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
 
 normal_run_checks:
 	; Check if it is initial run phase
@@ -4019,6 +4012,8 @@ initial_run_check_startup_rot:
 
 initial_run_continue_run:
 	jmp	run1						; Continue to run
+
+
 
 initial_run_phase_done:
 	; Reset stall count
