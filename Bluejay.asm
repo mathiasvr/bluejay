@@ -2297,20 +2297,19 @@ setup_comm_wait:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 evaluate_comparator_integrity:
-	mov	A, Flags_Startup
-	jz	eval_comp_check_timeout
+	jb	Flag_Startup_Phase, eval_comp_startup	; Do not exit run mode during startup phases
 
-	jb	Flag_Initial_Run_Phase, ($+5)			; Do not increment beyond startup phase
-	inc	Startup_Cnt						; Increment counter
-	sjmp	eval_comp_exit
-
-eval_comp_check_timeout:
 	jnb	Flag_Comp_Timed_Out, eval_comp_exit	; Has timeout elapsed?
-	jb	Flag_Dir_Change_Brake, eval_comp_exit	; Do not exit run mode if it is braking
+	jb	Flag_Initial_Run_Phase, eval_comp_exit	; Do not exit run mode if initial run phase
+	jb	Flag_Dir_Change_Brake, eval_comp_exit	; Do not exit run mode if braking
 	jb	Flag_Demag_Detected, eval_comp_exit	; Do not exit run mode if it is a demag situation
+
 	dec	SP								; Routine exit without "ret" command
 	dec	SP
-	ljmp	run_to_wait_for_power_on_fail			; Yes - exit run mode
+	ljmp	run_to_wait_for_power_on_fail			; Exit run mode if timeout has elapsed
+
+eval_comp_startup:
+	inc	Startup_Cnt						; Increment startup counter
 
 eval_comp_exit:
 	ret
