@@ -514,6 +514,11 @@ LOCAL skip
 skip:
 ENDM
 
+imov MACRO reg, val					;; Increment pointer register and move
+	inc	reg
+	mov	@reg, val					;; Write value to memory address pointed to by register
+ENDM
+
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -3349,46 +3354,46 @@ write_tag:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 set_default_parameters:
 	mov	Temp1, #_Pgm_Gov_P_Gain
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_P_Gain
-	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_BOOST		; Pgm_Startup_Boost
-	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_BEEP		; Pgm_Startup_Beep
-	Push_Mem	Temp1, #DEFAULT_PGM_DITHERING			; Pgm_Dithering
-	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Gain
-	Push_Mem	Temp1, #0FFh						; _Pgm_Motor_Idle
-	Push_Mem	Temp1, #DEFAULT_PGM_STARTUP_PWR		; Pgm_Startup_Pwr
-	Push_Mem	Temp1, #0FFh						; _Pgm_Pwm_Freq
-	Push_Mem	Temp1, #DEFAULT_PGM_DIRECTION			; Pgm_Direction
-	Push_Mem	Temp1, #0FFh						; _Pgm_Input_Pol
+	mov	@Temp1, #0FFh						; _Pgm_Gov_P_Gain
+	imov	Temp1, #DEFAULT_PGM_STARTUP_BOOST		; Pgm_Startup_Boost
+	imov	Temp1, #DEFAULT_PGM_STARTUP_BEEP		; Pgm_Startup_Beep
+	imov	Temp1, #DEFAULT_PGM_DITHERING			; Pgm_Dithering
+	imov	Temp1, #0FFh						; Pgm_Rampup_Start_Power
+	imov	Temp1, #0FFh						; Pgm_Rampup_Slope
+	imov	Temp1, #DEFAULT_PGM_STARTUP_PWR		; Pgm_Startup_Pwr
+	imov	Temp1, #0FFh						; _Pgm_Pwm_Freq
+	imov	Temp1, #DEFAULT_PGM_DIRECTION			; Pgm_Direction
+	imov	Temp1, #0FFh						; _Pgm_Input_Pol
 
-	inc	Temp1								; Skip Initialized_L_Dummy
-	inc	Temp1								; Skip Initialized_H_Dummy
+	inc	Temp1							; Skip Initialized_L_Dummy
+	inc	Temp1							; Skip Initialized_H_Dummy
 
-	Push_Mem	Temp1, #0FFh						; _Pgm_Enable_TX_Program
-	Push_Mem	Temp1, #0FFh						; _Pgm_Main_Rearm_Start
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Setup_Target
-	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Rpm
-	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Accel
-	Push_Mem	Temp1, #0FFh						; _Pgm_Volt_Comp
-	Push_Mem	Temp1, #DEFAULT_PGM_COMM_TIMING		; Pgm_Comm_Timing
-	Push_Mem	Temp1, #0FFh						; _Pgm_Damping_Force
-	Push_Mem	Temp1, #0FFh						; _Pgm_Gov_Range
-	Push_Mem	Temp1, #0FFh						; _Pgm_Startup_Method
-	Push_Mem	Temp1, #0FFh						; _Pgm_Min_Throttle
-	Push_Mem	Temp1, #0FFh						; _Pgm_Max_Throttle
-	Push_Mem	Temp1, #DEFAULT_PGM_BEEP_STRENGTH		; Pgm_Beep_Strength
-	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_STRENGTH	; Pgm_Beacon_Strength
-	Push_Mem	Temp1, #DEFAULT_PGM_BEACON_DELAY		; Pgm_Beacon_Delay
-	Push_Mem	Temp1, #0FFh						; _Pgm_Throttle_Rate
-	Push_Mem	Temp1, #DEFAULT_PGM_DEMAG_COMP		; Pgm_Demag_Comp
-	Push_Mem	Temp1, #0FFh						; _Pgm_BEC_Voltage_High
-	Push_Mem	Temp1, #0FFh						; _Pgm_Center_Throttle
-	Push_Mem	Temp1, #0FFh						; _Pgm_Main_Spoolup_Time
-	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT	; Pgm_Enable_Temp_Prot
-	Push_Mem	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT	; Pgm_Enable_Power_Prot
-	Push_Mem	Temp1, #0FFh						; _Pgm_Enable_Pwm_Input
-	Push_Mem	Temp1, #0FFh						; _Pgm_Pwm_Dither
-	Push_Mem	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP		; Pgm_Brake_On_Stop
-	Push_Mem	Temp1, #DEFAULT_PGM_LED_CONTROL		; Pgm_LED_Control
+	imov	Temp1, #0FFh						; _Pgm_Enable_TX_Program
+	imov	Temp1, #0FFh						; _Pgm_Main_Rearm_Start
+	imov	Temp1, #0FFh						; _Pgm_Gov_Setup_Target
+	imov	Temp1, #0FFh						; _Pgm_Startup_Rpm
+	imov	Temp1, #0FFh						; _Pgm_Startup_Accel
+	imov	Temp1, #0FFh						; _Pgm_Volt_Comp
+	imov	Temp1, #DEFAULT_PGM_COMM_TIMING		; Pgm_Comm_Timing
+	imov	Temp1, #0FFh						; _Pgm_Damping_Force
+	imov	Temp1, #0FFh						; _Pgm_Gov_Range
+	imov	Temp1, #0FFh						; _Pgm_Startup_Method
+	imov	Temp1, #0FFh						; _Pgm_Min_Throttle
+	imov	Temp1, #0FFh						; _Pgm_Max_Throttle
+	imov	Temp1, #DEFAULT_PGM_BEEP_STRENGTH		; Pgm_Beep_Strength
+	imov	Temp1, #DEFAULT_PGM_BEACON_STRENGTH	; Pgm_Beacon_Strength
+	imov	Temp1, #DEFAULT_PGM_BEACON_DELAY		; Pgm_Beacon_Delay
+	imov	Temp1, #0FFh						; _Pgm_Throttle_Rate
+	imov	Temp1, #DEFAULT_PGM_DEMAG_COMP		; Pgm_Demag_Comp
+	imov	Temp1, #0FFh						; _Pgm_BEC_Voltage_High
+	imov	Temp1, #0FFh						; _Pgm_Center_Throttle
+	imov	Temp1, #0FFh						; _Pgm_Main_Spoolup_Time
+	imov	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT	; Pgm_Enable_Temp_Prot
+	imov	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT	; Pgm_Enable_Power_Prot
+	imov	Temp1, #0FFh						; _Pgm_Enable_Pwm_Input
+	imov	Temp1, #0FFh						; _Pgm_Pwm_Dither
+	imov	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP		; Pgm_Brake_On_Stop
+	imov	Temp1, #DEFAULT_PGM_LED_CONTROL		; Pgm_LED_Control
 
 	ret
 
@@ -3467,24 +3472,24 @@ decode_temp_done:
 decode_dithering:
 IF PWM_BITS_H == 2					; Initialize pwm dithering bit patterns
 	mov	Temp1, #Dithering_Patterns
-	Push_Mem	Temp1, #00h
-	Push_Mem	Temp1, #55h
+	mov	@Temp1, #00h
+	imov	Temp1, #55h
 ELSEIF PWM_BITS_H == 1
 	mov	Temp1, #Dithering_Patterns
-	Push_Mem	Temp1, #00h
-	Push_Mem	Temp1, #11h
-	Push_Mem	Temp1, #55h
-	Push_Mem	Temp1, #77h
+	mov	@Temp1, #00h
+	imov	Temp1, #11h
+	imov	Temp1, #55h
+	imov	Temp1, #77h
 ELSEIF PWM_BITS_H == 0
 	mov	Temp1, #Dithering_Patterns
-	Push_Mem	Temp1, #00h
-	Push_Mem	Temp1, #01h
-	Push_Mem	Temp1, #11h
-	Push_Mem	Temp1, #25h
-	Push_Mem	Temp1, #55h
-	Push_Mem	Temp1, #5Bh
-	Push_Mem	Temp1, #77h
-	Push_Mem	Temp1, #7fh
+	mov	@Temp1, #00h
+	imov	Temp1, #01h
+	imov	Temp1, #11h
+	imov	Temp1, #25h
+	imov	Temp1, #55h
+	imov	Temp1, #5Bh
+	imov	Temp1, #77h
+	imov	Temp1, #7fh
 ENDIF
 	ret
 
