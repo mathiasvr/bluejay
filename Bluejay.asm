@@ -179,7 +179,6 @@ Flag_Had_Signal			BIT	Flags3.2			; Used to detect reset after having had a valid
 
 Tlm_Data_L:				DS	1				; DShot telemetry data (lo byte)
 Tlm_Data_H:				DS	1				; DShot telemetry data (hi byte)
-Tmp_B:					DS	1
 
 ;**** **** **** **** ****
 ; Direct addressing data segment
@@ -410,15 +409,13 @@ IF MCU_48MHZ == 1
 ENDIF
 ENDM
 
-Push_Mem MACRO reg, val
-	mov	@reg, val					;; Write value to memory address pointed to by register
-	inc	reg						;; Increment pointer
-ENDM
-
-DShot_GCR_Get_Time MACRO
+; DShot GCR encoding, adjust time by adding to previous item
+GCR_Add_Time MACRO reg
+	mov	B, @reg
 	mov	A, DShot_GCR_Pulse_Time_2
-	cjne	A, Tmp_B, ($+5)
+	cjne	A, B, ($+5)
 	mov	A, DShot_GCR_Pulse_Time_3
+	mov	@reg, A
 ENDM
 
 ; Prepare telemetry packet while waiting for timer 3 to wrap
@@ -2828,7 +2825,7 @@ dshot_tlm_12bit_encoded:
 
 	; GCR encode the telemetry data (16-bit)
 	mov	Temp1, #Temp_Storage		; Store pulse timings in Temp_Storage
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1	; Final transition time
+	mov	@Temp1, DShot_GCR_Pulse_Time_1; Final transition time
 
 	call	dshot_gcr_encode			; GCR encode lowest 4-bit of A (store through Temp1)
 
@@ -2848,8 +2845,7 @@ dshot_tlm_12bit_encoded:
 	mov	A, Tlm_Data_H
 	call	dshot_gcr_encode
 
-	Push_Mem	Temp1, Tmp_B			; Initial transition time
-
+	inc	Temp1
 	mov	Temp5, #0					; Reset current packet stage
 
 	pop	PSW
@@ -2991,123 +2987,107 @@ dshot_gcr_encode_jump_table:
 ; GCR encoding is ordered by least significant bit first,
 ; and represented as pulse durations.
 dshot_gcr_encode_0_11001:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_3
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_1_11011:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_2_10010:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	GCR_Add_Time	Temp1
+	imov	Temp1, DShot_GCR_Pulse_Time_3
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_3_10011:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_3
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_4_11101:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_5_10101:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_6_10110:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	GCR_Add_Time	Temp1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_7_10111:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_8_11010:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	GCR_Add_Time	Temp1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_9_01001:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_3
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_3
+	imov	Temp1, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_A_01010:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	GCR_Add_Time	Temp1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_B_01011:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_C_11110:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_1
+	GCR_Add_Time	Temp1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
 	ret
 
 dshot_gcr_encode_D_01101:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_2
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_E_01110:
-	DShot_GCR_Get_Time
-	Push_Mem	Temp1, A
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	GCR_Add_Time	Temp1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
 	ret
 
 dshot_gcr_encode_F_01111:
-	Push_Mem	Temp1, Tmp_B
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	Push_Mem	Temp1, DShot_GCR_Pulse_Time_1
-	mov	Tmp_B, DShot_GCR_Pulse_Time_2
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_1
+	imov	Temp1, DShot_GCR_Pulse_Time_2
 	ret
 
 
