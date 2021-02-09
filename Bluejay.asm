@@ -1404,11 +1404,11 @@ set_pwm_limit:
 	jz	set_pwm_limit_low_rpm_exit	; Avoid divide by zero
 
 	mov	A, #255					; Divide 255 by Comm_Period4x_H
+	jnb	Flag_Initial_Run_Phase, ($+5)	; More protection for initial run phase
+	mov	A, #127
 	mov	B, Comm_Period4x_H
 	div	AB
 	mov	B, Low_Rpm_Pwr_Slope		; Multiply by slope
-	jnb	Flag_Initial_Run_Phase, ($+6)	; More protection for initial run phase
-	mov	B, #5
 	mul	AB
 	mov	Temp1, A					; Set new limit
 	xch	A, B
