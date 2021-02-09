@@ -1386,7 +1386,7 @@ switch_power_off:
 ;
 ; Set pwm limit low rpm
 ;
-; Sets power limit for low rpm and disables demag for low rpm
+; Sets power limit for low rpm
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 set_pwm_limit:
