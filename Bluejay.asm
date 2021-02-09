@@ -113,7 +113,7 @@ $include (Common.inc)					; Include common source code for EFM8BBx based ESCs
 
 ;**** **** **** **** ****
 ; Programming defaults
-DEFAULT_PGM_STARTUP_PWR			EQU	9	; 1=0.031 2=0.047 3=0.063 4=0.094 5=0.125 6=0.188 7=0.25 8=0.38 9=0.50 10=0.75 11=1.00 12=1.25 13=1.50
+DEFAULT_PGM_RPM_POWER_SLOPE		EQU	9	; 0=Off, 1..13 (Power limit factor in relation to rpm)
 DEFAULT_PGM_COMM_TIMING			EQU	4	; 1=Low		2=MediumLow	3=Medium		4=MediumHigh	5=High
 DEFAULT_PGM_DEMAG_COMP			EQU	2	; 1=Disabled	2=Low		3=High
 DEFAULT_PGM_DIRECTION			EQU	1	; 1=Normal	2=Reversed	3=Bidir		4=Bidir rev
@@ -121,13 +121,15 @@ DEFAULT_PGM_BEEP_STRENGTH		EQU	40	; 0..255 (BLHeli_S is 1..255)
 DEFAULT_PGM_BEACON_STRENGTH		EQU	80	; 0..255
 DEFAULT_PGM_BEACON_DELAY			EQU	4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
 DEFAULT_PGM_ENABLE_TEMP_PROT		EQU	7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
-DEFAULT_PGM_ENABLE_POWER_PROT		EQU	1	; 1=Enabled	0=Disabled
+
 DEFAULT_PGM_BRAKE_ON_STOP		EQU	0	; 1=Enabled	0=Disabled
 DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2bits per LED, 0=Off, 1=On
 
-DEFAULT_PGM_STARTUP_BOOST		EQU	51	; 0..255 (1000..1125 Throttle): value * (1000 / 2047) + 1000
+DEFAULT_PGM_STARTUP_POWER_MIN		EQU	51	; 0..255 => (1000..1125 Throttle): value * (1000 / 2047) + 1000
 DEFAULT_PGM_STARTUP_BEEP			EQU	1	; 0=Short beep, 1=Melody
 DEFAULT_PGM_DITHERING			EQU	1	; 0=Disabled, 1=Enabled
+
+DEFAULT_PGM_STARTUP_POWER_MAX		EQU	25	; 0..255 => (1000..2000 Throttle): Maximum startup power
 
 ;**** **** **** **** ****
 ; Temporary register definitions
@@ -258,13 +260,13 @@ DShot_GCR_Start_Delay:		DS	1
 ;**** **** **** **** ****
 ; Indirect addressing data segments
 ISEG AT 080h						; The variables below must be in this sequence
-_Pgm_Gov_P_Gain:			DS	1	; Governor P gain
-Pgm_Startup_Boost:			DS	1	; Governor I gain
-Pgm_Startup_Beep:			DS	1	; Governor mode
-Pgm_Dithering:				DS	1	; Low voltage limit
-_Pgm_Motor_Gain:			DS	1	; Motor gain
-_Pgm_Motor_Idle:			DS	1	; Motor idle speed
-Pgm_Startup_Pwr:			DS	1	; Startup power
+_Pgm_Gov_P_Gain:			DS	1	;
+Pgm_Startup_Power_Min:		DS	1	; Minimum power during startup phase
+Pgm_Startup_Beep:			DS	1	; Startup beep melody on/off
+Pgm_Dithering:				DS	1	; Enable dithering
+Pgm_Startup_Power_Max:		DS	1	; Maximum power (limit) during startup (and starting initial run phase)
+_Pgm_Rampup_Slope:			DS	1	;
+Pgm_Rpm_Power_Slope:		DS	1	; Low RPM power protection slope (factor)
 _Pgm_Pwm_Freq:				DS	1	; PWM frequency
 Pgm_Direction:				DS	1	; Rotation direction
 _Pgm_Input_Pol:			DS	1	; Input PWM polarity
@@ -291,14 +293,11 @@ _Pgm_BEC_Voltage_High:		DS	1	; BEC voltage
 _Pgm_Center_Throttle:		DS	1	; Center throttle (in bidirectional mode)
 _Pgm_Main_Spoolup_Time:		DS	1	; Main spoolup time
 Pgm_Enable_Temp_Prot:		DS	1	; Temperature protection enable
-Pgm_Enable_Power_Prot:		DS	1	; Low RPM power protection enable
+_Pgm_Enable_Power_Prot:		DS	1	; Low RPM power protection enable
 _Pgm_Enable_Pwm_Input:		DS	1	; Enable PWM input signal
 _Pgm_Pwm_Dither:			DS	1	; Output PWM dither
 Pgm_Brake_On_Stop:			DS	1	; Braking when throttle is zero
 Pgm_LED_Control:			DS	1	; LED control
-
-; The sequence of the variables below is no longer of importance
-Pgm_Startup_Pwr_Decoded:		DS	1	; Programmed startup power decoded
 
 ISEG AT 0B0h
 Stack:					DS	16	; Reserved stack space
@@ -315,19 +314,19 @@ Temp_Storage:				DS	48	; Temporary storage
 CSEG AT 1A00h
 EEPROM_FW_MAIN_REVISION		EQU	0	; Main revision of the firmware
 EEPROM_FW_SUB_REVISION		EQU	9	; Sub revision of the firmware
-EEPROM_LAYOUT_REVISION		EQU	200	; Revision of the EEPROM layout
+EEPROM_LAYOUT_REVISION		EQU	201	; Revision of the EEPROM layout
 
 Eep_FW_Main_Revision:		DB	EEPROM_FW_MAIN_REVISION		; EEPROM firmware main revision number
 Eep_FW_Sub_Revision:		DB	EEPROM_FW_SUB_REVISION		; EEPROM firmware sub revision number
 Eep_Layout_Revision:		DB	EEPROM_LAYOUT_REVISION		; EEPROM layout revision number
 
 _Eep_Pgm_Gov_P_Gain:		DB	0FFh
-Eep_Pgm_Startup_Boost:		DB	DEFAULT_PGM_STARTUP_BOOST
+Eep_Pgm_Startup_Power_Min:	DB	DEFAULT_PGM_STARTUP_POWER_MIN
 Eep_Pgm_Startup_Beep:		DB	DEFAULT_PGM_STARTUP_BEEP
 Eep_Pgm_Dithering:			DB	DEFAULT_PGM_DITHERING
-_Eep_Pgm_Motor_Gain:		DB	0FFh
-_Eep_Pgm_Motor_Idle:		DB	0FFh
-Eep_Pgm_Startup_Pwr:		DB	DEFAULT_PGM_STARTUP_PWR		; EEPROM copy of programmed startup power
+Eep_Pgm_Startup_Power_Max:	DB	DEFAULT_PGM_STARTUP_POWER_MAX
+_Eep_Pgm_Rampup_Slope:		DB	0FFh
+Eep_Pgm_Rpm_Power_Slope:		DB	DEFAULT_PGM_RPM_POWER_SLOPE		; EEPROM copy of programmed startup power
 _Eep_Pgm_Pwm_Freq:			DB	0FFh
 Eep_Pgm_Direction:			DB	DEFAULT_PGM_DIRECTION		; EEPROM copy of programmed rotation direction
 _Eep__Pgm_Input_Pol:		DB	0FFh
@@ -354,7 +353,7 @@ _Eep_Pgm_BEC_Voltage_High:	DB	0FFh
 _Eep_Pgm_Center_Throttle:	DB	0FFh						; EEPROM copy of programmed center throttle
 _Eep_Pgm_Main_Spoolup_Time:	DB	0FFh
 Eep_Pgm_Temp_Prot_Enable:	DB	DEFAULT_PGM_ENABLE_TEMP_PROT	; EEPROM copy of programmed temperature protection enable
-Eep_Pgm_Enable_Power_Prot:	DB	DEFAULT_PGM_ENABLE_POWER_PROT	; EEPROM copy of programmed low rpm power protection enable
+_Eep_Pgm_Enable_Power_Prot:	DB	0FFh						; EEPROM copy of programmed low rpm power protection enable
 _Eep_Pgm_Enable_Pwm_Input:	DB	0FFh
 _Eep_Pgm_Pwm_Dither:		DB	0FFh
 Eep_Pgm_Brake_On_Stop:		DB	DEFAULT_PGM_BRAKE_ON_STOP	; EEPROM copy of programmed braking when throttle is zero
@@ -372,7 +371,7 @@ CSEG AT 80h						; Code segment after interrupt vectors
 ;**** **** **** **** ****
 ; Table definitions
 ; Rampup pwm power (8-bit)
-STARTUP_POWER_TABLE:	DB	1,	2,	3,	4,	6,	9,	12,	18,	25,	37,	50,	62,	75
+;STARTUP_POWER_TABLE:	DB	1,	2,	3,	4,	6,	9,	12,	18,	25,	37,	50,	62,	75
 
 
 
@@ -778,7 +777,7 @@ t1_int_not_bidir:
 	mov	A, Temp5
 	jnz	t1_int_stall_boost			; Already more power than minimum at startup
 
-	mov	Temp2, #Pgm_Startup_Boost	; Read startup boost setting (power at startup)
+	mov	Temp2, #Pgm_Startup_Power_Min	; Read minimum startup power setting
 	mov	B, @Temp2
 
 	clr	C						; Set power to at least be minimum startup power
@@ -1398,9 +1397,8 @@ set_pwm_limit:
 	mov	Temp1, #0FFh				; Default full power
 	jb	Flag_Startup_Phase, set_pwm_limit_low_rpm_exit	; Exit if startup phase set
 
-	mov	Temp2, #Pgm_Enable_Power_Prot	; Check if low RPM power protection is enabled
-	mov	A, @Temp2
-	jz	set_pwm_limit_low_rpm_exit	; Exit if disabled
+	mov	A, Low_Rpm_Pwr_Slope		; Check if low RPM power protection is enabled
+	jz	set_pwm_limit_low_rpm_exit	; Exit if disabled (zero)
 
 	mov	A, Comm_Period4x_H
 	jz	set_pwm_limit_low_rpm_exit	; Avoid divide by zero
@@ -3335,12 +3333,12 @@ write_tag:
 set_default_parameters:
 	mov	Temp1, #_Pgm_Gov_P_Gain
 	mov	@Temp1, #0FFh						; _Pgm_Gov_P_Gain
-	imov	Temp1, #DEFAULT_PGM_STARTUP_BOOST		; Pgm_Startup_Boost
+	imov	Temp1, #DEFAULT_PGM_STARTUP_POWER_MIN	; Pgm_Startup_Power_Min
 	imov	Temp1, #DEFAULT_PGM_STARTUP_BEEP		; Pgm_Startup_Beep
 	imov	Temp1, #DEFAULT_PGM_DITHERING			; Pgm_Dithering
-	imov	Temp1, #0FFh						; Pgm_Rampup_Start_Power
-	imov	Temp1, #0FFh						; Pgm_Rampup_Slope
-	imov	Temp1, #DEFAULT_PGM_STARTUP_PWR		; Pgm_Startup_Pwr
+	imov	Temp1, #DEFAULT_PGM_STARTUP_POWER_MAX	; Pgm_Startup_Power_Max
+	imov	Temp1, #0FFh						; _Pgm_Rampup_Slope
+	imov	Temp1, #DEFAULT_PGM_RPM_POWER_SLOPE	; Pgm_Rpm_Power_Slope
 	imov	Temp1, #0FFh						; _Pgm_Pwm_Freq
 	imov	Temp1, #DEFAULT_PGM_DIRECTION			; Pgm_Direction
 	imov	Temp1, #0FFh						; _Pgm_Input_Pol
@@ -3369,7 +3367,7 @@ set_default_parameters:
 	imov	Temp1, #0FFh						; _Pgm_Center_Throttle
 	imov	Temp1, #0FFh						; _Pgm_Main_Spoolup_Time
 	imov	Temp1, #DEFAULT_PGM_ENABLE_TEMP_PROT	; Pgm_Enable_Temp_Prot
-	imov	Temp1, #DEFAULT_PGM_ENABLE_POWER_PROT	; Pgm_Enable_Power_Prot
+	imov	Temp1, #0FFh						; _Pgm_Enable_Power_Prot
 	imov	Temp1, #0FFh						; _Pgm_Enable_Pwm_Input
 	imov	Temp1, #0FFh						; _Pgm_Pwm_Dither
 	imov	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP		; Pgm_Brake_On_Stop
@@ -3395,22 +3393,22 @@ decode_settings:
 	mov	Flag_Pgm_Dir_Rev, C
 	mov	Flag_Pgm_Bidir_Rev, C
 
-	; Decode startup power
-	mov	Temp1, #Pgm_Startup_Pwr
-	mov	A, @Temp1
-	dec	A
-	mov	DPTR, #STARTUP_POWER_TABLE
-	movc	A, @A+DPTR
-	mov	Temp1, #Pgm_Startup_Pwr_Decoded
-	mov	@Temp1, A
-	; Decode low rpm power slope
-	mov	Temp1, #Pgm_Startup_Pwr
-	mov	A, @Temp1
-	mov	Low_Rpm_Pwr_Slope, A
-	clr	C
-	subb	A, #2
-	jnc	($+5)
-	mov	Low_Rpm_Pwr_Slope, #2
+	; Check startup power
+	mov	Temp1, #Pgm_Startup_Power_Max
+	mov	A, #80					; Limit to at most 80
+	subb	A, @Temp1
+	jnc	($+4)
+	mov	@Temp1, #80
+
+	; Check low rpm power slope
+	mov	Temp1, #Pgm_Rpm_Power_Slope
+	mov	A, #13					; Limit to at most 13
+	subb	A, @Temp1
+	jnc	($+4)
+	mov	@Temp1, #13
+
+	mov	Low_Rpm_Pwr_Slope, @Temp1
+
 	; Decode demag compensation
 	mov	Temp1, #Pgm_Demag_Comp
 	mov	A, @Temp1
@@ -3819,7 +3817,7 @@ init_start:
 
 	; Set up start operating conditions
 	clr	IE_EA					; Disable interrupts
-	mov	Temp2, #Pgm_Startup_Pwr_Decoded
+	mov	Temp2, #Pgm_Startup_Power_Max
 	mov	Pwm_Limit_Beg, @Temp2		; Set initial pwm limit
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
