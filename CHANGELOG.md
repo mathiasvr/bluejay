@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10](https://github.com/mathiasvr/bluejay/compare/v0.9...v0.10) (2021-02-10)
+
+### Features
+
+* Separate startup and rampup power settings ([ad46bab](https://github.com/mathiasvr/bluejay/commit/ad46bab50605834db0161cde13ec5202e810431f))
+
+### Bug Fixes
+
+* DShot commands could cause invalid direction settings ([30fbf47](https://github.com/mathiasvr/bluejay/commit/30fbf477074d3283b9d1c2b04840768514c8395f))
+* Fix and optimize direction handling ([f5911b6](https://github.com/mathiasvr/bluejay/commit/f5911b673e3b1b34f227586d31985e87d502b2f7))
+
+
 ## [0.9](https://github.com/mathiasvr/bluejay/compare/v0.8...v0.9) (2021-01-29)
 
 ### ⚠ BREAKING CHANGES
