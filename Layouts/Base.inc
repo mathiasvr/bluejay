@@ -63,6 +63,46 @@ $endif
 
 
 ;**** **** **** **** ****
+; PWM channels and updating
+;**** **** **** **** ****
+$if NOT CUSTOM_PWM_UPDATE
+
+Enable_Power_Pwm_Module MACRO
+IF FETON_DELAY == 0
+	mov	PCA0_POWER_MODULE, #4Ah		;; Enable comparator of module, enable match, set pwm mode
+ELSE
+	mov	PCA0_POWER_MODULE, #42h		;; Enable comparator of module, set pwm mode
+ENDIF
+ENDM
+
+Enable_Damp_Pwm_Module MACRO
+IF FETON_DELAY == 0
+	mov	PCA0_DAMP_MODULE, #00h		;; Disable
+ELSE
+	mov	PCA0_DAMP_MODULE, #42h		;; Enable comparator of module, set pwm mode
+ENDIF
+ENDM
+
+Set_Power_Pwm_Reg_L MACRO value
+	mov	PCA0_POWER_L, value
+ENDM
+
+Set_Power_Pwm_Reg_H MACRO value
+	mov	PCA0_POWER_H, value
+ENDM
+
+Set_Damp_Pwm_Reg_L MACRO value
+	mov	PCA0_DAMP_L, value
+ENDM
+
+Set_Damp_Pwm_Reg_H MACRO value
+	mov	PCA0_DAMP_H, value
+ENDM
+
+$endif
+
+
+;**** **** **** **** ****
 ; Comparator setup and phase change
 ;**** **** **** **** ****
 IF COMP_PORT == 0

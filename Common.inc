@@ -165,22 +165,6 @@ ELSE
 ENDIF
 ENDM
 
-Enable_Power_Pwm_Module MACRO
-IF FETON_DELAY == 0
-	mov	PCA0_POWER_MODULE, #4Ah		;; Enable comparator of module, enable match, set pwm mode
-ELSE
-	mov	PCA0_POWER_MODULE, #42h		;; Enable comparator of module, set pwm mode
-ENDIF
-ENDM
-
-Enable_Damp_Pwm_Module MACRO
-IF FETON_DELAY == 0
-	mov	PCA0_DAMP_MODULE, #00h		;; Disable
-ELSE
-	mov	PCA0_DAMP_MODULE, #42h		;; Enable comparator of module, set pwm mode
-ENDIF
-ENDM
-
 Clear_COVF_Interrupt MACRO
 	anl	PCA0PWM, #0DFh
 ENDM

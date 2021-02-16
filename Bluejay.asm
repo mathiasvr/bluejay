@@ -1136,19 +1136,19 @@ ENDIF
 
 ; Set power pwm auto-reload registers
 IF PWM_BITS_H != 0
-	mov	PCA0_POWER_L, Power_Pwm_Reg_L
-	mov	PCA0_POWER_H, Power_Pwm_Reg_H
+	Set_Power_Pwm_Reg_L Power_Pwm_Reg_L
+	Set_Power_Pwm_Reg_H Power_Pwm_Reg_H
 ELSE
-	mov	PCA0_POWER_H, Power_Pwm_Reg_L
+	Set_Power_Pwm_Reg_H Power_Pwm_Reg_L
 ENDIF
 
 IF FETON_DELAY != 0
 	; Set damp pwm auto-reload registers
 	IF PWM_BITS_H != 0
-		mov	PCA0_DAMP_L, Damp_Pwm_Reg_L
-		mov	PCA0_DAMP_H, Damp_Pwm_Reg_H
+		Set_Damp_Pwm_Reg_L Damp_Pwm_Reg_L
+		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_H
 	ELSE
-		mov	PCA0_DAMP_H, Damp_Pwm_Reg_L
+		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_L
 	ENDIF
 ENDIF
 
