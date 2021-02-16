@@ -27,8 +27,11 @@
 ;
 ;**** **** **** **** ****
 
+PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
+COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
-
+; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
+COMP_PORT		EQU	1
 
 
 ;*********************
@@ -44,14 +47,10 @@ Rcp_In		EQU	1	;i
 ;			EQU	0	;i
 
 
-
 P0_DIGITAL	EQU	0FFh
 P0_INIT		EQU	(1 SHL Rcp_In)
 P0_PUSHPULL	EQU	(1 SHL LED_0) + (1 SHL LED_1) + (1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)
 P0_SKIP		EQU	0FFh
-
-PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
-COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 
 IF FETON_DELAY == 0
@@ -86,7 +85,6 @@ B_com		EQU	1	;o
 A_com		EQU	0	;o
 
 
-
 P_ApwmFET		EQU	P0.A_pwm
 P_AcomFET		EQU	P1.A_com
 P_BpwmFET		EQU	P0.B_pwm
@@ -94,18 +92,11 @@ P_BcomFET		EQU	P1.B_com
 P_CpwmFET		EQU	P0.C_pwm
 P_CcomFET		EQU	P1.C_com
 
-; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
-COMP_PORT		EQU	1
-
-$set(CUSTOM_PWM_PHASE, CUSTOM_LED)
-
-$include (Base.inc)
 
 P1_DIGITAL	EQU	(1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
 P1_INIT		EQU	00h
 P1_PUSHPULL	EQU	(1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
 P1_SKIP		EQU	0FFh
-
 
 
 Set_Pwm_A MACRO
@@ -147,7 +138,6 @@ Set_Pwms_Off MACRO
 ENDM
 
 
-
 ;*********************
 ; PORT 2 definitions *
 ;*********************
@@ -158,12 +148,9 @@ P2_PUSHPULL	EQU	(1 SHL DebugPin)
 P2_SKIP		EQU	0FFh
 
 
-;**********************
-; MCU specific macros *
-;**********************
-
-
-
+;**** **** **** **** ****
+; LED configuration
+;**** **** **** **** ****
 Set_LED_0 MACRO
 	setb	P0.LED_0
 ENDM
@@ -191,3 +178,10 @@ ENDM
 
 Clear_LED_3 MACRO
 ENDM
+
+
+;**** **** **** **** ****
+; Inherit base layout
+;**** **** **** **** ****
+$set(CUSTOM_PWM_PHASE, CUSTOM_LED)
+$include (Base.inc)

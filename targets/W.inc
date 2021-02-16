@@ -27,7 +27,11 @@
 ;
 ;**** **** **** **** ****
 
+PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
+COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
+; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
+COMP_PORT		EQU	0
 
 
 ;*********************
@@ -47,9 +51,6 @@ P0_INIT		EQU	0FFh
 P0_PUSHPULL	EQU	0
 P0_SKIP		EQU	0FFh
 
-
-PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
-COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 IF FETON_DELAY == 0
 	PCA0_POWER_MODULE	EQU	PCA0CPM0
@@ -82,12 +83,6 @@ C_pwm		EQU	4	;o
 ;		EQU	1	;i
 ;		EQU	0	;i
 
-; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
-COMP_PORT		EQU	0
-
-$set(CUSTOM_PWM_PHASE, CUSTOM_FET_TOGGLING)
-
-$include (Base.inc)
 
 ; pwm outputs start as analog in -> floating
 ; this ensures all mosfet drivers start with floating outputs
@@ -95,69 +90,69 @@ P1_DIGITAL	EQU	NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm))
 P1_INIT		EQU	00h
 P1_PUSHPULL	EQU	((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm))
 ;
-P1_SKIP		EQU    0FFh
+P1_SKIP		EQU	0FFh
 
 
 ApwmFET_on MACRO
-	setb     P1.A_pwm		; set pin to high
-	orl P1MDIN, #(1 SHL A_pwm)	; enable pin driver
+	setb	P1.A_pwm		; set pin to high
+	orl	P1MDIN, #(1 SHL A_pwm)	; enable pin driver
 ENDM
 
 ApwmFET_off MACRO
-	anl P1MDIN, #(NOT(1 SHL A_pwm))	; analog in -> pullup, driver and digital in is disable = floating
+	anl	P1MDIN, #(NOT(1 SHL A_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
 BpwmFET_on MACRO
-	setb P1.B_pwm		; set pin to high
-	orl P1MDIN, #(1 SHL B_pwm)	; enable pin driver
+	setb	P1.B_pwm		; set pin to high
+	orl	P1MDIN, #(1 SHL B_pwm)	; enable pin driver
 ENDM
 
 BpwmFET_off MACRO
-	anl P1MDIN, #(NOT(1 SHL B_pwm))	; analog in -> pullup, driver and digital in is disable = floating
+	anl	P1MDIN, #(NOT(1 SHL B_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
 CpwmFET_on MACRO
-	setb     P1.C_pwm		; set pin to high
-	orl P1MDIN, #(1 SHL C_pwm)	; enable pin driver
+	setb	P1.C_pwm		; set pin to high
+	orl	P1MDIN, #(1 SHL C_pwm)	; enable pin driver
 ENDM
 
 CpwmFET_off MACRO
-	anl P1MDIN, #(NOT(1 SHL C_pwm))	; analog in -> pullup, driver and digital in is disable = floating
+	anl	P1MDIN, #(NOT(1 SHL C_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
 All_pwmFETs_Off MACRO
-	anl P1MDIN, #(NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)))	; analog in -> pullup, driver and digital in is disable = floating
+	anl	P1MDIN, #(NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
 AcomFET_on MACRO
-	clr P1.A_pwm			; set pin to low
-	orl P1MDIN, #(1 SHL A_pwm)	; enable pin driver
+	clr	P1.A_pwm			; set pin to low
+	orl	P1MDIN, #(1 SHL A_pwm)	; enable pin driver
 ENDM
 
 AcomFET_off MACRO
-	anl P1MDIN, #(NOT(1 SHL A_pwm))	; analog in -> pullup, driver and digital in is disable = floating
+	anl	P1MDIN, #(NOT(1 SHL A_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
 BcomFET_on MACRO
-	clr P1.B_pwm			; set pin to low
-	orl P1MDIN, #(1 SHL B_pwm)	; enable pin driver
+	clr	P1.B_pwm			; set pin to low
+	orl	P1MDIN, #(1 SHL B_pwm)	; enable pin driver
 ENDM
 
 BcomFET_off MACRO
-	anl P1MDIN, #(NOT(1 SHL B_pwm))	; analog in -> pullup, driver and digital in is disable = floating
+	anl	P1MDIN, #(NOT(1 SHL B_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
 CcomFET_on MACRO
-	clr P1.C_pwm			; set pin to low
-	orl P1MDIN, #(1 SHL C_pwm)	; enable pin driver
+	clr	P1.C_pwm			; set pin to low
+	orl	P1MDIN, #(1 SHL C_pwm)	; enable pin driver
 ENDM
 
 CcomFET_off MACRO
-	anl P1MDIN, #(NOT(1 SHL C_pwm))	; analog in -> pullup, driver and digital in is disable = floating
+	anl	P1MDIN, #(NOT(1 SHL C_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
 All_comFETs_Off MACRO
-	anl P1MDIN, #(NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)))	; analog in -> pullup, driver and digital in is disable = floating
+	anl	P1MDIN, #(NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
 Set_Pwm_A MACRO
@@ -180,8 +175,6 @@ Set_Pwms_Off MACRO
 ENDM
 
 
-
-
 ;*********************
 ; PORT 2 definitions *
 ;*********************
@@ -190,3 +183,10 @@ DebugPin		EQU	0	;o
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)
 P2_SKIP		EQU	0FFh
+
+
+;**** **** **** **** ****
+; Inherit base layout
+;**** **** **** **** ****
+$set(CUSTOM_PWM_PHASE, CUSTOM_FET_TOGGLING)
+$include (Base.inc)

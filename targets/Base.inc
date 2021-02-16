@@ -1,14 +1,44 @@
-
+;**** **** **** **** ****
+;
+; Bluejay digital ESC firmware for controlling brushless motors in multirotors
+;
+; Copyright 2020 Mathias Rasmussen
+; Copyright 2011, 2012 Steffen Skaug
+;
+; This file is part of Bluejay.
+;
+; Bluejay is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; Bluejay is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with Bluejay.  If not, see <http://www.gnu.org/licenses/>.
+;
+;**** **** **** **** ****
+;
+; Base layout
+;
+; The inheriting layout should
+; - Specify PWM_ACTIVE_HIGH, COMPWM_ACTIVE_HIGH and COMP_PORT
+; - Set CUSTOM_* flags to override default implementation
+;
+;**** **** **** **** ****
 
 
 ;**** **** **** **** ****
 ; Bootloader definitions
 ;**** **** **** **** ****
-RTX_PORT				EQU	P0		; Receive/Transmit port
-RTX_MDOUT				EQU	P0MDOUT	; Set to 1 for PUSHPULL
-RTX_MDIN				EQU	P0MDIN	; Set to 1 for DIGITAL
-RTX_SKIP				EQU	P0SKIP	; Set to 1 for SKIP
-RTX_PIN				EQU	Rcp_In	; RTX pin
+RTX_PORT		EQU	P0				; Receive/Transmit port
+RTX_MDOUT		EQU	P0MDOUT			; Set to 1 for PUSHPULL
+RTX_MDIN		EQU	P0MDIN			; Set to 1 for DIGITAL
+RTX_SKIP		EQU	P0SKIP			; Set to 1 for SKIP
+RTX_PIN		EQU	Rcp_In			; RTX pin
 
 
 ;**** **** **** **** ****
@@ -17,8 +47,8 @@ RTX_PIN				EQU	Rcp_In	; RTX pin
 $if NOT CUSTOM_PWM_SETUP
 
 Initialize_Xbar MACRO
-	mov	XBR2, #40h	;; Xbar enabled
-	mov	XBR1, #02h	;; CEX0 and CEX1 routed to pins
+	mov	XBR2, #40h				;; Xbar enabled
+	mov	XBR1, #02h				;; CEX0 and CEX1 routed to pins
 ENDM
 
 Set_Pwm_Polarity MACRO
@@ -36,41 +66,41 @@ $endif
 ; Comparator setup and phase change
 ;**** **** **** **** ****
 IF COMP_PORT == 0
-CMP_CN0	EQU	CMP0CN0
-CMP_MD	EQU	CMP0MD
-CMP_MX	EQU	CMP0MX
+CMP_CN0		EQU	CMP0CN0
+CMP_MD		EQU	CMP0MD
+CMP_MX		EQU	CMP0MX
 ELSE
-CMP_CN0	EQU	CMP1CN0
-CMP_MD	EQU	CMP1MD
-CMP_MX	EQU	CMP1MX
+CMP_CN0		EQU	CMP1CN0
+CMP_MD		EQU	CMP1MD
+CMP_MX		EQU	CMP1MX
 ENDIF
 
 $if NOT CUSTOM_COMP_SETUP
 
 Initialize_Comparator MACRO
-	mov	CMP_CN0, #80h	;; Comparator enabled, no hysteresis
-	mov	CMP_MD, #00h	;; Comparator response time 100ns
+	mov	CMP_CN0, #80h				;; Comparator enabled, no hysteresis
+	mov	CMP_MD, #00h				;; Comparator response time 100ns
 ENDM
 
 Read_Comp_Out MACRO
-	mov	A, CMP_CN0	;; Read comparator output
+	mov	A, CMP_CN0				;; Read comparator output
 ENDM
 
 $endif
 
 ; Set comparator multiplexer to phase A
 Set_Comp_Phase_A MACRO
-	mov CMP_MX, #((A_Mux SHL 4) + Comp_Com)
+	mov	CMP_MX, #((A_Mux SHL 4) + Comp_Com)
 ENDM
 
 ; Set comparator multiplexer to phase B
 Set_Comp_Phase_B MACRO
-	mov CMP_MX, #((B_Mux SHL 4) + Comp_Com)
+	mov	CMP_MX, #((B_Mux SHL 4) + Comp_Com)
 ENDM
 
 ; Set comparator multiplexer to phase C
 Set_Comp_Phase_C MACRO
-	mov CMP_MX, #((C_Mux SHL 4) + Comp_Com)
+	mov	CMP_MX, #((C_Mux SHL 4) + Comp_Com)
 ENDM
 
 
@@ -122,22 +152,22 @@ $endif
 
 
 ;**** **** **** **** ****
-; Fets on/off toggling
+; Toggling FETs on/off
 ;**** **** **** **** ****
 $if NOT CUSTOM_FET_TOGGLING
 
-IF PWM_ACTIVE_HIGH == 1		; fet active high
+IF PWM_ACTIVE_HIGH == 1				; PWM FET active high
 pON	LIT	'setb'
 pOFF	LIT	'clr'
-ELSE						; fet active low
+ELSE								; PWM FET active low
 pON	LIT	'clr'
 pOFF	LIT	'setb'
 ENDIF
 
-IF COMPWM_ACTIVE_HIGH == 1	; comfet active high
+IF COMPWM_ACTIVE_HIGH == 1			; COM FET active high
 cON	LIT	'setb'
 cOFF	LIT	'clr'
-ELSE						; comfet active low
+ELSE								; COM FET active low
 cON	LIT	'clr'
 cOFF	LIT	'setb'
 ENDIF
@@ -194,7 +224,6 @@ All_pwmFETs_Off MACRO
 ENDM
 
 
-
 AcomFET_on MACRO
 IF FETON_DELAY == 0
 	pOFF	P_ApwmFET
@@ -237,6 +266,40 @@ ENDM
 $endif
 
 
+;**** **** **** **** ****
+; ADC and temperature measurement
+;**** **** **** **** ****
+TEMP_LIMIT		EQU	49			; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
+TEMP_LIMIT_STEP	EQU	9			; Temperature measurement ADC value increment for another 10degC
+
+Initialize_Adc MACRO
+	mov	REF0CN, #0Ch				;; Set vdd (3.3V) as reference. Enable temp sensor and bias
+IF MCU_48MHZ == 0
+	mov	ADC0CF, #59h				;; ADC clock 2MHz, PGA gain 1
+ELSE
+	mov	ADC0CF, #0B9h				;; ADC clock 2MHz, PGA gain 1
+ENDIF
+	mov	ADC0MX, #10h				;; Select temp sensor input
+	mov	ADC0CN0, #80h				;; ADC enabled
+	mov	ADC0CN1, #01h				;; Common mode buffer enabled
+ENDM
+
+Start_Adc MACRO
+	mov	ADC0CN0, #90h				;; ADC start
+ENDM
+
+Read_Adc_Result MACRO
+	mov	Temp1, ADC0L
+	mov	Temp2, ADC0H
+ENDM
+
+Stop_Adc MACRO
+ENDM
+
+
+;**** **** **** **** ****
+; LEDs
+;**** **** **** **** ****
 $if NOT CUSTOM_LED
 
 Set_LED_0 MACRO
@@ -264,35 +327,3 @@ Clear_LED_3 MACRO
 ENDM
 
 $endif
-
-;**** **** **** **** ****
-; ADC and temperature measurement
-;**** **** **** **** ****
-TEMP_LIMIT			EQU	49		; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
-TEMP_LIMIT_STEP		EQU	9		; Temperature measurement ADC value increment for another 10degC
-
-Initialize_Adc MACRO
-	mov	REF0CN, #0Ch				;; Set vdd (3.3V) as reference. Enable temp sensor and bias
-IF MCU_48MHZ == 0
-	mov	ADC0CF, #59h				;; ADC clock 2MHz, PGA gain 1
-ELSE
-	mov	ADC0CF, #0B9h				;; ADC clock 2MHz, PGA gain 1
-ENDIF
-	mov	ADC0MX, #10h				;; Select temp sensor input
-	mov	ADC0CN0, #80h				;; ADC enabled
-	mov	ADC0CN1, #01h				;; Common mode buffer enabled
-ENDM
-
-Start_Adc MACRO
-	mov	ADC0CN0, #90h				;; ADC start
-ENDM
-
-Read_Adc_Result MACRO
-	mov	Temp1, ADC0L
-	mov	Temp2, ADC0H
-ENDM
-
-Stop_Adc MACRO
-ENDM
-
-
