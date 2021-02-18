@@ -61,3 +61,5 @@ The following table shows a correspondence between BLHeli_S and Bluejay's startu
 Any help you can provide is greatly appreciated!
 
 If you have problems, suggestions or other feedback you can open an [issue](https://github.com/mathiasvr/bluejay/issues).
+
+Join the new [Discord server](https://discord.gg/phAmtxnMMN) to ask questions and discuss Bluejay.
