@@ -33,25 +33,6 @@ COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 ; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
 COMP_PORT		EQU	0
 
-
-;*********************
-; PORT 0 definitions *
-;*********************
-LED_1		EQU	7	;o
-LED_0		EQU	6	;o
-Rcp_In		EQU	5	;i
-;			EQU	4	;i
-C_Mux		EQU	3	;i
-B_Mux		EQU	2	;i
-A_Mux		EQU	1	;i
-Comp_Com		EQU	0	;i
-
-P0_DIGITAL	EQU	NOT((1 SHL A_Mux) + (1 SHL B_Mux) + (1 SHL C_Mux) + (1 SHL Comp_Com))
-P0_INIT		EQU	NOT((1 SHL LED_0) + (1 SHL LED_1))
-P0_PUSHPULL	EQU	(1 SHL LED_0) + (1 SHL LED_1)
-P0_SKIP		EQU	0FFh
-
-
 IF FETON_DELAY == 0
 	PCA0_POWER_MODULE	EQU	PCA0CPM0
 	PCA0_POWER_L		EQU	PCA0CPL0
@@ -69,6 +50,23 @@ ELSE
 	PCA0_DAMP_L		EQU	PCA0CPL1
 	PCA0_DAMP_H		EQU	PCA0CPH1
 ENDIF
+
+;*********************
+; PORT 0 definitions *
+;*********************
+LED_1		EQU	7	;o
+LED_0		EQU	6	;o
+Rcp_In		EQU	5	;i
+;			EQU	4	;i
+C_Mux		EQU	3	;i
+B_Mux		EQU	2	;i
+A_Mux		EQU	1	;i
+Comp_Com		EQU	0	;i
+
+P0_DIGITAL	EQU	NOT((1 SHL A_Mux) + (1 SHL B_Mux) + (1 SHL C_Mux) + (1 SHL Comp_Com))
+P0_INIT		EQU	NOT((1 SHL LED_0) + (1 SHL LED_1))
+P0_PUSHPULL	EQU	(1 SHL LED_0) + (1 SHL LED_1)
+P0_SKIP		EQU	0FFh
 
 
 ;*********************
