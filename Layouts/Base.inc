@@ -34,6 +34,7 @@
 ;**** **** **** **** ****
 ; Bootloader definitions
 ;**** **** **** **** ****
+; Note: The RTX pin must be on port 0 because we use the IT01CF register for interrupts
 RTX_PORT		EQU	P0				; Receive/Transmit port
 RTX_MDOUT		EQU	P0MDOUT			; Set to 1 for PUSHPULL
 RTX_MDIN		EQU	P0MDIN			; Set to 1 for DIGITAL
@@ -122,11 +123,11 @@ Initialize_Comparator MACRO
 	mov	CMP_MD, #00h				;; Comparator response time 100ns
 ENDM
 
+$endif
+
 Read_Comp_Out MACRO
 	mov	A, CMP_CN0				;; Read comparator output
 ENDM
-
-$endif
 
 ; Set comparator multiplexer to phase A
 Set_Comp_Phase_A MACRO
@@ -144,12 +145,30 @@ Set_Comp_Phase_C MACRO
 ENDM
 
 
+; Toggle FETs 'on' and 'off'
+IF PWM_ACTIVE_HIGH == 1				; PWM FET active high
+pON	LIT	'setb'
+pOFF	LIT	'clr'
+ELSE								; PWM FET active low
+pON	LIT	'clr'
+pOFF	LIT	'setb'
+ENDIF
+
+IF COMPWM_ACTIVE_HIGH == 1			; COM FET active high
+cON	LIT	'setb'
+cOFF	LIT	'clr'
+ELSE								; COM FET active low
+cON	LIT	'clr'
+cOFF	LIT	'setb'
+ENDIF
+
+
 ;**** **** **** **** ****
 ; PWM phase change
 ;**** **** **** **** ****
 $if NOT CUSTOM_PWM_PHASE
 
-; All pwm and com pins must be on port 1
+; All pwm and complementary pwm pins must be on port 1 to use the base code below
 P_ApwmFET		EQU	P1.A_pwm
 P_AcomFET		EQU	P1.A_com
 P_BpwmFET		EQU	P1.B_pwm
@@ -195,22 +214,6 @@ $endif
 ; Toggling FETs on/off
 ;**** **** **** **** ****
 $if NOT CUSTOM_FET_TOGGLING
-
-IF PWM_ACTIVE_HIGH == 1				; PWM FET active high
-pON	LIT	'setb'
-pOFF	LIT	'clr'
-ELSE								; PWM FET active low
-pON	LIT	'clr'
-pOFF	LIT	'setb'
-ENDIF
-
-IF COMPWM_ACTIVE_HIGH == 1			; COM FET active high
-cON	LIT	'setb'
-cOFF	LIT	'clr'
-ELSE								; COM FET active low
-cON	LIT	'clr'
-cOFF	LIT	'setb'
-ENDIF
 
 ApwmFET_on MACRO
 	pON	P_ApwmFET

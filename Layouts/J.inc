@@ -69,8 +69,6 @@ P0_PUSHPULL	EQU	(1 SHL LED_0) + (1 SHL LED_1) + (1 SHL LED_2)
 P0_SKIP		EQU	0FFh
 
 
-
-
 ;*********************
 ; PORT 1 definitions *
 ;*********************

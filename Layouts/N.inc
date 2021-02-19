@@ -22,7 +22,7 @@
 ;
 ;**** **** **** **** ****
 ;
-; Hardware definition file "N"
+; Hardware definition file "N". B with A and C fets swapped
 ; X  X  RC X  MC MB MA CC    X  X  Cp Cc Bp Bc Ap Ac
 ;
 ;**** **** **** **** ****

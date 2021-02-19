@@ -22,7 +22,7 @@
 ;
 ;**** **** **** **** ****
 ;
-; Hardware definition file "U".
+; Hardware definition file "U". Like M, but with 3 LEDs
 ; MA MC CC MB RC L0 L1 L2     X  Cc Bc Ac Cp Bp Ap X
 ;
 ;**** **** **** **** ****

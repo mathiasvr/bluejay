@@ -88,16 +88,6 @@ P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + 
 P1_SKIP		EQU	0FFh
 
 
-Initialize_Comparator MACRO
-	mov	CMP_CN0, #80h	;; Comparator enabled, no hysteresis
-	mov	CMP_MD, #40h	;; Comparator response time 100ns, Output polarity inverted
-ENDM
-
-Read_Comp_Out MACRO
-	mov	A, CMP_CN0	;; Read comparator output
-ENDM
-
-
 ;*********************
 ; PORT 2 definitions *
 ;*********************
@@ -106,6 +96,15 @@ DebugPin		EQU	0
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)
 P2_SKIP		EQU	0FFh
+
+
+;**** **** **** **** ****
+; Comparator setup
+;**** **** **** **** ****
+Initialize_Comparator MACRO
+	mov	CMP_CN0, #80h	;; Comparator enabled, no hysteresis
+	mov	CMP_MD, #40h	;; Comparator response time 100ns, Output polarity inverted
+ENDM
 
 
 ;**** **** **** **** ****

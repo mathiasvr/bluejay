@@ -83,19 +83,31 @@ B_com		EQU	1
 C_pwm		EQU	0
 
 
+P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com)
+P1_INIT		EQU	00h
+P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com)
+P1_SKIP		EQU	0FFh
+
+
+;*********************
+; PORT 2 definitions *
+;*********************
+DebugPin		EQU	0
+
+P2_DIGITAL	EQU	(1 SHL DebugPin)
+P2_PUSHPULL	EQU	(1 SHL DebugPin)
+P2_SKIP		EQU	0FFh
+
+
+;**** **** **** **** ****
+; PWM Phase
+;**** **** **** **** ****
 P_ApwmFET		EQU	P1.A_pwm
 P_AcomFET		EQU	P1.A_com
 P_BpwmFET		EQU	P1.B_pwm
 P_BcomFET		EQU	P1.B_com
 P_CpwmFET		EQU	P1.C_pwm
 P_CcomFET		EQU	P0.C_com
-
-
-P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com)
-P1_INIT		EQU	00h
-P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com)
-P1_SKIP		EQU	0FFh
-
 
 Set_Pwm_A MACRO
 IF FETON_DELAY == 0
@@ -134,16 +146,6 @@ Set_Pwms_Off MACRO
 	mov	P0SKIP, #0FFh
 	mov	P1SKIP, #0FFh
 ENDM
-
-
-;*********************
-; PORT 2 definitions *
-;*********************
-DebugPin		EQU	0
-
-P2_DIGITAL	EQU	(1 SHL DebugPin)
-P2_PUSHPULL	EQU	(1 SHL DebugPin)
-P2_SKIP		EQU	0FFh
 
 
 ;**** **** **** **** ****

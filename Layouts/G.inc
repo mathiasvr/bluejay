@@ -22,7 +22,7 @@
 ;
 ;**** **** **** **** ****
 ;
-; Hardware definition file "G"
+; Hardware definition file "G". A with different comp ordering
 ; X  X  RC X  CC MA MC MB    X  X  Cc Cp Bc Bp Ac Ap
 ;
 ;**** **** **** **** ****

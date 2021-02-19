@@ -87,12 +87,11 @@ C_pwm		EQU	4
 P1_DIGITAL	EQU	NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm))
 P1_INIT		EQU	00h
 P1_PUSHPULL	EQU	((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm))
-;
 P1_SKIP		EQU	0FFh
 
 
 ApwmFET_on MACRO
-	setb	P1.A_pwm		; set pin to high
+	setb	P1.A_pwm				; set pin to high
 	orl	P1MDIN, #(1 SHL A_pwm)	; enable pin driver
 ENDM
 
@@ -101,7 +100,7 @@ ApwmFET_off MACRO
 ENDM
 
 BpwmFET_on MACRO
-	setb	P1.B_pwm		; set pin to high
+	setb	P1.B_pwm				; set pin to high
 	orl	P1MDIN, #(1 SHL B_pwm)	; enable pin driver
 ENDM
 
@@ -110,7 +109,7 @@ BpwmFET_off MACRO
 ENDM
 
 CpwmFET_on MACRO
-	setb	P1.C_pwm		; set pin to high
+	setb	P1.C_pwm				; set pin to high
 	orl	P1MDIN, #(1 SHL C_pwm)	; enable pin driver
 ENDM
 
@@ -123,7 +122,7 @@ All_pwmFETs_Off MACRO
 ENDM
 
 AcomFET_on MACRO
-	clr	P1.A_pwm			; set pin to low
+	clr	P1.A_pwm				; set pin to low
 	orl	P1MDIN, #(1 SHL A_pwm)	; enable pin driver
 ENDM
 
@@ -132,7 +131,7 @@ AcomFET_off MACRO
 ENDM
 
 BcomFET_on MACRO
-	clr	P1.B_pwm			; set pin to low
+	clr	P1.B_pwm				; set pin to low
 	orl	P1MDIN, #(1 SHL B_pwm)	; enable pin driver
 ENDM
 
@@ -141,7 +140,7 @@ BcomFET_off MACRO
 ENDM
 
 CcomFET_on MACRO
-	clr	P1.C_pwm			; set pin to low
+	clr	P1.C_pwm				; set pin to low
 	orl	P1MDIN, #(1 SHL C_pwm)	; enable pin driver
 ENDM
 

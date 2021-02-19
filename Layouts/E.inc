@@ -99,7 +99,7 @@ P2_SKIP		EQU	0FFh
 
 
 ;**** **** **** **** ****
-; MCU specific
+; ESC specific
 ;**** **** **** **** ****
 Initialize_Xbar MACRO
 	mov	XBR2, #40h	;; Xbar enabled

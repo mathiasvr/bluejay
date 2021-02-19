@@ -22,7 +22,7 @@
 ;
 ;**** **** **** **** ****
 ;
-; Hardware definition file "D". Com fets are active low for H/L_N driver and EN_N/PWM driver
+; Hardware definition file "D". Com fets are active low for H/L_N driver and EN_N/PWM driver. A with different comp
 ; X  X  RC X  CC MA MC MB    X  X  Cc Cp Bc Bp Ac Ap
 ;
 ;**** **** **** **** ****

@@ -22,7 +22,7 @@
 ;
 ;**** **** **** **** ****
 ;
-; Hardware definition file "S". like "O" but Com fets are active high, Pwm fets are active low
+; Hardware definition file "S". like "O" but Com fets are active high, Pwm fets are active low. N with different comp
 ; X  X  RC X  CC MA MC MB    X  X  Cc Cp Bc Bp Ac Ap
 ;
 ;**** **** **** **** ****

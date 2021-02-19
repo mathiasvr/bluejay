@@ -75,13 +75,13 @@ H_	EQU	8		; Cm Vn Bm Am __ __ __ RX	Cc Bc Ac __ Cp Bp Ap __
 I_	EQU	9		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __
 J_	EQU	10		; Am Cm Bm Vn RX L0 L1 L2	Ap Bp Cp Ac Bc Cc __ __	LEDs
 K_	EQU	11		; RX Am Vn Bm __ Cm __ __	Ac Bc Cc Cp Bp Ap __ __	Com fets inverted
-L_	EQU	12		; Cm Bm Am Vn __ RX __ __	Cp Bp Ap Cc Bc Ac __ __
+L_	EQU	12		; Cm Bm Am Vn __ RX __ __	Cp Bp Ap Cc Bc Ac __ __	Like I with different mux pins
 M_	EQU	13		; __ __ L0 RX Bm Vn Cm Am	__ Ap Bp Cp Ac Bc Cc __	LED
-N_	EQU	14		; Vn Am Bm Cm __ RX __ __	Ac Ap Bc Bp Cc Cp __ __
+N_	EQU	14		; Vn Am Bm Cm __ RX __ __	Ac Ap Bc Bp Cc Cp __ __	Like B, with A and C fets swapped
 O_	EQU	15		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Like D, but low side pwm
-P_	EQU	16		; __ Cm Bm Vn Am RX __ __	__ Ap Bp Cp Ac Bc Cc __
+P_	EQU	16		; __ Cm Bm Vn Am RX __ __	__ Ap Bp Cp Ac Bc Cc __	Like M, without LEDs and different mux
 Q_	EQU	17		; __ RX __ L0 L1 Ap Bp Cp	Ac Bc Cc Vn Cm Bm Am __	LEDs
-R_	EQU	18		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __
+R_	EQU	18		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __	Like L, with different mux pins
 S_	EQU	19		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Like O, but com fets inverted
 T_	EQU	20		; __ Cm Vn Bm __ Am __ RX	Cc Bc Ac Ap Bp Cp __ __
 U_	EQU	21		; L2 L1 L0 RX Bm Vn Cm Am	__ Ap Bp Cp Ac Bc Cc __	Like M, but with 3 LEDs
@@ -89,7 +89,7 @@ V_	EQU	22		; Am Bm Vn Cm __ RX __ Cc	Cp Bc __ __ Bp Ac Ap __
 W_	EQU	23		; __ __ Am Vn __ Bm Cm RX	__ __ __ __ Cp Bp Ap __	Tristate gate driver
 X_	EQU	24
 Y_	EQU	25
-Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __
+Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __	Pwm fets inverted
 
 ;**** **** **** **** ****
 ; Select the port mapping to use (or unselect all for use with external batch compile file)

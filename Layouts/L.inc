@@ -22,7 +22,7 @@
 ;
 ;**** **** **** **** ****
 ;
-; Hardware definition file "L"
+; Hardware definition file "L". I with different comp ordering
 ; X  X  RC X  CC MA MB MC    X  X  Ac Bc Cc Ap Bp Cp
 ;
 ;**** **** **** **** ****
@@ -67,8 +67,6 @@ P0_DIGITAL	EQU	NOT((1 SHL A_Mux) + (1 SHL B_Mux) + (1 SHL C_Mux) + (1 SHL V_Mux)
 P0_INIT		EQU	0FFh
 P0_PUSHPULL	EQU	0
 P0_SKIP		EQU	0FFh
-
-
 
 
 ;*********************

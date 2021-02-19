@@ -22,7 +22,7 @@
 ;
 ;**** **** **** **** ****
 ;
-; Hardware definition file "P".
+; Hardware definition file "P". M with different comp and no LEDs
 ; X  X  RC MA CC MB MC X     X  Cc Bc Ac Cp Bp Ap X
 ;
 ;**** **** **** **** ****

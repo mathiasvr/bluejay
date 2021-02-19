@@ -22,7 +22,7 @@
 ;
 ;**** **** **** **** ****
 ;
-; Hardware definition file "Z"
+; Hardware definition file "Z". N different comp and pwm active low
 ; X  X  RC X  CC MA MC MB    X  X  Cp Cc Bp Bc Ap Ac
 ;
 ;**** **** **** **** ****
