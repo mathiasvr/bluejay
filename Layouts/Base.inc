@@ -52,7 +52,7 @@ Initialize_Xbar MACRO
 ENDM
 
 Set_Pwm_Polarity MACRO
-IF PCA0_POWER_MODULE == PCA0CPM0
+IF PCA0CPM_POWER == PCA0CPM0
 	mov	PCA0POL, #((COMPWM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
 ELSE
 	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COMPWM_ACTIVE_HIGH)
@@ -69,34 +69,34 @@ $if NOT CUSTOM_PWM_UPDATE
 
 Enable_Power_Pwm_Module MACRO
 IF FETON_DELAY == 0
-	mov	PCA0_POWER_MODULE, #4Ah		;; Enable comparator of module, enable match, set pwm mode
+	mov	PCA0CPM_POWER, #4Ah		;; Enable comparator of module, enable match, set pwm mode
 ELSE
-	mov	PCA0_POWER_MODULE, #42h		;; Enable comparator of module, set pwm mode
+	mov	PCA0CPM_POWER, #42h		;; Enable comparator of module, set pwm mode
 ENDIF
 ENDM
 
 Enable_Damp_Pwm_Module MACRO
 IF FETON_DELAY == 0
-	mov	PCA0_DAMP_MODULE, #00h		;; Disable
+	mov	PCA0CPM_DAMP, #00h		;; Disable
 ELSE
-	mov	PCA0_DAMP_MODULE, #42h		;; Enable comparator of module, set pwm mode
+	mov	PCA0CPM_DAMP, #42h		;; Enable comparator of module, set pwm mode
 ENDIF
 ENDM
 
 Set_Power_Pwm_Reg_L MACRO value
-	mov	PCA0_POWER_L, value
+	mov	PCA0CPL_POWER, value
 ENDM
 
 Set_Power_Pwm_Reg_H MACRO value
-	mov	PCA0_POWER_H, value
+	mov	PCA0CPH_POWER, value
 ENDM
 
 Set_Damp_Pwm_Reg_L MACRO value
-	mov	PCA0_DAMP_L, value
+	mov	PCA0CPL_DAMP, value
 ENDM
 
 Set_Damp_Pwm_Reg_H MACRO value
-	mov	PCA0_DAMP_H, value
+	mov	PCA0CPH_DAMP, value
 ENDM
 
 $endif
