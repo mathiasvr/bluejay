@@ -25,7 +25,7 @@
 ; Base layout
 ;
 ; The inheriting layout should
-; - Specify PWM_ACTIVE_HIGH, COMPWM_ACTIVE_HIGH and COMP_PORT
+; - Specify PWM_ACTIVE_HIGH, COMPWM_ACTIVE_HIGH and COMPARATOR_PORT
 ; - Set CUSTOM_* flags to override default implementation
 ;
 ;**** **** **** **** ****
@@ -105,7 +105,7 @@ $endif
 ;**** **** **** **** ****
 ; Comparator setup and phase change
 ;**** **** **** **** ****
-IF COMP_PORT == 0
+IF COMPARATOR_PORT == 0
 CMP_CN0		EQU	CMP0CN0
 CMP_MD		EQU	CMP0MD
 CMP_MX		EQU	CMP0MX
@@ -130,17 +130,17 @@ $endif
 
 ; Set comparator multiplexer to phase A
 Set_Comp_Phase_A MACRO
-	mov	CMP_MX, #((A_Mux SHL 4) + Comp_Com)
+	mov	CMP_MX, #((A_Mux SHL 4) + V_Mux)
 ENDM
 
 ; Set comparator multiplexer to phase B
 Set_Comp_Phase_B MACRO
-	mov	CMP_MX, #((B_Mux SHL 4) + Comp_Com)
+	mov	CMP_MX, #((B_Mux SHL 4) + V_Mux)
 ENDM
 
 ; Set comparator multiplexer to phase C
 Set_Comp_Phase_C MACRO
-	mov	CMP_MX, #((C_Mux SHL 4) + Comp_Com)
+	mov	CMP_MX, #((C_Mux SHL 4) + V_Mux)
 ENDM
 
 

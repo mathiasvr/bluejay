@@ -31,7 +31,7 @@ PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
 COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 ; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
-COMP_PORT		EQU	1
+COMPARATOR_PORT	EQU	1
 
 IF FETON_DELAY == 0
 	PCA0_POWER_MODULE	EQU	PCA0CPM0
@@ -77,7 +77,7 @@ P0_SKIP		EQU	0FFh
 A_Mux		EQU	6	;i
 B_Mux		EQU	5	;i
 C_Mux		EQU	4	;i
-Comp_Com		EQU	3	;o
+V_Mux		EQU	3	;o
 C_com		EQU	2	;o
 B_com		EQU	1	;o
 A_com		EQU	0	;o
