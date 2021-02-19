@@ -54,14 +54,14 @@ ENDIF
 ;*********************
 ; PORT 0 definitions *
 ;*********************
-C_pwm		EQU	7	;o
-B_pwm		EQU	6	;o
-A_pwm		EQU	5	;o
-LED_1		EQU	4	;i
-LED_0		EQU	3	;i
-;			EQU	2	;i
-Rcp_In		EQU	1	;i
-;			EQU	0	;i
+C_pwm		EQU	7
+B_pwm		EQU	6
+A_pwm		EQU	5
+LED_1		EQU	4
+LED_0		EQU	3
+;			EQU	2
+Rcp_In		EQU	1
+;			EQU	0
 
 
 P0_DIGITAL	EQU	0FFh
@@ -73,14 +73,14 @@ P0_SKIP		EQU	0FFh
 ;*********************
 ; PORT 1 definitions *
 ;*********************
-;			EQU	7	;i
-A_Mux		EQU	6	;i
-B_Mux		EQU	5	;i
-C_Mux		EQU	4	;i
-V_Mux		EQU	3	;o
-C_com		EQU	2	;o
-B_com		EQU	1	;o
-A_com		EQU	0	;o
+;			EQU	7
+A_Mux		EQU	6
+B_Mux		EQU	5
+C_Mux		EQU	4
+V_Mux		EQU	3
+C_com		EQU	2
+B_com		EQU	1
+A_com		EQU	0
 
 
 P_ApwmFET		EQU	P0.A_pwm
@@ -139,7 +139,7 @@ ENDM
 ;*********************
 ; PORT 2 definitions *
 ;*********************
-DebugPin		EQU	0	;o
+DebugPin		EQU	0
 
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)

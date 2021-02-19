@@ -54,14 +54,14 @@ ENDIF
 ;*********************
 ; PORT 0 definitions *
 ;*********************
-Rcp_In		EQU	7	;i
-C_Mux		EQU	6	;i
-B_Mux		EQU	5	;i
-;		EQU	4	;i
-V_Mux	EQU	3	;i
-A_Mux		EQU	2	;i
-;		EQU	1	;i
-;		EQU	0	;i
+Rcp_In		EQU	7
+C_Mux		EQU	6
+B_Mux		EQU	5
+;			EQU	4
+V_Mux		EQU	3
+A_Mux		EQU	2
+;			EQU	1
+;			EQU	0
 
 P0_DIGITAL	EQU	NOT((1 SHL A_Mux) + (1 SHL B_Mux) + (1 SHL C_Mux) + (1 SHL V_Mux))
 P0_INIT		EQU	0FFh
@@ -72,14 +72,14 @@ P0_SKIP		EQU	0FFh
 ;*********************
 ; PORT 1 definitions *
 ;*********************
-;		EQU	7	;i
-A_pwm		EQU	6	;o
-B_pwm		EQU	5	;o
-C_pwm		EQU	4	;o
-;		EQU	3	;i
-;		EQU	2	;i
-;		EQU	1	;i
-;		EQU	0	;i
+;			EQU	7
+A_pwm		EQU	6
+B_pwm		EQU	5
+C_pwm		EQU	4
+;			EQU	3
+;			EQU	2
+;			EQU	1
+;			EQU	0
 
 
 ; pwm outputs start as analog in -> floating
@@ -176,7 +176,7 @@ ENDM
 ;*********************
 ; PORT 2 definitions *
 ;*********************
-DebugPin		EQU	0	;o
+DebugPin		EQU	0
 
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)

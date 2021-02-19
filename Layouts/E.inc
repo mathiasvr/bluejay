@@ -54,14 +54,14 @@ ENDIF
 ;*********************
 ; PORT 0 definitions *
 ;*********************
-LED_1		EQU	7	;o
-LED_0		EQU	6	;o
-Rcp_In		EQU	5	;i
-;			EQU	4	;i
-C_Mux		EQU	3	;i
-B_Mux		EQU	2	;i
-A_Mux		EQU	1	;i
-V_Mux		EQU	0	;i
+LED_1		EQU	7
+LED_0		EQU	6
+Rcp_In		EQU	5
+;			EQU	4
+C_Mux		EQU	3
+B_Mux		EQU	2
+A_Mux		EQU	1
+V_Mux		EQU	0
 
 P0_DIGITAL	EQU	NOT((1 SHL A_Mux) + (1 SHL B_Mux) + (1 SHL C_Mux) + (1 SHL V_Mux))
 P0_INIT		EQU	NOT((1 SHL LED_0) + (1 SHL LED_1))
@@ -72,14 +72,14 @@ P0_SKIP		EQU	0FFh
 ;*********************
 ; PORT 1 definitions *
 ;*********************
-;			EQU	7	;i
-LED_2		EQU	6	;o
-C_com		EQU	5	;o
-C_pwm		EQU	4	;o
-B_com		EQU	3	;o
-B_pwm		EQU	2	;o
-A_com		EQU	1	;o
-A_pwm		EQU	0	;o
+;			EQU	7
+LED_2		EQU	6
+C_com		EQU	5
+C_pwm		EQU	4
+B_com		EQU	3
+B_pwm		EQU	2
+A_com		EQU	1
+A_pwm		EQU	0
 
 
 P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com) + (1 SHL LED_2)
@@ -91,7 +91,7 @@ P1_SKIP		EQU	0FFh
 ;*********************
 ; PORT 2 definitions *
 ;*********************
-DebugPin		EQU	0	;o
+DebugPin		EQU	0
 
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)
