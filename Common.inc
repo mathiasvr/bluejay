@@ -159,7 +159,7 @@ Initialize_PCA MACRO
 	mov	PCA0PWM, #(80h + PWM_BITS_H)	;; Enable PCA auto-reload registers and set pwm cycle length (8-11 bits)
 
 IF PWM_CENTERED == 1
-	mov	PCA0CENT, #03h				;; Center aligned pwm
+	mov	PCA0CENT, #07h				;; Center aligned pwm
 ELSE
 	mov	PCA0CENT, #00h				;; Edge aligned pwm
 ENDIF
