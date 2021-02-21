@@ -63,3 +63,45 @@ Any help you can provide is greatly appreciated!
 If you have problems, suggestions or other feedback you can open an [issue](https://github.com/mathiasvr/bluejay/issues).
 
 Join the new [Discord server](https://discord.gg/phAmtxnMMN) to ask questions and discuss Bluejay.
+
+### IDE
+To install an IDE and toolchain, use [SILABS Simplicity Studio](https://www.silabs.com/developers/simplicity-studio).
+
+After installing and starting Simplicity, choose *"Install"* from the toolbar, then *"Manage installed packages"* from there select the *"SDK"* tab and install the 8051 SDK. From the *"Toolchains"* tab install the *"Keil 8051 Toolchain"*.
+
+#### Obtaining license key
+You now only have the evaluation license for the Keil toolchain, you need to get a license for the full version. Go to "Help" -> "Licensing" -> "Keil 8051". From there you need to follow the link to a from after which you will be sent a license key for the full version of the Keil toolchain.
+
+### Registering via WINE
+If you only want compiler and linker, [download the C51 package from Keil](https://www.keil.com/demo/eval/c51.htm). Run it with wine:
+
+    wine c51v960a.exe
+
+This will install toolchain and uVision. To obtain a license key you need to run uVision in order to get your Computer ID.
+
+    wine ~/.wine/drive_c/Keil_v5/UV4/UV4.exe
+
+Go to "File" -> "License Management" note your "Computer ID".
+
+With that, you can request a licence key on the [Keil license installation page](https://www.keil.com/license/install.htm?P=X9F3Y-I8FIW-TWSZ0). In the CID field you need to enter the Computer ID which uVision showed you in the previous step.
+
+The license ID will be sent to you via E-Mail, once received you paste it into the LIC field, press "Add LIC" and you are done.
+
+### Building
+For your convenience a Docker Image is provided that will set up the toolchain. For this to work you need to have completed the step [Registering via Wine](#registering-via-wine) and your ```.wine``` directory has to be copied to the tools directory.
+
+To build the docker image [install docker](https://docs.docker.com/engine/install) and from the tools directory run:
+
+    docker build -t bluejay-build .
+
+A build script is provided, it will build all targets if no further parameters are provided:
+
+    ./build.sh
+
+or a specific target if you chose to:
+
+    ./build.sh -l A -m H -d 0 -p96
+
+If a specific target is chosen, all parameters need to be provided: layout, mcu, deadtime and pwm
+
+The source from the projects root is used to build the firmware.

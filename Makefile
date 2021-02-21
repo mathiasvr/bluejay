@@ -19,7 +19,7 @@ HEX_DIR		?= $(OUTPUT_DIR)/hex
 LOG_DIR		?= $(OUTPUT_DIR)/logs
 
 # Path to the keil binaries
-KEIL_PATH	?= ~/Downloads/keil_8051/9.60/BIN
+KEIL_PATH	?= ~/.wine/drive_c/Keil_v5/C51/BIN
 
 WINE_BIN	?= /usr/local/bin/wine
 
