@@ -63,3 +63,39 @@ Any help you can provide is greatly appreciated!
 If you have problems, suggestions or other feedback you can open an [issue](https://github.com/mathiasvr/bluejay/issues).
 
 Join the new [Discord server](https://discord.gg/phAmtxnMMN) to ask questions and discuss Bluejay.
+
+### Obtaining the toolchain
+To obtain the toolchain, [download the C51 package from Keil](https://www.keil.com/demo/eval/c51.htm). Run it with wine:
+
+    wine c51v960a.exe
+
+This will install toolchain and uVision. To obtain a license key (which you will need in order to link files above a certain size) you will have to run uVision in order to get your Computer ID.
+
+    wine ~/.wine/drive_c/Keil_v5/UV4/UV4.exe
+
+Go to "File" -> "License Management" note your "Computer ID".
+
+With this information, you can request a licence key on the [Keil license installation page](https://www.keil.com/license/install.htm?P=X9F3Y-I8FIW-TWSZ0). In the CID field you need to enter the Computer ID which uVision showed you in the previous step.
+
+The license ID will be sent to you via E-Mail, once received you paste it into the LIC field, press "Add LIC" and you are done.
+
+### Building
+For your convenience a Docker Image is provided that will set up the toolchain. For this to work you need to have completed the step [Registering via Wine](#registering-via-wine) and your ```.wine``` directory has to be copied to the tools directory.
+
+> The .wine directory can be deleted from the tools directory after the docker image has been created.
+
+To build the docker image [install docker](https://docs.docker.com/engine/install) and from the tools directory run:
+
+    docker build -t bluejay-build .
+
+A build script is provided, it will build all targets if no further parameters are provided:
+
+    ./build.sh
+
+or a specific target if you chose to:
+
+    ./build.sh -l A -m H -d 0 -p 96
+
+If a specific target is chosen, all parameters need to be provided: layout, mcu, deadtime and pwm
+
+The source from the projects root is used to build the firmware.
