@@ -39,13 +39,13 @@ ASM_SRC		= Bluejay.asm
 ASM_INC		= $(LAYOUTS:%=targets/%.inc) Common.inc BLHeliBootLoad.inc Silabs/SI_EFM8BB1_Defs.inc Silabs/SI_EFM8BB2_Defs.inc
 
 # Check that wine/simplicity studio is available
-EXECUTABLES	= $(WINE_BIN) $(AX51_BIN) $(LX51_BIN) $(OX51_BIN)
+EXECUTABLES	= $(AX51_BIN) $(LX51_BIN) $(OX51_BIN)
 DUMMYVAR	:= $(foreach exec, $(EXECUTABLES), \
 				$(if $(wildcard $(exec)),found, \
 				$(error "Could not find $(exec). Make sure to set the correct paths to the simplicity install location")))
 
 # Set up efm8load
-EFM8_LOAD_BIN	?= efm8load.py
+EFM8_LOAD_BIN	?= tools/efm8load.py
 EFM8_LOAD_PORT	?= /dev/ttyUSB0
 EFM8_LOAD_BAUD	?= 57600
 
