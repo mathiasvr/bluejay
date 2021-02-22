@@ -90,6 +90,8 @@ The license ID will be sent to you via E-Mail, once received you paste it into t
 ### Building
 For your convenience a Docker Image is provided that will set up the toolchain. For this to work you need to have completed the step [Registering via Wine](#registering-via-wine) and your ```.wine``` directory has to be copied to the tools directory.
 
+> The .wine directory can be deleted from the tools directory after the docker image has been created.
+
 To build the docker image [install docker](https://docs.docker.com/engine/install) and from the tools directory run:
 
     docker build -t bluejay-build .

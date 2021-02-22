@@ -21,15 +21,13 @@ LOG_DIR		?= $(OUTPUT_DIR)/logs
 # Path to the keil binaries
 KEIL_PATH	?= ~/.wine/drive_c/Keil_v5/C51/BIN
 
-WINE_BIN	?= /usr/local/bin/wine
-
 # Assembler and linker binaries
 AX51_BIN	= $(KEIL_PATH)/AX51.exe
 LX51_BIN	= $(KEIL_PATH)/LX51.exe
 OX51_BIN	= $(KEIL_PATH)/Ohx51.exe
-AX51		= $(WINE_BIN) $(AX51_BIN)
-LX51		= $(WINE_BIN) $(LX51_BIN)
-OX51		= $(WINE_BIN) $(OX51_BIN)
+AX51		= wine $(AX51_BIN)
+LX51		= wine $(LX51_BIN)
+OX51		= wine $(OX51_BIN)
 
 # Set up flags
 #AX51_FLAGS	= DEBUG NOMOD51
