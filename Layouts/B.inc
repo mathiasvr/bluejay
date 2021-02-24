@@ -2,7 +2,7 @@
 ;
 ; Bluejay digital ESC firmware for controlling brushless motors in multirotors
 ;
-; Copyright 2020 Mathias Rasmussen
+; Copyright 2020, 2021 Mathias Rasmussen
 ; Copyright 2011, 2012 Steffen Skaug
 ;
 ; This file is part of Bluejay.
