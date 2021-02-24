@@ -3438,11 +3438,9 @@ decode_temp_done:
 
 	mov	Temp1, #Pgm_Dithering		; Read programmed dithering setting
 	mov	A, @Temp1
-	clr	Flag_Dithering
-	jz	decode_dithering
-	setb	Flag_Dithering
+	add	A, #0FFh					; Carry set if A is not zero
+	mov	Flag_Dithering, C			; Set dithering enabled
 
-decode_dithering:
 IF PWM_BITS_H == 2					; Initialize pwm dithering bit patterns
 	mov	Temp1, #Dithering_Patterns
 	mov	@Temp1, #00h
