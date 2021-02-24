@@ -30,8 +30,7 @@
 PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
 COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
-; Note: currently all comparator pins (Comp_ and Mux_) must be on the same port
-COMPARATOR_PORT	EQU	1
+COMPARATOR_PORT	EQU	1		; All comparator (mux) pins must be on the same port
 
 IF FETON_DELAY == 0
 	PCA0CPM_POWER	EQU	PCA0CPM0
