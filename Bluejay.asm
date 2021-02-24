@@ -1482,19 +1482,19 @@ check_temp_and_limit_power:
 
 	; Wait for ADC conversion to complete
 	jnb	ADC0CN0_ADINT, check_temp_and_limit_power
-	; Read ADC result
-	Read_Adc_Result
-	; Stop ADC
+
+	mov	Temp3, ADC0L				; Read ADC result
+	mov	Temp4, ADC0H
+
 	Stop_Adc
 
 	mov	Adc_Conversion_Cnt, #0		; Yes - temperature check. Reset counter
-	mov	A, Temp2					; Move ADC MSB to Temp3
-	mov	Temp3, A
+
 	mov	Temp2, #Pgm_Enable_Temp_Prot	; Is temp protection enabled?
 	mov	A, @Temp2
 	jz	temp_check_exit			; No - branch
 
-	mov	A, Temp3					; Is temperature reading below 256?
+	mov	A, Temp4					; Is temperature reading below 256?
 	jnz	temp_average_inc_dec		; No - proceed
 
 	mov	A, Current_Average_Temp		; Yes - decrement average
@@ -1503,7 +1503,7 @@ check_temp_and_limit_power:
 
 temp_average_inc_dec:
 	clr	C
-	mov	A, Temp1					; Check if current temperature is above or below average
+	mov	A, Temp3					; Check if current temperature is above or below average
 	subb	A, Current_Average_Temp
 	jz	temp_average_updated_load_acc	; Equal - no change
 
@@ -1524,6 +1524,7 @@ temp_average_updated_load_acc:
 	mov	A, Current_Average_Temp
 temp_average_updated:
 	mov	Current_Average_Temp, A
+
 	clr	C
 	subb	A, Temp_Prot_Limit			; Is temperature below first limit?
 	jc	temp_check_exit			; Yes - exit
@@ -3815,12 +3816,10 @@ init_start:
 
 	jnb	ADC0CN0_ADINT, $			; Wait for adc conversion to complete
 
-	Read_Adc_Result				; Read initial temperature
-	mov	A, Temp2
-	jnz	($+3)					; Is reading below 256?
-	mov	Temp1, A					; Yes - set average temperature value to zero
-
-	mov	Current_Average_Temp, Temp1	; Set initial average temperature
+	mov	Current_Average_Temp, ADC0L	; Read initial temperature
+	mov	A, ADC0H
+	jnz	($+5)					; Is reading below 256?
+	mov	Current_Average_Temp, #0		; Yes - set average temperature value to zero
 
 	mov	Adc_Conversion_Cnt, #8		; Make sure a temp reading is done
 	call	check_temp_and_limit_power

@@ -331,11 +331,6 @@ Start_Adc MACRO
 	mov	ADC0CN0, #90h				;; ADC start
 ENDM
 
-Read_Adc_Result MACRO
-	mov	Temp1, ADC0L
-	mov	Temp2, ADC0H
-ENDM
-
 Stop_Adc MACRO
 ENDM
 
