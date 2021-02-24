@@ -3433,8 +3433,8 @@ decode_temp_step:
 decode_temp_done:
 	mov	Temp_Prot_Limit, A
 
-	mov	Temp1, #Pgm_Beep_Strength	; Set beep strength
-	mov	Beep_Strength, @Temp1
+	mov	Temp1, #Pgm_Beep_Strength	; Read programmed beep strength setting
+	mov	Beep_Strength, @Temp1		; Set beep strength
 
 	mov	Temp1, #Pgm_Dithering		; Read programmed dithering setting
 	mov	A, @Temp1
@@ -3442,25 +3442,25 @@ decode_temp_done:
 	mov	Flag_Dithering, C			; Set dithering enabled
 
 IF PWM_BITS_H == 2					; Initialize pwm dithering bit patterns
-	mov	Temp1, #Dithering_Patterns
-	mov	@Temp1, #00h
-	imov	Temp1, #55h
+	mov	Temp1, #Dithering_Patterns	; 1-bit dithering (10-bit to 11-bit)
+	mov	@Temp1, #00h				; 00000000
+	imov	Temp1, #55h				; 01010101
 ELSEIF PWM_BITS_H == 1
-	mov	Temp1, #Dithering_Patterns
-	mov	@Temp1, #00h
-	imov	Temp1, #11h
-	imov	Temp1, #55h
-	imov	Temp1, #77h
+	mov	Temp1, #Dithering_Patterns	; 2-bit dithering (9-bit to 11-bit)
+	mov	@Temp1, #00h				; 00000000
+	imov	Temp1, #11h				; 00010001
+	imov	Temp1, #55h				; 01010101
+	imov	Temp1, #77h				; 01110111
 ELSEIF PWM_BITS_H == 0
-	mov	Temp1, #Dithering_Patterns
-	mov	@Temp1, #00h
-	imov	Temp1, #01h
-	imov	Temp1, #11h
-	imov	Temp1, #25h
-	imov	Temp1, #55h
-	imov	Temp1, #5Bh
-	imov	Temp1, #77h
-	imov	Temp1, #7fh
+	mov	Temp1, #Dithering_Patterns	; 3-bit dithering (8-bit to 11-bit)
+	mov	@Temp1, #00h				; 00000000
+	imov	Temp1, #01h				; 00000001
+	imov	Temp1, #11h				; 00010001
+	imov	Temp1, #25h				; 00100101
+	imov	Temp1, #55h				; 01010101
+	imov	Temp1, #5Bh				; 01011011
+	imov	Temp1, #77h				; 01110111
+	imov	Temp1, #7fh				; 01111111
 ENDIF
 	ret
 
