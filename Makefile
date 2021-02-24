@@ -108,7 +108,6 @@ $(HEX_DIR)/%.hex : $(OUTPUT_DIR)/%.OMF
 	@$(OX51) "$<" "HEXFILE ($@)" >> $(LOG) 2>&1 || (tail $(LOG); exit 1)
 
 changelog:
-	@npx -q commitlint --config .github/workflows/commitlint.config.js --from v0.1.0
 	@npx -q mathiasvr/generate-changelog --exclude build,chore,ci,docs,refactor,style,other
 
 help:
