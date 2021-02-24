@@ -177,7 +177,7 @@ Disable_COVF_Interrupt MACRO
 	anl	PCA0PWM, #0BFh
 ENDM
 
-; CCF interrupt is only used for FETON_DELAY == 0
+IF FETON_DELAY == 0					; CCF interrupt is only used for FETON_DELAY == 0
 Clear_CCF_Interrupt MACRO
 	anl	PCA0CN0, #0FEh
 ENDM
@@ -189,6 +189,7 @@ ENDM
 Disable_CCF_Interrupt MACRO
 	anl	PCA0CPM0,#0FEh
 ENDM
+ENDIF
 
 Enable_PCA_Interrupt MACRO
 LOCAL pca_enabled set_pca_int_hi_pwm
