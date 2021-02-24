@@ -16,7 +16,6 @@ PWM			?= 24
 # Directory configuration
 OUTPUT_DIR	?= build
 HEX_DIR		?= $(OUTPUT_DIR)/hex
-LOG_DIR		?= $(OUTPUT_DIR)/logs
 
 # Path to the keil binaries
 KEIL_PATH	?= ~/.wine/drive_c/Keil_v5/C51/BIN
@@ -64,10 +63,8 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ : $(ASM_SRC) $(ASM_INC)
 	$(eval _MCU_48MHZ	:= $(subst L,0,$(subst H,1,$(2))))
 	$(eval _DEADTIME	:= $(3))
 	$(eval _PWM_FREQ	:= $(subst 24,0,$(subst 48,1,$(subst 96,2,$(4)))))
-	$(eval _LOG			:= $(LOG_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).log)
 	$$(eval _LST		:= $$(patsubst %.OBJ,%.LST,$$@))
 	@mkdir -p $(OUTPUT_DIR)
-	@mkdir -p $(LOG_DIR)
 	@echo "AX51 : $$@"
 	@$(AX51) $(ASM_SRC) \
 		"DEFINE(ESCNO=$(_ESCNO)) " \
@@ -76,7 +73,7 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ : $(ASM_SRC) $(ASM_INC)
 		"DEFINE(PWM_FREQ=$(_PWM_FREQ)) "\
 		"OBJECT($$@) "\
 		"PRINT($$(_LST)) "\
-		"$(AX51_FLAGS)" > $(_LOG) 2>&1 || (grep -B 3 -E "\*\*\* (ERROR|WARNING)" $$(_LST); exit 1)
+		"$(AX51_FLAGS)" > /dev/null 2>&1 || (grep -B 3 -E "\*\*\* (ERROR|WARNING)" $$(_LST); exit 1)
 endef
 
 SINGLE_TARGET_HEX = $(HEX_DIR)/$(LAYOUT)_$(MCU)_$(DEADTIME)_$(PWM)_$(VERSION).hex
@@ -96,16 +93,17 @@ all : $(HEX_TARGETS)
 	@echo "\nbuild finished. built $(shell ls -Aq $(HEX_DIR) | wc -l) hex targets\n"
 
 $(OUTPUT_DIR)/%.OMF : $(OUTPUT_DIR)/%.OBJ
-	$(eval LOG := $(LOG_DIR)/$(basename $(notdir $@)).log)
+	$(eval MAP := $(OUTPUT_DIR)/$(basename $(notdir $@)).MAP)
 	@echo "LX51 : linking $< to $@"
 #	Linking should produce exactly 1 warning
-	@$(LX51) "$<" TO "$@" "$(LX51_FLAGS)" >> $(LOG) 2>&1; test $$? -lt 2 && grep -q "1 WARNING" $(LOG) || (tail $(LOG); exit 1)
+	@$(LX51) "$<" TO "$@" "$(LX51_FLAGS)" > /dev/null 2>&1; \
+		test $$? -lt 2 && grep -q "1 WARNING" $(MAP) || \
+		(grep -A 3 -E "\*\*\* (ERROR|WARNING)" $(MAP); exit 1)
 
 $(HEX_DIR)/%.hex : $(OUTPUT_DIR)/%.OMF
-	$(eval LOG := $(LOG_DIR)/$(basename $(notdir $@)).log)
 	@mkdir -p $(HEX_DIR)
 	@echo "OHX  : generating hex file $@"
-	@$(OX51) "$<" "HEXFILE ($@)" >> $(LOG) 2>&1 || (tail $(LOG); exit 1)
+	@$(OX51) "$<" "HEXFILE ($@)" > /dev/null 2>&1 || (echo "Error: Could not make hex file"; exit 1)
 
 changelog:
 	@npx -q mathiasvr/generate-changelog --exclude build,chore,ci,docs,refactor,style,other
@@ -120,7 +118,6 @@ help:
 
 clean:
 	@rm -f $(OUTPUT_DIR)/*.{OBJ,MAP,OMF,LST}
-	@rm -f $(LOG_DIR)/*.log
 
 efm8load: single_target
 	$(EFM8_LOAD_BIN) -p $(EFM8_LOAD_PORT) -b $(EFM8_LOAD_BAUD) -w $(SINGLE_TARGET_HEX)
