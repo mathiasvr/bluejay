@@ -42,51 +42,64 @@ ENDIF
 ;**** **** **** **** ****
 ; ESC selection statements
 IF ESCNO == A_
-$include (targets/A.inc)				; Select pinout A
+$include (Layouts/A.inc)				; Select pinout A
 ELSEIF ESCNO == B_
-$include (targets/B.inc)				; Select pinout B
+$include (Layouts/B.inc)				; Select pinout B
 ELSEIF ESCNO == C_
-$include (targets/C.inc)				; Select pinout C
+$include (Layouts/C.inc)				; Select pinout C
 ELSEIF ESCNO == D_
-$include (targets/D.inc)				; Select pinout D
+$include (Layouts/D.inc)				; Select pinout D
 ELSEIF ESCNO == E_
-$include (targets/E.inc)				; Select pinout E
+$include (Layouts/E.inc)				; Select pinout E
 ELSEIF ESCNO == F_
-$include (targets/F.inc)				; Select pinout F
+$include (Layouts/F.inc)				; Select pinout F
 ELSEIF ESCNO == G_
-$include (targets/G.inc)				; Select pinout G
+$include (Layouts/G.inc)				; Select pinout G
 ELSEIF ESCNO == H_
-$include (targets/H.inc)				; Select pinout H
+$include (Layouts/H.inc)				; Select pinout H
 ELSEIF ESCNO == I_
-$include (targets/I.inc)				; Select pinout I
+$include (Layouts/I.inc)				; Select pinout I
 ELSEIF ESCNO == J_
-$include (targets/J.inc)				; Select pinout J
+$include (Layouts/J.inc)				; Select pinout J
 ELSEIF ESCNO == K_
-$include (targets/K.inc)				; Select pinout K
+$include (Layouts/K.inc)				; Select pinout K
 ELSEIF ESCNO == L_
-$include (targets/L.inc)				; Select pinout L
+$include (Layouts/L.inc)				; Select pinout L
 ELSEIF ESCNO == M_
-$include (targets/M.inc)				; Select pinout M
+$include (Layouts/M.inc)				; Select pinout M
 ELSEIF ESCNO == N_
-$include (targets/N.inc)				; Select pinout N
+$include (Layouts/N.inc)				; Select pinout N
 ELSEIF ESCNO == O_
-$include (targets/O.inc)				; Select pinout O
+$include (Layouts/O.inc)				; Select pinout O
 ELSEIF ESCNO == P_
-$include (targets/P.inc)				; Select pinout P
+$include (Layouts/P.inc)				; Select pinout P
 ELSEIF ESCNO == Q_
-$include (targets/Q.inc)				; Select pinout Q
+$include (Layouts/Q.inc)				; Select pinout Q
 ELSEIF ESCNO == R_
-$include (targets/R.inc)				; Select pinout R
+$include (Layouts/R.inc)				; Select pinout R
 ELSEIF ESCNO == S_
-$include (targets/S.inc)				; Select pinout S
+$include (Layouts/S.inc)				; Select pinout S
 ELSEIF ESCNO == T_
-$include (targets/T.inc)				; Select pinout T
+$include (Layouts/T.inc)				; Select pinout T
 ELSEIF ESCNO == U_
-$include (targets/U.inc)				; Select pinout U
+$include (Layouts/U.inc)				; Select pinout U
 ELSEIF ESCNO == V_
-$include (targets/V.inc)				; Select pinout V
+$include (Layouts/V.inc)				; Select pinout V
 ELSEIF ESCNO == W_
-$include (targets/W.inc)				; Select pinout W
+$include (Layouts/W.inc)				; Select pinout W
+;ELSEIF ESCNO == X_
+;$include (Layouts/X.inc)			; Select pinout X
+;ELSEIF ESCNO == Y_
+;$include (Layouts/Y.inc)			; Select pinout Y
+ELSEIF ESCNO == Z_
+$include (Layouts/Z.inc)				; Select pinout Z
+ENDIF
+
+SIGNATURE_001			EQU	0E8h		; Device signature
+IF MCU_48MHZ == 0
+SIGNATURE_002			EQU	0B1h
+ELSE
+SIGNATURE_002			EQU	0B2h
 ENDIF
 
 ;**** **** **** **** ****
@@ -146,34 +159,20 @@ Initialize_PCA MACRO
 	mov	PCA0PWM, #(80h + PWM_BITS_H)	;; Enable PCA auto-reload registers and set pwm cycle length (8-11 bits)
 
 IF PWM_CENTERED == 1
-	mov	PCA0CENT, #03h				;; Center aligned pwm
+	mov	PCA0CENT, #07h				;; Center aligned pwm
 ELSE
 	mov	PCA0CENT, #00h				;; Edge aligned pwm
-ENDIF
-ENDM
-
-Enable_Power_Pwm_Module MACRO
-IF FETON_DELAY == 0
-	mov	PCA0_POWER_MODULE, #4Ah		;; Enable comparator of module, enable match, set pwm mode
-ELSE
-	mov	PCA0_POWER_MODULE, #42h		;; Enable comparator of module, set pwm mode
-ENDIF
-ENDM
-
-Enable_Damp_Pwm_Module MACRO
-IF FETON_DELAY == 0
-	mov	PCA0_DAMP_MODULE, #00h		;; Disable
-ELSE
-	mov	PCA0_DAMP_MODULE, #42h		;; Enable comparator of module, set pwm mode
 ENDIF
 ENDM
 
 Clear_COVF_Interrupt MACRO
 	anl	PCA0PWM, #0DFh
 ENDM
+
 Enable_COVF_Interrupt MACRO
 	orl	PCA0PWM, #40h
 ENDM
+
 Disable_COVF_Interrupt MACRO
 	anl	PCA0PWM, #0BFh
 ENDM
@@ -182,9 +181,11 @@ ENDM
 Clear_CCF_Interrupt MACRO
 	anl	PCA0CN0, #0FEh
 ENDM
+
 Enable_CCF_Interrupt MACRO
 	orl	PCA0CPM0,#01h
 ENDM
+
 Disable_CCF_Interrupt MACRO
 	anl	PCA0CPM0,#0FEh
 ENDM
@@ -224,4 +225,10 @@ Set_MCU_Clk_48MHz MACRO
 	mov	CLKSEL, #03h				;; Set clock to 48MHz (Oscillator 1)
 
 	setb	Flag_Clock_At_48MHz
+ENDM
+
+Set_RPM_Out MACRO
+ENDM
+
+Clear_RPM_Out MACRO
 ENDM

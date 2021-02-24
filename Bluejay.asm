@@ -61,29 +61,35 @@ $NOMOD51
 ;
 ;**** **** **** **** ****
 ; List of enumerated supported ESCs
-A_	EQU	1		; X  X  RC X  MC MB MA CC	X  X  Cc Cp Bc Bp Ac Ap
-B_	EQU	2		; X  X  RC X  MC MB MA CC	X  X  Ap Ac Bp Bc Cp Cc
-C_	EQU	3		; Ac Ap MC MB MA CC X  RC	X  X  X  X  Cc Cp Bc Bp
-D_	EQU	4		; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Com fets inverted
-E_	EQU	5		; L1 L0 RC X  MC MB MA CC	X  L2 Cc Cp Bc Bp Ac Ap	A with LEDs
-F_	EQU	6		; X  X  RC X  MA MB MC CC	X  X  Cc Cp Bc Bp Ac Ap
-G_	EQU	7		; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like D, but non-inverted com fets
-H_	EQU	8		; RC X  X  X  MA MB CC MC	X  Ap Bp Cp X  Ac Bc Cc
-I_	EQU	9		; X  X  RC X  MC MB MA CC	X  X  Ac Bc Cc Ap Bp Cp
-J_	EQU	10		; L2 L1 L0 RC CC MB MC MA	X  X  Cc Bc Ac Cp Bp Ap	LEDs
-K_	EQU	11		; X  X  MC X  MB CC MA RC	X  X  Ap Bp Cp Cc Bc Ac	Com fets inverted
-L_	EQU	12		; X  X  RC X  CC MA MB MC	X  X  Ac Bc Cc Ap Bp Cp
-M_	EQU	13		; MA MC CC MB RC L0 X  X 	X  Cc Bc Ac Cp Bp Ap X	LED
-N_	EQU	14		; X  X  RC X  MC MB MA CC	X  X  Cp Cc Bp Bc Ap Ac
-O_	EQU	15		; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like D, but low side pwm
-P_	EQU	16		; X  X  RC MA CC MB MC X 	X  Cc Bc Ac Cp Bp Ap X
-Q_	EQU	17		; Cp Bp Ap L1 L0 X  RC X 	X  MA MB MC CC Cc Bc Ac	LEDs
-R_	EQU	18		; X  X  RC X  MC MB MA CC	X  X  Ac Bc Cc Ap Bp Cp
-S_	EQU	19		; X  X  RC X  CC MA MC MB	X  X  Cc Cp Bc Bp Ac Ap	Like O, but com fets inverted
-T_	EQU	20		; RC X  MA X  MB CC MC X 	X  X  Cp Bp Ap Ac Bc Cc
-U_	EQU	21		; MA MC CC MB RC L0 L1 L2	X  Cc Bc Ac Cp Bp Ap X	Like M, but with 3 LEDs
-V_	EQU	22		; Cc X  RC X  MC CC MB MA	X  Ap Ac Bp X  X  Bc Cp
-W_	EQU	23		; RC MC MB X  CC MA X X		X  Ap Bp Cp X  X  X  X	Tristate gate driver
+				; PORT 0					PORT 1
+				; P0 P1 P2 P3 P4 P5 P6 P7	P0 P1 P2 P3 P4 P5 P6 P7
+				; -----------------------	-----------------------
+A_	EQU	1		; Vn Am Bm Cm __ RX __ __	Ap Ac Bp Bc Cp Cc __ __
+B_	EQU	2		; Vn Am Bm Cm __ RX __ __	Cc Cp Bc Bp Ac Ap __ __
+C_	EQU	3		; RX __ Vn Am Bm Cm Ap Ac	Bp Bc Cp Cc __ __ __ __
+D_	EQU	4		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Com fets inverted
+E_	EQU	5		; Vn Am Bm Cm __ RX L0 L1	Ap Ac Bp Bc Cp Cc L2 __	A with LEDs
+F_	EQU	6		; Vn Cm Bm Am __ RX __ __	Ap Ac Bp Bc Cp Cc __ __
+G_	EQU	7		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Like D, but non-inverted com fets
+H_	EQU	8		; Cm Vn Bm Am __ __ __ RX	Cc Bc Ac __ Cp Bp Ap __
+I_	EQU	9		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __
+J_	EQU	10		; Am Cm Bm Vn RX L0 L1 L2	Ap Bp Cp Ac Bc Cc __ __	LEDs
+K_	EQU	11		; RX Am Vn Bm __ Cm __ __	Ac Bc Cc Cp Bp Ap __ __	Com fets inverted
+L_	EQU	12		; Cm Bm Am Vn __ RX __ __	Cp Bp Ap Cc Bc Ac __ __	Like I with different mux pins
+M_	EQU	13		; __ __ L0 RX Bm Vn Cm Am	__ Ap Bp Cp Ac Bc Cc __	LED
+N_	EQU	14		; Vn Am Bm Cm __ RX __ __	Ac Ap Bc Bp Cc Cp __ __	Like B, with A and C fets swapped
+O_	EQU	15		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Like D, but low side pwm
+P_	EQU	16		; __ Cm Bm Vn Am RX __ __	__ Ap Bp Cp Ac Bc Cc __	Like M, without LEDs and different mux
+Q_	EQU	17		; __ RX __ L0 L1 Ap Bp Cp	Ac Bc Cc Vn Cm Bm Am __	LEDs
+R_	EQU	18		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __	Like L, with different mux pins
+S_	EQU	19		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Like O, but com fets inverted
+T_	EQU	20		; __ Cm Vn Bm __ Am __ RX	Cc Bc Ac Ap Bp Cp __ __
+U_	EQU	21		; L2 L1 L0 RX Bm Vn Cm Am	__ Ap Bp Cp Ac Bc Cc __	Like M, but with 3 LEDs
+V_	EQU	22		; Am Bm Vn Cm __ RX __ Cc	Cp Bc __ __ Bp Ac Ap __
+W_	EQU	23		; __ __ Am Vn __ Bm Cm RX	__ __ __ __ Cp Bp Ap __	Tristate gate driver
+X_	EQU	24
+Y_	EQU	25
+Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __	Pwm fets inverted
 
 ;**** **** **** **** ****
 ; Select the port mapping to use (or unselect all for use with external batch compile file)
@@ -1133,19 +1139,19 @@ ENDIF
 
 ; Set power pwm auto-reload registers
 IF PWM_BITS_H != 0
-	mov	PCA0_POWER_L, Power_Pwm_Reg_L
-	mov	PCA0_POWER_H, Power_Pwm_Reg_H
+	Set_Power_Pwm_Reg_L Power_Pwm_Reg_L
+	Set_Power_Pwm_Reg_H Power_Pwm_Reg_H
 ELSE
-	mov	PCA0_POWER_H, Power_Pwm_Reg_L
+	Set_Power_Pwm_Reg_H Power_Pwm_Reg_L
 ENDIF
 
 IF FETON_DELAY != 0
 	; Set damp pwm auto-reload registers
 	IF PWM_BITS_H != 0
-		mov	PCA0_DAMP_L, Damp_Pwm_Reg_L
-		mov	PCA0_DAMP_H, Damp_Pwm_Reg_H
+		Set_Damp_Pwm_Reg_L Damp_Pwm_Reg_L
+		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_H
 	ELSE
-		mov	PCA0_DAMP_H, Damp_Pwm_Reg_L
+		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_L
 	ENDIF
 ENDIF
 
@@ -3509,6 +3515,11 @@ pgm_start:
 	mov	P1, #P1_INIT
 	mov	P1SKIP, #P1_SKIP
 	mov	P2MDOUT, #P2_PUSHPULL
+IF MCU_48MHZ == 1
+	; Not available on BB1
+	mov	P2MDIN, #P2_DIGITAL
+	mov	P2SKIP, #P2_SKIP
+ENDIF
 	Initialize_Xbar				; Initialize the XBAR and related functionality
 	call	switch_power_off			; Switch power off again, after initializing ports
 
