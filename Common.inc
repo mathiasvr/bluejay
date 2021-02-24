@@ -135,7 +135,7 @@ ENDIF
 
 Interrupt_Table_Definition MACRO
 CSEG AT 0							;; Code segment start
-	jmp reset
+	jmp	reset
 CSEG AT 03h						;; Int0 interrupt
 	jmp	int0_int
 CSEG AT 0Bh						;; Timer0 overflow interrupt
@@ -228,8 +228,3 @@ Set_MCU_Clk_48MHz MACRO
 	setb	Flag_Clock_At_48MHz
 ENDM
 
-Set_RPM_Out MACRO
-ENDM
-
-Clear_RPM_Out MACRO
-ENDM

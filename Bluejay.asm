@@ -332,7 +332,7 @@ Eep_Pgm_Startup_Beep:		DB	DEFAULT_PGM_STARTUP_BEEP
 Eep_Pgm_Dithering:			DB	DEFAULT_PGM_DITHERING
 Eep_Pgm_Startup_Power_Max:	DB	DEFAULT_PGM_STARTUP_POWER_MAX
 _Eep_Pgm_Rampup_Slope:		DB	0FFh
-Eep_Pgm_Rpm_Power_Slope:		DB	DEFAULT_PGM_RPM_POWER_SLOPE		; EEPROM copy of programmed startup power
+Eep_Pgm_Rpm_Power_Slope:		DB	DEFAULT_PGM_RPM_POWER_SLOPE	; EEPROM copy of programmed rpm power slope (formerly startup power)
 _Eep_Pgm_Pwm_Freq:			DB	0FFh
 Eep_Pgm_Direction:			DB	DEFAULT_PGM_DIRECTION		; EEPROM copy of programmed rotation direction
 _Eep__Pgm_Input_Pol:		DB	0FFh
@@ -373,12 +373,6 @@ Eep_Name:					DB	"Bluejay (BETA)  "			; Name tag (16 Bytes)
 ;**** **** **** **** ****
 Interrupt_Table_Definition			; SiLabs interrupts
 CSEG AT 80h						; Code segment after interrupt vectors
-
-;**** **** **** **** ****
-; Table definitions
-; Rampup pwm power (8-bit)
-;STARTUP_POWER_TABLE:	DB	1,	2,	3,	4,	6,	9,	12,	18,	25,	37,	50,	62,	75
-
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -2378,7 +2372,6 @@ wait_for_comm_wait:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ; Comm phase 1 to comm phase 2
 comm1_comm2:						; C->A
-	Set_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm1_comm2_rev
 
 	clr	IE_EA					; Disable all interrupts
@@ -2400,7 +2393,6 @@ comm1_comm2_rev:					; A->C
 
 ; Comm phase 2 to comm phase 3
 comm2_comm3:						; B->A
-	Clear_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm2_comm3_rev
 
 	clr	IE_EA					; Disable all interrupts
@@ -2422,7 +2414,6 @@ comm2_comm3_rev:					; B->C
 
 ; Comm phase 3 to comm phase 4
 comm3_comm4:						; B->C
-	Set_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm3_comm4_rev
 
 	clr	IE_EA					; Disable all interrupts
@@ -2444,7 +2435,6 @@ comm3_comm4_rev:					; B->A
 
 ; Comm phase 4 to comm phase 5
 comm4_comm5:						; A->C
-	Clear_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm4_comm5_rev
 
 	clr	IE_EA					; Disable all interrupts
@@ -2466,7 +2456,6 @@ comm4_comm5_rev:					; C->A
 
 ; Comm phase 5 to comm phase 6
 comm5_comm6:						; A->B
-	Set_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm5_comm6_rev
 
 	clr	IE_EA					; Disable all interrupts
@@ -2488,7 +2477,6 @@ comm5_comm6_rev:					; C->B
 
 ; Comm phase 6 to comm phase 1
 comm6_comm1:						; C->B
-	Clear_RPM_Out
 	jb	Flag_Pgm_Dir_Rev, comm6_comm1_rev
 
 	clr	IE_EA					; Disable all interrupts
@@ -2558,7 +2546,7 @@ dshot_cmd_check:
 	jnc	dshot_cmd_direction_1
 
 	call	beacon_beep
-	call wait200ms
+	call	wait200ms
 
 	sjmp	dshot_cmd_exit
 
@@ -3298,7 +3286,7 @@ read_tag:
 	mov	@Temp2, A					; Write to RAM
 	inc	Temp2
 	inc	DPTR
-	djnz Temp3, read_tag
+	djnz	Temp3, read_tag
 	ret
 
 
@@ -3316,7 +3304,7 @@ write_tag:
 	call	write_eeprom_byte_from_acc
 	inc	Temp2
 	inc	DPTR
-	djnz Temp3, write_tag
+	djnz	Temp3, write_tag
 	ret
 
 
@@ -3452,7 +3440,7 @@ decode_temp_done:
 	mov	A, @Temp1
 	clr	Flag_Dithering
 	jz	decode_dithering
-	setb Flag_Dithering
+	setb	Flag_Dithering
 
 decode_dithering:
 IF PWM_BITS_H == 2					; Initialize pwm dithering bit patterns
@@ -3603,7 +3591,7 @@ ENDIF
 	call	beep_f2
 	call	beep_f2
 	call	beep_f2
-	call wait200ms
+	call	wait200ms
 	clr	Flag_Had_Signal
 
 setup_dshot:
