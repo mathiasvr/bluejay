@@ -535,6 +535,7 @@ ENDM
 ; Requirements:
 ; - Must NOT be called while Flag_Telemetry_Pending is cleared
 ; - Must NOT write to Temp5, Temp8
+;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t0_int:
 	push	PSW
@@ -1000,7 +1001,8 @@ t1_int_exit_no_int:
 ;
 ; Update RC pulse timeout and stop counters
 ; Happens every 32ms
-; Requirements: Temp variables can NOT be used since PSW.x is not set
+;
+; Requirements: No PSW instructions or Temp registers
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t2_int:
@@ -1039,8 +1041,8 @@ t2_int_exit:
 ; Timer 3 interrupt routine
 ;
 ; Used for commutation timing
-; Requirements: Temp variables can NOT be used since PSW.x is not set
-;               ACC can not be used, as it is not pushed to stack
+;
+; Requirements: No PSW instructions or Temp/Acc/B registers
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t3_int:
@@ -1059,6 +1061,8 @@ t3_int:
 ; Int0 interrupt routine (High priority)
 ;
 ; Read and store DShot pwm signal for decoding
+;
+; Requirements: No PSW instructions
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 int0_int:
@@ -1083,6 +1087,8 @@ int0_int:
 ;
 ; Used for RC pulse timing
 ;
+; Requirements: No PSW instructions or Temp/Acc registers
+;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 int1_int:
 	clr	IE_EX1					; Disable int1 interrupts
@@ -1100,7 +1106,7 @@ reti
 ;
 ; Update pwm registers according to PCA clock signal
 ;
-; Requirements: Temp variables can NOT be used since PSW.x is not set
+; Requirements: No PSW instructions or Temp registers
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 pca_int:
