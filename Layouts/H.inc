@@ -55,7 +55,7 @@ ENDIF
 ;*********************
 Rcp_In		EQU	7
 ;			EQU	6
-;  			EQU	5
+;			EQU	5
 ;			EQU	4
 A_Mux		EQU	3
 B_Mux		EQU	2

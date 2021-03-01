@@ -54,7 +54,7 @@ ENDIF
 ; PORT 0 definitions *
 ;*********************
 ;			EQU	7
-;  			EQU	6
+;			EQU	6
 Rcp_In		EQU	5
 ;			EQU	4
 C_Mux		EQU	3

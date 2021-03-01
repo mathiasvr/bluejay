@@ -53,7 +53,7 @@ ENDIF
 ;*********************
 ; PORT 0 definitions *
 ;*********************
-;  			EQU	7
+;			EQU	7
 ;			EQU	6
 C_Mux		EQU	5
 ;			EQU	4

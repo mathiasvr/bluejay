@@ -55,7 +55,7 @@ ENDIF
 ;*********************
 A_Mux		EQU	7
 C_Mux		EQU	6
-V_Mux  	EQU	5
+V_Mux		EQU	5
 B_Mux		EQU	4
 Rcp_In		EQU	3
 LED_0		EQU	2
