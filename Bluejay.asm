@@ -152,40 +152,40 @@ Temp8		EQU	R7
 ; RAM definitions
 ; Bit-addressable data segment
 DSEG AT 20h
-Bit_Access:				DS	1				; MUST BE AT THIS ADDRESS. Variable at bit accessible address (for non interrupt routines)
-Bit_Access_Int:			DS	1				; Variable at bit accessible address (for interrupts)
+Bit_Access:				DS	1			; MUST BE AT THIS ADDRESS. Variable at bit accessible address (for non interrupt routines)
+Bit_Access_Int:			DS	1			; Variable at bit accessible address (for interrupts)
 
-Flags0:					DS	1				; State flags. Reset upon init_start
-Flag_Startup_Phase			BIT	Flags0.0			; Set when in startup phase
-Flag_Initial_Run_Phase		BIT	Flags0.1			; Set when in initial run phase (or startup phase), before synchronized run is achieved.
+Flags0:					DS	1			; State flags. Reset upon init_start
+Flag_Startup_Phase			BIT	Flags0.0		; Set when in startup phase
+Flag_Initial_Run_Phase		BIT	Flags0.1		; Set when in initial run phase (or startup phase), before synchronized run is achieved.
 
-Flags1:					DS	1				; State flags. Reset upon init_start
-Flag_Timer3_Pending			BIT	Flags1.0			; Timer 3 pending flag
-Flag_Demag_Detected			BIT	Flags1.1			; Set when excessive demag time is detected
-Flag_Comp_Timed_Out			BIT	Flags1.2			; Set when comparator reading timed out
+Flags1:					DS	1			; State flags. Reset upon init_start
+Flag_Timer3_Pending			BIT	Flags1.0		; Timer 3 pending flag
+Flag_Demag_Detected			BIT	Flags1.1		; Set when excessive demag time is detected
+Flag_Comp_Timed_Out			BIT	Flags1.2		; Set when comparator reading timed out
 Flag_Motor_Running			BIT	Flags1.3
-Flag_Motor_Started			BIT	Flags1.4			; Set when motor is started
-Flag_Dir_Change_Brake		BIT	Flags1.5			; Set when braking before direction change
-Flag_High_Rpm				BIT	Flags1.6			; Set when motor rpm is high (Comm_Period4x_H less than 2)
-Flag_Low_Pwm_Power			BIT	Flags1.7			; Set when pwm duty cycle is below 50%
+Flag_Motor_Started			BIT	Flags1.4		; Set when motor is started
+Flag_Dir_Change_Brake		BIT	Flags1.5		; Set when braking before direction change
+Flag_High_Rpm				BIT	Flags1.6		; Set when motor rpm is high (Comm_Period4x_H less than 2)
+Flag_Low_Pwm_Power			BIT	Flags1.7		; Set when pwm duty cycle is below 50%
 
-Flags2:					DS	1				; State flags. NOT reset upon init_start
-Flag_Pgm_Dir_Rev			BIT	Flags2.0			; Programmed direction. 0=normal, 1=reversed
-Flag_Pgm_Bidir_Rev			BIT	Flags2.1			; Programmed bidirectional direction. 0=normal, 1=reversed
-Flag_Pgm_Bidir				BIT	Flags2.2			; Programmed bidirectional operation. 0=normal, 1=bidirectional
-Flag_Skip_Timer2_Int		BIT	Flags2.3			; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
-Flag_Clock_At_48MHz			BIT	Flags2.4			; Set if 48MHz MCUs run at 48MHz
-Flag_Rcp_Stop				BIT	Flags2.5			; Set if the RC pulse value is zero
-Flag_Rcp_Dir_Rev			BIT	Flags2.6			; RC pulse direction in bidirectional mode
-Flag_Rcp_DShot_Inverted		BIT	Flags2.7			; DShot RC pulse input is inverted (and supports telemetry)
+Flags2:					DS	1			; State flags. NOT reset upon init_start
+Flag_Pgm_Dir_Rev			BIT	Flags2.0		; Programmed direction. 0=normal, 1=reversed
+Flag_Pgm_Bidir_Rev			BIT	Flags2.1		; Programmed bidirectional direction. 0=normal, 1=reversed
+Flag_Pgm_Bidir				BIT	Flags2.2		; Programmed bidirectional operation. 0=normal, 1=bidirectional
+Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
+Flag_Clock_At_48MHz			BIT	Flags2.4		; Set if 48MHz MCUs run at 48MHz
+Flag_Rcp_Stop				BIT	Flags2.5		; Set if the RC pulse value is zero
+Flag_Rcp_Dir_Rev			BIT	Flags2.6		; RC pulse direction in bidirectional mode
+Flag_Rcp_DShot_Inverted		BIT	Flags2.7		; DShot RC pulse input is inverted (and supports telemetry)
 
-Flags3:					DS	1				; State flags. NOT reset upon init_start
-Flag_Telemetry_Pending		BIT	Flags3.0			; DShot telemetry data packet is ready to be sent
-Flag_Dithering				BIT	Flags3.1			; Dithering enabled
-Flag_Had_Signal			BIT	Flags3.2			; Used to detect reset after having had a valid signal
+Flags3:					DS	1			; State flags. NOT reset upon init_start
+Flag_Telemetry_Pending		BIT	Flags3.0		; DShot telemetry data packet is ready to be sent
+Flag_Dithering				BIT	Flags3.1		; PWM dithering enabled
+Flag_Had_Signal			BIT	Flags3.2		; Used to detect reset after having had a valid signal
 
-Tlm_Data_L:				DS	1				; DShot telemetry data (lo byte)
-Tlm_Data_H:				DS	1				; DShot telemetry data (hi byte)
+Tlm_Data_L:				DS	1			; DShot telemetry data (lo byte)
+Tlm_Data_H:				DS	1			; DShot telemetry data (hi byte)
 
 ;**** **** **** **** ****
 ; Direct addressing data segment
