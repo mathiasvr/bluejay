@@ -155,10 +155,9 @@ DSEG AT 20h
 Bit_Access:				DS	1				; MUST BE AT THIS ADDRESS. Variable at bit accessible address (for non interrupt routines)
 Bit_Access_Int:			DS	1				; Variable at bit accessible address (for interrupts)
 
-Flags_Startup:				DS	1				; State flags. Reset upon init_start
-Flag_Startup_Phase			BIT	Flags_Startup.0	; Set when in startup phase
-Flag_Initial_Run_Phase		BIT	Flags_Startup.1	; Set when in initial run phase, before synchronized run is achieved
-; Note: Remaining bits must be cleared
+Flags0:					DS	1				; State flags. Reset upon init_start
+Flag_Startup_Phase			BIT	Flags0.0			; Set when in startup phase
+Flag_Initial_Run_Phase		BIT	Flags0.1			; Set when in initial run phase (or startup phase), before synchronized run is achieved.
 
 Flags1:					DS	1				; State flags. Reset upon init_start
 Flag_Timer3_Pending			BIT	Flags1.0			; Timer 3 pending flag
@@ -772,8 +771,8 @@ t1_int_not_bidir:
 	; Do not boost when changing direction in bidirectional mode
 	jb	Flag_Motor_Started, t1_int_startup_boosted
 
-	mov	A, Flags_Startup			; Boost pwm during direct start
-	jz	t1_int_startup_boosted
+	; Boost pwm during direct start
+	jnb	Flag_Initial_Run_Phase, t1_int_startup_boosted
 
 	mov	A, Temp5
 	jnz	t1_int_stall_boost			; Already more power than minimum at startup
@@ -2079,8 +2078,8 @@ wait_before_zc_scan:
 setup_zc_scan_timeout:
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable timer 3 interrupts
-	mov	A, Flags_Startup
-	jz	wait_before_zc_scan_exit
+
+	jnb	Flag_Initial_Run_Phase, wait_before_zc_scan_exit
 
 	mov	Temp1, Comm_Period4x_L		; Set long timeout when starting
 	mov	Temp2, Comm_Period4x_H
@@ -2147,9 +2146,8 @@ comp_start:
 	mov	Temp4, #(1 SHL MCU_48MHZ)	; Max number of readings required
 	jb	Flag_High_Rpm, comp_check_timeout	; Branch if high rpm
 
-	mov	A, Flags_Startup			; Clear demag detected flag if start phases
-	jz	($+4)
-	clr	Flag_Demag_Detected
+	jnb	Flag_Initial_Run_Phase, ($+5)
+	clr	Flag_Demag_Detected			; Clear demag detected flag if start phases
 
 	jnb	Flag_Startup_Phase, comp_not_startup
 	mov	Temp3, #(27 SHL MCU_48MHZ)	; Set many samples during startup, approximately one pwm period
@@ -3797,8 +3795,8 @@ init_start:
 	setb	IE_EA					; Enable interrupts
 
 	clr	A
+	mov	Flags0, A					; Clear flags0
 	mov	Flags1, A					; Clear flags1
-	mov	Flags_Startup, A			; Clear startup flags
 	mov	Demag_Detected_Metric, A		; Clear demag metric
 
 	call	wait1ms
@@ -3854,7 +3852,8 @@ ENDIF
 ;**** **** **** **** ****
 ; Motor start beginning
 init_start_bidir_done:
-	setb	Flag_Startup_Phase			; Set startup phase flag
+	setb	Flag_Startup_Phase			; Set startup phase flags
+	setb	Flag_Initial_Run_Phase
 	mov	Startup_Cnt, #0			; Reset counter
 	call	comm5_comm6				; Initialize commutation
 	call	comm6_comm1
@@ -3967,7 +3966,6 @@ run6:
 
 startup_phase_done:
 	clr	Flag_Startup_Phase			; Clear startup phase flag
-	setb	Flag_Initial_Run_Phase		; Set initial run phase flag
 	mov	Initial_Run_Rot_Cntd, #12	; Set initial run rotation count
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
@@ -4072,8 +4070,8 @@ run_to_wait_for_power_on_fail:
 run_to_wait_for_power_on:
 	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off
+	mov	Flags0, #0				; Clear flags0
 	mov	Flags1, #0				; Clear flags1
-	mov	Flags_Startup, #0			; Clear startup flags
 
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz
