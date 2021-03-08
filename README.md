@@ -1,6 +1,10 @@
 <img align="right" src="bluejay.svg" alt="Bluejay" width="250">
 
 # Bluejay
+
+![GitHub release (latest by date)](https://img.shields.io/github/downloads/mathiasvr/bluejay/latest/total?style=for-the-badge)
+[![Discord](https://img.shields.io/discord/811989862299336744?color=7289da&label=Discord&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/phAmtxnMMN)
+
 Digital ESC firmware for controlling brushless motors in multirotors.
 
 > Based on [BLHeli_S](https://github.com/bitdump/BLHeli) revision 16.7
@@ -13,11 +17,13 @@ Bluejay aims to be an open source successor to BLHeli_S adding several improveme
 - Bidirectional DShot: RPM telemetry
 - Selectable PWM frequency: 24, 48 and 96 kHz
 - PWM dithering: 11-bit effective throttle resolution
+- Power configuration: Startup power and RPM protection
+- Numerous optimizations and bug fixes
 
-See the project [changelog](CHANGELOG.md) for a detailed list of changes.
+See the project [changelog](CHANGELOG.md) for a list of changes.
 
 ## Flashing ESCs
-Bluejay firmware can be flashed to BLHeli_S compatible ESCs and configured using [Bluejay Configurator](https://github.com/mathiasvr/blheli-configurator/releases) (a fork of BLHeli Configurator).
+Bluejay firmware can be flashed to BLHeli_S compatible ESCs and configured using [Bluejay Configurator](https://github.com/mathiasvr/bluejay-configurator/releases) (a fork of BLHeli Configurator).
 
 ### Release binaries
 
@@ -62,7 +68,7 @@ Any help you can provide is greatly appreciated!
 
 If you have problems, suggestions or other feedback you can open an [issue](https://github.com/mathiasvr/bluejay/issues).
 
-Join the new [Discord server](https://discord.gg/phAmtxnMMN) to ask questions and discuss Bluejay.
+You can also join our [Discord server](https://discord.gg/phAmtxnMMN) to ask questions and discuss Bluejay!
 
 ### Obtaining the toolchain
 To obtain the toolchain, [download the C51 package from Keil](https://www.keil.com/demo/eval/c51.htm). Run it with wine:
