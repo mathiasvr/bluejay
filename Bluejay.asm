@@ -1707,37 +1707,44 @@ IF MCU_48MHZ == 1
 	rrca	Temp1
 ENDIF
 
-	; Calculate this commutation time
-	mov	Temp4, Prev_Comm_L
-	mov	Temp5, Prev_Comm_H
-	mov	Prev_Comm_L, Temp1			; Store timestamp as previous commutation
-	mov	Prev_Comm_H, Temp2
+	jb	Flag_Startup_Phase, calc_next_comm_startup
 
+	; Calculate this commutation time
 	clr	C
 	mov	A, Temp1
-	subb	A, Temp4					; Calculate the new commutation time
-	mov	Temp1, A
+	subb	A, Prev_Comm_L				; Calculate the new commutation time
+	mov	Prev_Comm_L, Temp1			; Save timestamp as previous commutation
+	mov	Temp1, A					; Store commutation period in Temp1 (lo byte)
 	mov	A, Temp2
-	subb	A, Temp5
-	jb	Flag_Startup_Phase, calc_next_comm_startup
+	subb	A, Prev_Comm_H
+	mov	Prev_Comm_H, Temp2			; Save timestamp as previous commutation
 IF MCU_48MHZ == 1
 	anl	A, #7Fh
 ENDIF
-	mov	Temp2, A
+	mov	Temp2, A					; Store commutation period in Temp2 (hi byte)
 
 	jnb	Flag_High_Rpm, calc_next_comm_normal	; Branch normal rpm
 	ajmp	calc_next_comm_timing_fast			; Branch high rpm
 
 calc_next_comm_startup:
+	; Calculate this commutation time
+	mov	Temp4, Prev_Comm_L
+	mov	Temp5, Prev_Comm_H
 	mov	Temp6, Prev_Comm_X
+	mov	Prev_Comm_L, Temp1			; Store timestamp as previous commutation
+	mov	Prev_Comm_H, Temp2
 	mov	Prev_Comm_X, Temp3			; Store extended timestamp as previous commutation
-	mov	Temp2, A
+
+	clr	C
+	mov	A, Temp1
+	subb	A, Temp4					; Calculate the new commutation time
+	mov	A, Temp2
+	subb	A, Temp5
 	mov	A, Temp3
 	subb	A, Temp6					; Calculate the new extended commutation time
 IF MCU_48MHZ == 1
 	anl	A, #7Fh
 ENDIF
-	mov	Temp3, A
 	jz	calc_next_comm_startup_no_X
 
 	; Extended byte is not zero, so commutation time is above 0xFFFF
@@ -1751,8 +1758,6 @@ calc_next_comm_startup_no_X:
 	mov	Temp8, Prev_Prev_Comm_H
 	mov	Prev_Prev_Comm_L, Temp4
 	mov	Prev_Prev_Comm_H, Temp5
-	mov	Temp1, Prev_Comm_L			; Reload this commutation timestamp
-	mov	Temp2, Prev_Comm_H
 
 	; Calculate the new commutation time based upon the two last commutations (to reduce sensitivity to offset)
 	clr	C
