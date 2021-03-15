@@ -1817,14 +1817,6 @@ calc_next_comm_avg_period_div:
 	rrca	Temp5
 	djnz	Temp7, calc_next_comm_avg_period_div
 
-	clr	C
-	mov	A, Temp3
-	subb	A, Temp5					; Subtract a fraction
-	mov	Temp3, A
-	mov	A, Temp4
-	subb	A, Temp6
-	mov	Temp4, A
-
 	mov	A, Temp8					; Divide new time
 	jz	calc_next_comm_new_period_div_done
 
@@ -1835,6 +1827,14 @@ calc_next_comm_new_period_div:
 	djnz	Temp8, calc_next_comm_new_period_div
 
 calc_next_comm_new_period_div_done:
+	clr	C
+	mov	A, Temp3
+	subb	A, Temp5					; Subtract a fraction
+	mov	Temp3, A
+	mov	A, Temp4
+	subb	A, Temp6
+	mov	Temp4, A
+
 	mov	A, Temp3
 	add	A, Temp1					; Add the divided new time
 	mov	Comm_Period4x_L, A
