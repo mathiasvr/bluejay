@@ -319,7 +319,7 @@ Temp_Storage:				DS	48	; Temporary storage
 CSEG AT 1A00h
 EEPROM_FW_MAIN_REVISION		EQU	0	; Main revision of the firmware
 EEPROM_FW_SUB_REVISION		EQU	10	; Sub revision of the firmware
-EEPROM_LAYOUT_REVISION		EQU	201	; Revision of the EEPROM layout
+EEPROM_LAYOUT_REVISION		EQU	203	; Revision of the EEPROM layout
 
 Eep_FW_Main_Revision:		DB	EEPROM_FW_MAIN_REVISION		; EEPROM firmware main revision number
 Eep_FW_Sub_Revision:		DB	EEPROM_FW_SUB_REVISION		; EEPROM firmware sub revision number
@@ -368,6 +368,10 @@ Eep_Dummy:				DB	0FFh						; EEPROM address for safety reason
 
 CSEG AT 1A60h
 Eep_Name:					DB	"Bluejay (BETA)  "			; Name tag (16 Bytes)
+
+CSEG AT 1A70h
+Eep_Pgm_Startup_Tune:		DB	53,66,5,0,77,45,5,0,53,66,5,0,92,38,200,0,77,45,140,25,140,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+Eep_Dummy2:				DB	0FFh						; EEPROM address for safety reason
 
 ;**** **** **** **** ****
 Interrupt_Table_Definition			; SiLabs interrupts
@@ -3540,21 +3544,40 @@ ENDIF
 	call	wait250ms
 	call	wait250ms
 	sjmp	startup_beep_done
-
+; Startup tune has 64 pairs of (item1, item2) - a total of 128 items.
+; item2 - is the duration of each pulse of the musical note, lower the value, higher the pitch
+; item1 - if item2 is zero, it is the number of milliseconds of wait time, else it is the number of pulses of item2
 startup_beep_melody:
-	call	beep_f1					; Normal startup melody
-	call	wait5ms
-	call	beep_f2
-	call	wait5ms
-	call	beep_f1
-	call	wait5ms
-	call	beep_f3
-	call	wait200ms
-	call	beep_f2
-	call	beep_f4
-	call	beep_f4
+	mov	Temp5,	#40h
+	mov	DPTR,	#Eep_Pgm_Startup_Tune
+
+startup_melody_loop:
+	; Read current location at Eep_Pgm_Startup_Tune to Temp4 and increment DPTR. If the value is 0, no point trying to play this note
+	clr	A
+	movc	A,	@A+DPTR
+	inc	DPTR
+	mov	Temp4,	A
+	jz	startup_beep_done
+
+	; Read current location at Eep_Pgm_Startup_Tune to Temp3. If the value zero, that means this is a silent note
+	clr	A
+	movc	A,	@A+DPTR
+	mov	Temp3,	A
+	jz	startup_melody_item_wait_ms
+	call	beep
+	sjmp	startup_melody_loop_next_item
+
+startup_melody_item_wait_ms:
+	mov	A,	Temp4
+	mov	Temp2,	A
+	call	wait_ms_o
+
+startup_melody_loop_next_item:
+	inc	DPTR
+	djnz	Temp5,	startup_melody_loop
 
 startup_beep_done:
+	mov	DPTR,	#Eep_Dummy2
 	call	led_control				; Set LEDs to programmed values
 
 	call	wait250ms					; Wait for flight controller to get ready
