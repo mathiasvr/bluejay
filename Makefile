@@ -1,5 +1,5 @@
 # Current version
-VERSION		?= v0.10
+VERSION		?= $(shell git describe --tags --abbrev=0 | tr 'a-z' 'A-Z')
 
 # Target parameters
 LAYOUTS		= A B C D E F G H I J K L M N O P Q R S T U V W Z
