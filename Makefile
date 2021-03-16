@@ -1,5 +1,6 @@
 # Current version
-VERSION		?= $(shell git describe --tags --abbrev=0 | tr 'a-z' 'A-Z')
+TAG			:= $(shell git describe --tags --abbrev=0)
+VERSION		?= $(TAG)
 
 # Target parameters
 LAYOUTS		= A B C D E F G H I J K L M N O P Q R S T U V W Z
@@ -93,7 +94,7 @@ all : $(HEX_TARGETS)
 	@echo "\nbuild finished. built $(shell ls -Aq $(HEX_DIR) | wc -l) hex targets\n"
 
 $(OUTPUT_DIR)/%.OMF : $(OUTPUT_DIR)/%.OBJ
-	$(eval MAP := $(OUTPUT_DIR)/$(basename $(notdir $@)).MAP)
+	$(eval MAP := $(OUTPUT_DIR)/$(shell echo $(basename $(notdir $@)).MAP | tr 'a-z' 'A-Z'))
 	@echo "LX51 : linking $< to $@"
 #	Linking should produce exactly 1 warning
 	@$(LX51) "$<" TO "$@" "$(LX51_FLAGS)" > /dev/null 2>&1; \
