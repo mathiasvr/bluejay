@@ -82,11 +82,11 @@ SINGLE_TARGET_HEX = $(HEX_DIR)/$(LAYOUT)_$(MCU)_$(DEADTIME)_$(PWM)_$(VERSION).he
 single_target : $(SINGLE_TARGET_HEX)
 
 # Create all obj targets using macro expansion
-$(foreach _t,$(LAYOUTS), \
+$(foreach _l, $(LAYOUTS), \
 	$(foreach _m, $(MCUS), \
-		$(foreach _f, $(DEADTIMES), \
+		$(foreach _d, $(DEADTIMES), \
 			$(foreach _p, $(filter-out $(subst L,96,$(_m)), $(PWM_FREQS)), \
-				$(eval $(call MAKE_OBJ,$(_t),$(_m),$(_f),$(_p)))))))
+				$(eval $(call MAKE_OBJ,$(_l),$(_m),$(_d),$(_p)))))))
 
 HEX_TARGETS = $(OBJS:%.OBJ=$(HEX_DIR)/%.hex)
 
