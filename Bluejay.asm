@@ -2276,19 +2276,22 @@ comp_exit:
 ;
 ; Setup commutation timing routine
 ;
-; Sets up and starts wait from commutation to zero cross
+; Clear the zero cross timeout and sets up wait from zero cross to commutation
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 setup_comm_wait:
 	clr	IE_EA
 	anl	EIE1, #7Fh				; Disable timer 3 interrupts
+
+	; It is necessary to update the timer reload registers before the timer registers,
+	; to avoid a reload of the previous values in case of a short Wt_Comm_Start delay.
+	mov	TMR3RLL, Wt_Adv_Start_L		; Setup next wait time
+	mov	TMR3RLH, Wt_Adv_Start_H
 	mov	TMR3CN0, #00h				; Timer 3 disabled and interrupt flag cleared
 	mov	TMR3L, Wt_Comm_Start_L
 	mov	TMR3H, Wt_Comm_Start_H
 	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
-	; Setup next wait time
-	mov	TMR3RLL, Wt_Adv_Start_L
-	mov	TMR3RLH, Wt_Adv_Start_H
+
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable timer 3 interrupts
 	setb	IE_EA					; Enable interrupts again
