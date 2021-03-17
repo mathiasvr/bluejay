@@ -268,7 +268,7 @@ ISEG AT 080h						; The variables below must be in this sequence
 _Pgm_Gov_P_Gain:			DS	1	;
 Pgm_Startup_Power_Min:		DS	1	; Minimum power during startup phase
 Pgm_Startup_Beep:			DS	1	; Startup beep melody on/off
-Pgm_Dithering:				DS	1	; Enable dithering
+Pgm_Dithering:				DS	1	; Enable PWM dithering
 Pgm_Startup_Power_Max:		DS	1	; Maximum power (limit) during startup (and starting initial run phase)
 _Pgm_Rampup_Slope:			DS	1	;
 Pgm_Rpm_Power_Slope:		DS	1	; Low RPM power protection slope (factor)

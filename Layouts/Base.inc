@@ -328,7 +328,7 @@ ENDIF
 ENDM
 
 Start_Adc MACRO
-	mov	ADC0CN0, #90h				;; ADC start
+	mov	ADC0CN0, #90h				;; Enable ADC and initiate conversion
 ENDM
 
 Stop_Adc MACRO
