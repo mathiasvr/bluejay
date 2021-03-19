@@ -1,4 +1,3 @@
-$NOMOD51
 ;**** **** **** **** ****
 ;
 ; Bluejay digital ESC firmware for controlling brushless motors in multirotors
