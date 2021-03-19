@@ -101,14 +101,14 @@ Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __	Pwm fets inverted
 
 ;**** **** **** **** ****
 ; Select the fet dead time (or unselect for use with external batch compile file)
-;FETON_DELAY		EQU	15	; 20.4ns per step
+;DEADTIME			EQU	15	; 20.4ns per step
 
 ;**** **** **** **** ****
 ; Select the pwm frequency (or unselect for use with external batch compile file)
 ;PWM_FREQ			EQU	0	; 0=24, 1=48, 2=96 kHz
 
 
-PWM_CENTERED	EQU	FETON_DELAY > 0		; Use center aligned pwm on ESCs with dead time
+PWM_CENTERED	EQU	DEADTIME > 0			; Use center aligned pwm on ESCs with dead time
 
 IF MCU_48MHZ < 2 AND PWM_FREQ	< 3
 	; Number of bits in pwm high byte
@@ -928,13 +928,13 @@ ENDIF
 
 t1_int_set_pwm:
 ; Set pwm registers
-IF FETON_DELAY != 0
+IF DEADTIME != 0
 	clr	C
 	mov	A, Temp2					; Skew damping fet timing
 IF MCU_48MHZ == 0
-	subb	A, #((FETON_DELAY + 1) SHR 1)
+	subb	A, #((DEADTIME + 1) SHR 1)
 ELSE
-	subb	A, #(FETON_DELAY)
+	subb	A, #(DEADTIME)
 ENDIF
 	mov	Temp4, A
 	mov	A, Temp3
@@ -952,7 +952,7 @@ ENDIF
 	mov	Power_Pwm_Reg_L, Temp2
 	mov	Power_Pwm_Reg_H, Temp3
 
-IF FETON_DELAY != 0
+IF DEADTIME != 0
 	mov	Damp_Pwm_Reg_L, Temp4
 	mov	Damp_Pwm_Reg_H, Temp5
 ENDIF
@@ -1112,7 +1112,7 @@ pca_int:
 	clr	IE_EA					; Disable all interrupts
 	push	ACC
 
-IF FETON_DELAY != 0					; HI/LO enable style drivers
+IF DEADTIME != 0					; HI/LO enable style drivers
 	mov	A, PCA0L					; Read low byte first, to transfer high byte to holding register
 	mov	A, PCA0H
 
@@ -1144,7 +1144,7 @@ ELSE
 	Set_Power_Pwm_Reg_H Power_Pwm_Reg_L
 ENDIF
 
-IF FETON_DELAY != 0
+IF DEADTIME != 0
 	; Set damp pwm auto-reload registers
 	IF PWM_BITS_H != 0
 		Set_Damp_Pwm_Reg_L Damp_Pwm_Reg_L
@@ -1165,7 +1165,7 @@ ENDIF
 	clr	Flag_Low_Pwm_Power
 
 	Disable_COVF_Interrupt
-IF FETON_DELAY == 0					; EN/PWM style drivers
+IF DEADTIME == 0					; EN/PWM style drivers
 	Disable_CCF_Interrupt
 ENDIF
 
@@ -1173,7 +1173,7 @@ ENDIF
 
 pca_int_exit:
 	Clear_COVF_Interrupt
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	Clear_CCF_Interrupt
 ENDIF
 

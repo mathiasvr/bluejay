@@ -32,7 +32,7 @@ COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 COMPARATOR_PORT	EQU	0		; All comparator (mux) pins must be on the same port
 
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	PCA0CPM_POWER	EQU	PCA0CPM0
 	PCA0CPL_POWER	EQU	PCA0CPL0
 	PCA0CPH_POWER	EQU	PCA0CPH0
@@ -109,7 +109,7 @@ P_CpwmFET		EQU	P1.C_pwm
 P_CcomFET		EQU	P0.C_com
 
 Set_Pwm_A MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	cON	P_AcomFET
 	mov	P0SKIP, #0FFh
 	mov	P1SKIP, #(NOT (1 SHL A_pwm))
@@ -120,7 +120,7 @@ ENDIF
 ENDM
 
 Set_Pwm_B MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	cON	P_BcomFET
 	mov	P0SKIP, #0FFh
 	mov	P1SKIP, #(NOT (1 SHL B_pwm))
@@ -131,7 +131,7 @@ ENDIF
 ENDM
 
 Set_Pwm_C MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	cON	P_CcomFET
 	mov	P0SKIP, #0FFh
 	mov	P1SKIP, #(NOT (1 SHL C_pwm))

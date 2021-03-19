@@ -69,7 +69,7 @@ $endif
 $if NOT CUSTOM_PWM_UPDATE
 
 Enable_Power_Pwm_Module MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	mov	PCA0CPM_POWER, #4Ah		;; Enable comparator of module, enable match, set pwm mode
 ELSE
 	mov	PCA0CPM_POWER, #42h		;; Enable comparator of module, set pwm mode
@@ -77,7 +77,7 @@ ENDIF
 ENDM
 
 Enable_Damp_Pwm_Module MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	mov	PCA0CPM_DAMP, #00h		;; Disable
 ELSE
 	mov	PCA0CPM_DAMP, #42h		;; Enable comparator of module, set pwm mode
@@ -177,7 +177,7 @@ P_CpwmFET		EQU	P1.C_pwm
 P_CcomFET		EQU	P1.C_com
 
 Set_Pwm_A MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	cON	P_AcomFET
 	mov	P1SKIP, #(NOT (1 SHL A_pwm))
 ELSE
@@ -186,7 +186,7 @@ ENDIF
 ENDM
 
 Set_Pwm_B MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	cON	P_BcomFET
 	mov	P1SKIP, #(NOT (1 SHL B_pwm))
 ELSE
@@ -195,7 +195,7 @@ ENDIF
 ENDM
 
 Set_Pwm_C MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	cON	P_CcomFET
 	mov	P1SKIP, #(NOT (1 SHL C_pwm))
 ELSE
@@ -217,13 +217,13 @@ $if NOT CUSTOM_FET_TOGGLING
 
 ApwmFET_on MACRO
 	pON	P_ApwmFET
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	cON	P_AcomFET
 ENDIF
 ENDM
 
 ApwmFET_off MACRO
-IF FETON_DELAY != 0
+IF DEADTIME != 0
 	pOFF	P_ApwmFET
 ELSE
 	cOFF	P_AcomFET
@@ -232,13 +232,13 @@ ENDM
 
 BpwmFET_on MACRO
 	pON	P_BpwmFET
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	cON	P_BcomFET
 ENDIF
 ENDM
 
 BpwmFET_off MACRO
-IF FETON_DELAY != 0
+IF DEADTIME != 0
 	pOFF	P_BpwmFET
 ELSE
 	cOFF	P_BcomFET
@@ -247,13 +247,13 @@ ENDM
 
 CpwmFET_on MACRO
 	pON	P_CpwmFET
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	cON	P_CcomFET
 ENDIF
 ENDM
 
 CpwmFET_off MACRO
-IF FETON_DELAY != 0
+IF DEADTIME != 0
 	pOFF	P_CpwmFET
 ELSE
 	cOFF	P_CcomFET
@@ -268,7 +268,7 @@ ENDM
 
 
 AcomFET_on MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	pOFF	P_ApwmFET
 ENDIF
 	cON	P_AcomFET
@@ -279,7 +279,7 @@ AcomFET_off MACRO
 ENDM
 
 BcomFET_on MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	pOFF	P_BpwmFET
 ENDIF
 	cON	P_BcomFET
@@ -290,7 +290,7 @@ BcomFET_off MACRO
 ENDM
 
 CcomFET_on MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	pOFF	P_CpwmFET
 ENDIF
 	cON	P_CcomFET

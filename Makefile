@@ -70,7 +70,7 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ : $(ASM_SRC) $(ASM_INC)
 	@$(AX51) $(ASM_SRC) \
 		"DEFINE(ESCNO=$(_ESCNO)) " \
 		"DEFINE(MCU_48MHZ=$(_MCU_48MHZ)) "\
-		"DEFINE(FETON_DELAY=$(_DEADTIME)) "\
+		"DEFINE(DEADTIME=$(_DEADTIME)) "\
 		"DEFINE(PWM_FREQ=$(_PWM_FREQ)) "\
 		"OBJECT($$@) "\
 		"PRINT($$(_LST)) "\
