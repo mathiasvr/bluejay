@@ -101,16 +101,16 @@ P2_SKIP		EQU	0FFh
 ;**** **** **** **** ****
 ; PWM Phase
 ;**** **** **** **** ****
-P_ApwmFET		EQU	P0.A_pwm
-P_AcomFET		EQU	P1.A_com
-P_BpwmFET		EQU	P0.B_pwm
-P_BcomFET		EQU	P1.B_com
-P_CpwmFET		EQU	P0.C_pwm
-P_CcomFET		EQU	P1.C_com
+P_A_pwm		EQU	P0.A_pwm
+P_A_com		EQU	P1.A_com
+P_B_pwm		EQU	P0.B_pwm
+P_B_com		EQU	P1.B_com
+P_C_pwm		EQU	P0.C_pwm
+P_C_com		EQU	P1.C_com
 
 Set_Pwm_A MACRO
 IF DEADTIME == 0
-	cON	P_AcomFET
+	cON	P_A_com
 	mov	P0SKIP, #(NOT (1 SHL A_pwm))
 	mov	P1SKIP, #0FFh
 ELSE
@@ -121,7 +121,7 @@ ENDM
 
 Set_Pwm_B MACRO
 IF DEADTIME == 0
-	cON	P_BcomFET
+	cON	P_B_com
 	mov	P0SKIP, #(NOT (1 SHL B_pwm))
 	mov	P1SKIP, #0FFh
 ELSE
@@ -132,7 +132,7 @@ ENDM
 
 Set_Pwm_C MACRO
 IF DEADTIME == 0
-	cON	P_CcomFET
+	cON	P_C_com
 	mov	P0SKIP, #(NOT (1 SHL C_pwm))
 	mov	P1SKIP, #0FFh
 ELSE

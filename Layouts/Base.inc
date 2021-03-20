@@ -169,16 +169,16 @@ ENDIF
 $if NOT CUSTOM_PWM_PHASE
 
 ; All pwm and complementary pwm pins must be on port 1 to use the base code below
-P_ApwmFET		EQU	P1.A_pwm
-P_AcomFET		EQU	P1.A_com
-P_BpwmFET		EQU	P1.B_pwm
-P_BcomFET		EQU	P1.B_com
-P_CpwmFET		EQU	P1.C_pwm
-P_CcomFET		EQU	P1.C_com
+P_A_pwm		EQU	P1.A_pwm
+P_A_com		EQU	P1.A_com
+P_B_pwm		EQU	P1.B_pwm
+P_B_com		EQU	P1.B_com
+P_C_pwm		EQU	P1.C_pwm
+P_C_com		EQU	P1.C_com
 
 Set_Pwm_A MACRO
 IF DEADTIME == 0
-	cON	P_AcomFET
+	cON	P_A_com
 	mov	P1SKIP, #(NOT (1 SHL A_pwm))
 ELSE
 	mov	P1SKIP, #(NOT ((1 SHL A_pwm) + (1 SHL A_com)))
@@ -187,7 +187,7 @@ ENDM
 
 Set_Pwm_B MACRO
 IF DEADTIME == 0
-	cON	P_BcomFET
+	cON	P_B_com
 	mov	P1SKIP, #(NOT (1 SHL B_pwm))
 ELSE
 	mov	P1SKIP, #(NOT ((1 SHL B_pwm) + (1 SHL B_com)))
@@ -196,7 +196,7 @@ ENDM
 
 Set_Pwm_C MACRO
 IF DEADTIME == 0
-	cON	P_CcomFET
+	cON	P_C_com
 	mov	P1SKIP, #(NOT (1 SHL C_pwm))
 ELSE
 	mov	P1SKIP, #(NOT ((1 SHL C_pwm) + (1 SHL C_com)))
@@ -216,47 +216,47 @@ $endif
 $if NOT CUSTOM_FET_TOGGLING
 
 ApwmFET_on MACRO
-	pON	P_ApwmFET
+	pON	P_A_pwm
 IF DEADTIME == 0
-	cON	P_AcomFET
+	cON	P_A_com
 ENDIF
 ENDM
 
 ApwmFET_off MACRO
 IF DEADTIME != 0
-	pOFF	P_ApwmFET
+	pOFF	P_A_pwm
 ELSE
-	cOFF	P_AcomFET
+	cOFF	P_A_com
 ENDIF
 ENDM
 
 BpwmFET_on MACRO
-	pON	P_BpwmFET
+	pON	P_B_pwm
 IF DEADTIME == 0
-	cON	P_BcomFET
+	cON	P_B_com
 ENDIF
 ENDM
 
 BpwmFET_off MACRO
 IF DEADTIME != 0
-	pOFF	P_BpwmFET
+	pOFF	P_B_pwm
 ELSE
-	cOFF	P_BcomFET
+	cOFF	P_B_com
 ENDIF
 ENDM
 
 CpwmFET_on MACRO
-	pON	P_CpwmFET
+	pON	P_C_pwm
 IF DEADTIME == 0
-	cON	P_CcomFET
+	cON	P_C_com
 ENDIF
 ENDM
 
 CpwmFET_off MACRO
 IF DEADTIME != 0
-	pOFF	P_CpwmFET
+	pOFF	P_C_pwm
 ELSE
-	cOFF	P_CcomFET
+	cOFF	P_C_com
 ENDIF
 ENDM
 
@@ -269,35 +269,35 @@ ENDM
 
 AcomFET_on MACRO
 IF DEADTIME == 0
-	pOFF	P_ApwmFET
+	pOFF	P_A_pwm
 ENDIF
-	cON	P_AcomFET
+	cON	P_A_com
 ENDM
 
 AcomFET_off MACRO
-	cOFF	P_AcomFET
+	cOFF	P_A_com
 ENDM
 
 BcomFET_on MACRO
 IF DEADTIME == 0
-	pOFF	P_BpwmFET
+	pOFF	P_B_pwm
 ENDIF
-	cON	P_BcomFET
+	cON	P_B_com
 ENDM
 
 BcomFET_off MACRO
-	cOFF	P_BcomFET
+	cOFF	P_B_com
 ENDM
 
 CcomFET_on MACRO
 IF DEADTIME == 0
-	pOFF	P_CpwmFET
+	pOFF	P_C_pwm
 ENDIF
-	cON	P_CcomFET
+	cON	P_C_com
 ENDM
 
 CcomFET_off MACRO
-	cOFF	P_CcomFET
+	cOFF	P_C_com
 ENDM
 
 All_comFETs_Off MACRO
