@@ -3513,7 +3513,7 @@ IF MCU_48MHZ == 1
 	mov	P2MDIN, #P2_DIGITAL
 	mov	P2SKIP, #P2_SKIP
 ENDIF
-	Initialize_Xbar				; Initialize the XBAR and related functionality
+	Initialize_Crossbar				; Initialize the crossbar and related functionality
 	call	switch_power_off			; Switch power off again, after initializing ports
 
 	; Clear RAM

@@ -100,8 +100,8 @@ P2_SKIP		EQU	0FFh
 ;**** **** **** **** ****
 ; ESC specific
 ;**** **** **** **** ****
-Initialize_Xbar MACRO
-	mov	XBR2, #40h	;; Xbar enabled
+Initialize_Crossbar MACRO
+	mov	XBR2, #40h	;; Crossbar enabled
 	mov	XBR1, #02h	;; CEX0 and CEX1 routed to pins
 
 	All_pwmFETs_off	;; For unlocking of HIP2103/4 driver circuits
