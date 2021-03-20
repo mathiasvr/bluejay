@@ -1280,16 +1280,16 @@ beep_start:
 
 beep_on_off:
 	clr	A
-	B_Com_Fet_Off					; BcomFET off
-	djnz	ACC, $					; Allow some time after comfet is turned off
-	B_Pwm_Fet_On					; BpwmFET on (in order to charge the driver of the BcomFET)
-	djnz	ACC, $					; Let the pwmfet be turned on a while
-	B_Pwm_Fet_Off					; BpwmFET off again
-	djnz	ACC, $					; Allow some time after pwmfet is turned off
-	B_Com_Fet_On					; BcomFET on
-	djnz	ACC, $					; Allow some time after comfet is turned on
+	B_Com_Fet_Off					; B com FET off
+	djnz	ACC, $					; Allow some time after com fet is turned off
+	B_Pwm_Fet_On					; B pwm FET on (in order to charge the driver of the B com FET)
+	djnz	ACC, $					; Let the pwm fet be turned on a while
+	B_Pwm_Fet_Off					; B pwm FET off again
+	djnz	ACC, $					; Allow some time after pwm fet is turned off
+	B_Com_Fet_On					; B com FET on
+	djnz	ACC, $					; Allow some time after com fet is turned on
 
-	mov	A, Temp2					; Turn on pwmfet
+	mov	A, Temp2					; Turn on pwm fet
 	jb	ACC.0, beep_a_pwm_on
 	A_Pwm_Fet_On
 beep_a_pwm_on:
@@ -1300,7 +1300,7 @@ beep_c_pwm_on:
 	mov	A, Beep_Strength			; On time according to beep strength
 	djnz	ACC, $
 
-	mov	A, Temp2					; Turn off pwmfet
+	mov	A, Temp2					; Turn off pwm fet
 	jb	ACC.0, beep_a_pwm_off
 	A_Pwm_Fet_Off
 beep_a_pwm_off:
@@ -1311,7 +1311,7 @@ beep_c_pwm_off:
 	mov	A, #150					; Off for 25 us
 	djnz	ACC, $
 
-	djnz	Temp2, beep_on_off			; Toggle next pwmfet
+	djnz	Temp2, beep_on_off			; Toggle next pwm fet
 
 	mov	A, Temp3
 beep_off:							; Fets off loop
@@ -2381,8 +2381,8 @@ comm1_comm2:						; C->A
 	jb	Flag_Pgm_Dir_Rev, comm1_comm2_rev
 
 	clr	IE_EA					; Disable all interrupts
-	B_Com_Fet_Off					; Turn off comfet
-	A_Com_Fet_On					; Turn on comfet
+	B_Com_Fet_Off					; Turn off com fet
+	A_Com_Fet_On					; Turn on com fet
 	Set_Pwm_C						; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_B				; Set comparator phase
@@ -2390,8 +2390,8 @@ comm1_comm2:						; C->A
 
 comm1_comm2_rev:					; A->C
 	clr	IE_EA					; Disable all interrupts
-	B_Com_Fet_Off					; Turn off comfet
-	C_Com_Fet_On					; Turn on comfet (reverse)
+	B_Com_Fet_Off					; Turn off com fet
+	C_Com_Fet_On					; Turn on com fet (reverse)
 	Set_Pwm_A						; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_B				; Set comparator phase
@@ -2402,7 +2402,7 @@ comm2_comm3:						; B->A
 	jb	Flag_Pgm_Dir_Rev, comm2_comm3_rev
 
 	clr	IE_EA					; Disable all interrupts
-	C_Pwm_Fet_Off					; Turn off pwmfet
+	C_Pwm_Fet_Off					; Turn off pwm fet
 	Set_Pwm_B						; To reapply power after a demag cut
 	A_Com_Fet_On
 	setb	IE_EA
@@ -2411,7 +2411,7 @@ comm2_comm3:						; B->A
 
 comm2_comm3_rev:					; B->C
 	clr	IE_EA					; Disable all interrupts
-	A_Pwm_Fet_Off					; Turn off pwmfet (reverse)
+	A_Pwm_Fet_Off					; Turn off pwm fet (reverse)
 	Set_Pwm_B						; To reapply power after a demag cut
 	C_Com_Fet_On
 	setb	IE_EA
@@ -2423,8 +2423,8 @@ comm3_comm4:						; B->C
 	jb	Flag_Pgm_Dir_Rev, comm3_comm4_rev
 
 	clr	IE_EA					; Disable all interrupts
-	A_Com_Fet_Off					; Turn off comfet
-	C_Com_Fet_On					; Turn on comfet
+	A_Com_Fet_Off					; Turn off com fet
+	C_Com_Fet_On					; Turn on com fet
 	Set_Pwm_B						; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_A				; Set comparator phase
@@ -2432,8 +2432,8 @@ comm3_comm4:						; B->C
 
 comm3_comm4_rev:					; B->A
 	clr	IE_EA					; Disable all interrupts
-	C_Com_Fet_Off					; Turn off comfet (reverse)
-	A_Com_Fet_On					; Turn on comfet (reverse)
+	C_Com_Fet_Off					; Turn off com fet (reverse)
+	A_Com_Fet_On					; Turn on com fet (reverse)
 	Set_Pwm_B						; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_C				; Set comparator phase (reverse)
@@ -2444,7 +2444,7 @@ comm4_comm5:						; A->C
 	jb	Flag_Pgm_Dir_Rev, comm4_comm5_rev
 
 	clr	IE_EA					; Disable all interrupts
-	B_Pwm_Fet_Off					; Turn off pwmfet
+	B_Pwm_Fet_Off					; Turn off pwm fet
 	Set_Pwm_A						; To reapply power after a demag cut
 	C_Com_Fet_On
 	setb	IE_EA
@@ -2453,7 +2453,7 @@ comm4_comm5:						; A->C
 
 comm4_comm5_rev:					; C->A
 	clr	IE_EA					; Disable all interrupts
-	B_Pwm_Fet_Off					; Turn off pwmfet
+	B_Pwm_Fet_Off					; Turn off pwm fet
 	Set_Pwm_C
 	A_Com_Fet_On					; To reapply power after a demag cut
 	setb	IE_EA
@@ -2465,8 +2465,8 @@ comm5_comm6:						; A->B
 	jb	Flag_Pgm_Dir_Rev, comm5_comm6_rev
 
 	clr	IE_EA					; Disable all interrupts
-	C_Com_Fet_Off					; Turn off comfet
-	B_Com_Fet_On					; Turn on comfet
+	C_Com_Fet_Off					; Turn off com fet
+	B_Com_Fet_On					; Turn on com fet
 	Set_Pwm_A						; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_C				; Set comparator phase
@@ -2474,8 +2474,8 @@ comm5_comm6:						; A->B
 
 comm5_comm6_rev:					; C->B
 	clr	IE_EA					; Disable all interrupts
-	A_Com_Fet_Off					; Turn off comfet (reverse)
-	B_Com_Fet_On					; Turn on comfet
+	A_Com_Fet_Off					; Turn off com fet (reverse)
+	B_Com_Fet_On					; Turn on com fet
 	Set_Pwm_C						; To reapply power after a demag cut
 	setb	IE_EA
 	Set_Comp_Phase_A				; Set comparator phase (reverse)
@@ -2486,7 +2486,7 @@ comm6_comm1:						; C->B
 	jb	Flag_Pgm_Dir_Rev, comm6_comm1_rev
 
 	clr	IE_EA					; Disable all interrupts
-	A_Pwm_Fet_Off					; Turn off pwmfet
+	A_Pwm_Fet_Off					; Turn off pwm fet
 	Set_Pwm_C
 	B_Com_Fet_On					; To reapply power after a demag cut
 	setb	IE_EA
@@ -2495,7 +2495,7 @@ comm6_comm1:						; C->B
 
 comm6_comm1_rev:					; A->B
 	clr	IE_EA					; Disable all interrupts
-	C_Pwm_Fet_Off					; Turn off pwmfet (reverse)
+	C_Pwm_Fet_Off					; Turn off pwm fet (reverse)
 	Set_Pwm_A
 	B_Com_Fet_On					; To reapply power after a demag cut
 	setb	IE_EA
