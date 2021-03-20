@@ -25,7 +25,7 @@
 ; Base layout
 ;
 ; The inheriting layout should
-; - Specify PWM_ACTIVE_HIGH, COMPWM_ACTIVE_HIGH and COMPARATOR_PORT
+; - Specify PWM_ACTIVE_HIGH, COM_ACTIVE_HIGH and COMPARATOR_PORT
 ; - Set CUSTOM_* flags to override default implementation
 ;
 ;**** **** **** **** ****
@@ -54,9 +54,9 @@ ENDM
 
 Set_Pwm_Polarity MACRO
 IF PCA0CPM_POWER == PCA0CPM0
-	mov	PCA0POL, #((COMPWM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
+	mov	PCA0POL, #((COM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
 ELSE
-	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COMPWM_ACTIVE_HIGH)
+	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COM_ACTIVE_HIGH)
 ENDIF
 ENDM
 
@@ -154,7 +154,7 @@ pON	LIT	'clr'
 pOFF	LIT	'setb'
 ENDIF
 
-IF COMPWM_ACTIVE_HIGH == 1			; COM FET active high
+IF COM_ACTIVE_HIGH == 1				; COM FET active high
 cON	LIT	'setb'
 cOFF	LIT	'clr'
 ELSE								; COM FET active low

@@ -28,7 +28,7 @@
 ;**** **** **** **** ****
 
 PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
-COMPWM_ACTIVE_HIGH	EQU	0		; Damping non-inverted
+COM_ACTIVE_HIGH	EQU	0		; Damping non-inverted
 
 COMPARATOR_PORT	EQU	0		; All comparator (mux) pins must be on the same port
 

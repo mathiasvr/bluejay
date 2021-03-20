@@ -28,7 +28,7 @@
 ;**** **** **** **** ****
 
 PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
-COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
+COM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 COMPARATOR_PORT	EQU	0		; All comparator (mux) pins must be on the same port
 
@@ -115,9 +115,9 @@ ENDM
 
 Set_Pwm_Polarity MACRO
 IF PCA0CPM_POWER == PCA0CPM0
-	mov	PCA0POL, #((COMPWM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
+	mov	PCA0POL, #((COM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
 ELSE
-	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COMPWM_ACTIVE_HIGH)
+	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COM_ACTIVE_HIGH)
 ENDIF
 ENDM
 
