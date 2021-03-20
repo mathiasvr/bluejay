@@ -166,28 +166,28 @@ ENDIF
 ENDM
 
 Clear_COVF_Interrupt MACRO
-	anl	PCA0PWM, #0DFh
+	anl	PCA0PWM, #0DFh				;; Clear PCA cycle overflow flag
 ENDM
 
 Enable_COVF_Interrupt MACRO
-	orl	PCA0PWM, #40h
+	orl	PCA0PWM, #40h				;; Enable PCA interrupt on cycle overflow
 ENDM
 
 Disable_COVF_Interrupt MACRO
-	anl	PCA0PWM, #0BFh
+	anl	PCA0PWM, #0BFh				;; Disable PCA interrupt on cycle overflow
 ENDM
 
 IF DEADTIME == 0					; CCF interrupt is only used for DEADTIME == 0
 Clear_CCF_Interrupt MACRO
-	anl	PCA0CN0, #0FEh
+	anl	PCA0CN0, #0FEh				;; Clear PCA capture/compare flag
 ENDM
 
 Enable_CCF_Interrupt MACRO
-	orl	PCA0CPM0,#01h
+	orl	PCA0CPM0, #01h				;; Enable PCA interrupt on capture/compare
 ENDM
 
 Disable_CCF_Interrupt MACRO
-	anl	PCA0CPM0,#0FEh
+	anl	PCA0CPM0, #0FEh			;; Disable PCA interrupt on capture/compare
 ENDM
 ENDIF
 
