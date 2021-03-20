@@ -215,14 +215,14 @@ $endif
 ;**** **** **** **** ****
 $if NOT CUSTOM_FET_TOGGLING
 
-ApwmFET_on MACRO
+A_Pwm_Fet_On MACRO
 	pON	P_A_pwm
 IF DEADTIME == 0
 	cON	P_A_com
 ENDIF
 ENDM
 
-ApwmFET_off MACRO
+A_Pwm_Fet_Off MACRO
 IF DEADTIME != 0
 	pOFF	P_A_pwm
 ELSE
@@ -230,14 +230,14 @@ ELSE
 ENDIF
 ENDM
 
-BpwmFET_on MACRO
+B_Pwm_Fet_On MACRO
 	pON	P_B_pwm
 IF DEADTIME == 0
 	cON	P_B_com
 ENDIF
 ENDM
 
-BpwmFET_off MACRO
+B_Pwm_Fet_Off MACRO
 IF DEADTIME != 0
 	pOFF	P_B_pwm
 ELSE
@@ -245,14 +245,14 @@ ELSE
 ENDIF
 ENDM
 
-CpwmFET_on MACRO
+C_Pwm_Fet_On MACRO
 	pON	P_C_pwm
 IF DEADTIME == 0
 	cON	P_C_com
 ENDIF
 ENDM
 
-CpwmFET_off MACRO
+C_Pwm_Fet_Off MACRO
 IF DEADTIME != 0
 	pOFF	P_C_pwm
 ELSE
@@ -260,50 +260,50 @@ ELSE
 ENDIF
 ENDM
 
-All_pwmFETs_Off MACRO
-	ApwmFET_off
-	BpwmFET_off
-	CpwmFET_off
+All_Pwm_Fets_Off MACRO
+	A_Pwm_Fet_Off
+	B_Pwm_Fet_Off
+	C_Pwm_Fet_Off
 ENDM
 
 
-AcomFET_on MACRO
+A_Com_Fet_On MACRO
 IF DEADTIME == 0
 	pOFF	P_A_pwm
 ENDIF
 	cON	P_A_com
 ENDM
 
-AcomFET_off MACRO
+A_Com_Fet_Off MACRO
 	cOFF	P_A_com
 ENDM
 
-BcomFET_on MACRO
+B_Com_Fet_On MACRO
 IF DEADTIME == 0
 	pOFF	P_B_pwm
 ENDIF
 	cON	P_B_com
 ENDM
 
-BcomFET_off MACRO
+B_Com_Fet_Off MACRO
 	cOFF	P_B_com
 ENDM
 
-CcomFET_on MACRO
+C_Com_Fet_On MACRO
 IF DEADTIME == 0
 	pOFF	P_C_pwm
 ENDIF
 	cON	P_C_com
 ENDM
 
-CcomFET_off MACRO
+C_Com_Fet_Off MACRO
 	cOFF	P_C_com
 ENDM
 
-All_comFETs_Off MACRO
-	AcomFET_off
-	BcomFET_off
-	CcomFET_off
+All_Com_Fets_Off MACRO
+	A_Com_Fet_Off
+	B_Com_Fet_Off
+	C_Com_Fet_Off
 ENDM
 
 $endif

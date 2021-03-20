@@ -104,13 +104,13 @@ Initialize_Crossbar MACRO
 	mov	XBR2, #40h	;; Crossbar enabled
 	mov	XBR1, #02h	;; CEX0 and CEX1 routed to pins
 
-	All_pwmFETs_off	;; For unlocking of HIP2103/4 driver circuits
+	All_Pwm_Fets_Off	;; For unlocking of HIP2103/4 driver circuits
 	call	wait100ms
-	AcomFET_on
-	BcomFET_on
-	CcomFET_on
+	A_Com_Fet_On
+	B_Com_Fet_On
+	C_Com_Fet_On
 	call	wait1ms
-	All_comFETs_off
+	All_Com_Fets_Off
 ENDM
 
 Set_Pwm_Polarity MACRO

@@ -89,65 +89,65 @@ P1_PUSHPULL	EQU	((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm))
 P1_SKIP		EQU	0FFh
 
 
-ApwmFET_on MACRO
+A_Pwm_Fet_On MACRO
 	setb	P1.A_pwm				; set pin to high
 	orl	P1MDIN, #(1 SHL A_pwm)	; enable pin driver
 ENDM
 
-ApwmFET_off MACRO
+A_Pwm_Fet_Off MACRO
 	anl	P1MDIN, #(NOT(1 SHL A_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
-BpwmFET_on MACRO
+B_Pwm_Fet_On MACRO
 	setb	P1.B_pwm				; set pin to high
 	orl	P1MDIN, #(1 SHL B_pwm)	; enable pin driver
 ENDM
 
-BpwmFET_off MACRO
+B_Pwm_Fet_Off MACRO
 	anl	P1MDIN, #(NOT(1 SHL B_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
-CpwmFET_on MACRO
+C_Pwm_Fet_On MACRO
 	setb	P1.C_pwm				; set pin to high
 	orl	P1MDIN, #(1 SHL C_pwm)	; enable pin driver
 ENDM
 
-CpwmFET_off MACRO
+C_Pwm_Fet_Off MACRO
 	anl	P1MDIN, #(NOT(1 SHL C_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
-All_pwmFETs_Off MACRO
+All_Pwm_Fets_Off MACRO
 	anl	P1MDIN, #(NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
-AcomFET_on MACRO
+A_Com_Fet_On MACRO
 	clr	P1.A_pwm				; set pin to low
 	orl	P1MDIN, #(1 SHL A_pwm)	; enable pin driver
 ENDM
 
-AcomFET_off MACRO
+A_Com_Fet_Off MACRO
 	anl	P1MDIN, #(NOT(1 SHL A_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
-BcomFET_on MACRO
+B_Com_Fet_On MACRO
 	clr	P1.B_pwm				; set pin to low
 	orl	P1MDIN, #(1 SHL B_pwm)	; enable pin driver
 ENDM
 
-BcomFET_off MACRO
+B_Com_Fet_Off MACRO
 	anl	P1MDIN, #(NOT(1 SHL B_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
-CcomFET_on MACRO
+C_Com_Fet_On MACRO
 	clr	P1.C_pwm				; set pin to low
 	orl	P1MDIN, #(1 SHL C_pwm)	; enable pin driver
 ENDM
 
-CcomFET_off MACRO
+C_Com_Fet_Off MACRO
 	anl	P1MDIN, #(NOT(1 SHL C_pwm))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
-All_comFETs_Off MACRO
+All_Com_Fets_Off MACRO
 	anl	P1MDIN, #(NOT((1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm)))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
