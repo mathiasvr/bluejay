@@ -1893,24 +1893,24 @@ calc_new_wait_per_demag_done:
 	; Divide Comm_Period4x by 16 (Comm_Period1x divided by 4) and store in Temp4/3
 	mov	A, Comm_Period4x_H			; Divide by 16
 	swap	A
-	mov	Temp3, A
+	mov	Temp7, A
 	anl	A, #00Fh
-	mov	Temp2, A
-	mov	A, Temp3
+	mov	Temp4, A
+	mov	A, Temp7
 	anl	A, #0F0h
-	mov	Temp1, A
+	mov	Temp3, A
 	mov	A, Comm_Period4x_L
 	swap	A
 	anl	A, #00Fh
-	add	A, Temp1
-	mov	Temp1, A
+	add	A, Temp3
+	mov	Temp3, A
 
 	; Subtract timing reduction
 	clr	C
-	mov	A, Temp1
+	mov	A, Temp3
 	subb	A, #2				; Set timing reduction
 	mov	Temp3, A
-	mov	A, Temp2
+	mov	A, Temp4
 	subb	A, #0
 	mov	Temp4, A
 
