@@ -370,7 +370,7 @@ CSEG AT 1A60h
 Eep_Name:					DB	"Bluejay (BETA)  "			; Name tag (16 Bytes)
 
 CSEG AT 1A70h
-Eep_Pgm_Startup_Tune:		DB	53,66,5,0,77,45,5,0,53,66,5,0,92,38,200,0,77,45,140,25,140,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+Eep_Pgm_Startup_Tune:		DB	2,203,4,32,41,66,10,0,55,45,10,0,41,66,10,0,62,39,168,0,55,45,166,25,41,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 Eep_Dummy2:				DB	0FFh						; EEPROM address for safety reason
 
 ;**** **** **** **** ****
@@ -3545,11 +3545,12 @@ ENDIF
 	call	wait250ms
 	sjmp	startup_beep_done
 ; Startup tune has 64 pairs of (item1, item2) - a total of 128 items.
+; the first 4 values of the 128 items are metadata
 ; item2 - is the duration of each pulse of the musical note, lower the value, higher the pitch
 ; item1 - if item2 is zero, it is the number of milliseconds of wait time, else it is the number of pulses of item2
 startup_beep_melody:
 	mov	Temp5,	#40h
-	mov	DPTR,	#Eep_Pgm_Startup_Tune
+	mov	DPTR,	#(Eep_Pgm_Startup_Tune + 04h)
 
 startup_melody_loop:
 	; Read current location at Eep_Pgm_Startup_Tune to Temp4 and increment DPTR. If the value is 0, no point trying to play this note
