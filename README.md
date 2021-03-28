@@ -2,7 +2,7 @@
 
 # Bluejay
 
-![GitHub release (latest by date)](https://img.shields.io/github/downloads/mathiasvr/bluejay/latest/total?style=for-the-badge)
+[![GitHub release (latest by date)](https://img.shields.io/github/downloads/mathiasvr/bluejay/latest/total?style=for-the-badge)](https://github.com/mathiasvr/bluejay/releases/latest)
 [![Discord](https://img.shields.io/discord/811989862299336744?color=7289da&label=Discord&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/phAmtxnMMN)
 
 Digital ESC firmware for controlling brushless motors in multirotors.
@@ -23,7 +23,10 @@ Bluejay aims to be an open source successor to BLHeli_S adding several improveme
 See the project [changelog](CHANGELOG.md) for a list of changes.
 
 ## Flashing ESCs
-Bluejay firmware can be flashed to BLHeli_S compatible ESCs and configured using [Bluejay Configurator](https://github.com/mathiasvr/bluejay-configurator/releases) (a fork of BLHeli Configurator).
+Bluejay firmware can be flashed to BLHeli_S compatible ESCs and configured using any of the following:
+
+- [ESC Configurator](https://esc-configurator.com/) (PWA)
+- [Bluejay Configurator](https://github.com/mathiasvr/bluejay-configurator/releases) (Standalone)
 
 ### Release binaries
 
