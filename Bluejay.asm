@@ -599,6 +599,8 @@ t1_int:
 	push	ACC
 	push	B
 
+	; Note: Interrupts (of higher priority) are not explicitly disabled because
+	; int0 is already disabled and timer 0 is assumed to be disabled at this point
 	clr	TMR2CN0_TR2				; Timer 2 disabled
 	mov	Temp2, TMR2L				; Read timer value
 	mov	Temp3, TMR2H
@@ -928,6 +930,8 @@ ENDIF
 t1_int_set_pwm:
 ; Set pwm registers
 IF DEADTIME != 0
+	; Subtract dead time from normal pwm and store as damping pwm
+	; Damping pwm duty cycle will be higher because numbers are inverted
 	clr	C
 	mov	A, Temp2					; Skew damping fet timing
 IF MCU_48MHZ == 0
@@ -1091,6 +1095,9 @@ int0_int:
 int1_int:
 	clr	IE_EX1					; Disable int1 interrupts
 	setb	TCON_TR1					; Start timer 1
+
+	; Note: Interrupts (of higher priority) are not explicitly disabled because
+	; a valid dshot signal should not trigger int0 yet and timer 0 is assumed to be disabled at this point
 	clr	TMR2CN0_TR2				; Timer 2 disabled
 	mov	DShot_Frame_Start_L, TMR2L	; Read timer value
 	mov	DShot_Frame_Start_H, TMR2H
