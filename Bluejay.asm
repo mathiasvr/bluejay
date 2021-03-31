@@ -1332,6 +1332,52 @@ beep_off:							; Fets off loop
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
+; Beep melody
+;
+; Plays a beep melody from eeprom storage
+;
+; Startup tune has 64 pairs of (item1, item2) - a total of 128 items.
+; the first 4 values of the 128 items are metadata
+; item2 - is the duration of each pulse of the musical note, lower the value, higher the pitch
+; item1 - if item2 is zero, it is the number of milliseconds of wait time, else it is the number of pulses of item2
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+startup_beep_melody:
+	mov	Temp5,	#40h
+	mov	DPTR,	#(Eep_Pgm_Startup_Tune + 04h)
+
+startup_melody_loop:
+	; Read current location at Eep_Pgm_Startup_Tune to Temp4 and increment DPTR. If the value is 0, no point trying to play this note
+	clr	A
+	movc	A,	@A+DPTR
+	inc	DPTR
+	mov	Temp4,	A
+	jz	startup_beep_done
+
+	; Read current location at Eep_Pgm_Startup_Tune to Temp3. If the value zero, that means this is a silent note
+	clr	A
+	movc	A,	@A+DPTR
+	mov	Temp3,	A
+	jz	startup_melody_item_wait_ms
+	call	beep
+	sjmp	startup_melody_loop_next_item
+
+startup_melody_item_wait_ms:
+	mov	A,	Temp4
+	mov	Temp2,	A
+	call	wait_ms_o
+
+startup_melody_loop_next_item:
+	inc	DPTR
+	djnz	Temp5,	startup_melody_loop
+
+startup_beep_done:
+	mov	DPTR,	#Eep_Dummy2
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
 ; LED control
 ;
 ; Controls LEDs
@@ -3533,52 +3579,7 @@ ENDIF
 	; Initializing beeps
 	clr	IE_EA					; Disable interrupts explicitly
 	call	wait100ms					; Wait a bit to avoid audible resets if not properly powered
-
-	mov	Temp1, #Pgm_Startup_Beep		; Read programmed startup beep setting
-	mov	A, @Temp1
-	jnz	startup_beep_melody
-
-	call	beep_f2_short				; Short startup beep
-	call	wait250ms
-	call	wait250ms
-	call	wait250ms
-	call	wait250ms
-	sjmp	startup_beep_done
-; Startup tune has 64 pairs of (item1, item2) - a total of 128 items.
-; the first 4 values of the 128 items are metadata
-; item2 - is the duration of each pulse of the musical note, lower the value, higher the pitch
-; item1 - if item2 is zero, it is the number of milliseconds of wait time, else it is the number of pulses of item2
-startup_beep_melody:
-	mov	Temp5,	#40h
-	mov	DPTR,	#(Eep_Pgm_Startup_Tune + 04h)
-
-startup_melody_loop:
-	; Read current location at Eep_Pgm_Startup_Tune to Temp4 and increment DPTR. If the value is 0, no point trying to play this note
-	clr	A
-	movc	A,	@A+DPTR
-	inc	DPTR
-	mov	Temp4,	A
-	jz	startup_beep_done
-
-	; Read current location at Eep_Pgm_Startup_Tune to Temp3. If the value zero, that means this is a silent note
-	clr	A
-	movc	A,	@A+DPTR
-	mov	Temp3,	A
-	jz	startup_melody_item_wait_ms
-	call	beep
-	sjmp	startup_melody_loop_next_item
-
-startup_melody_item_wait_ms:
-	mov	A,	Temp4
-	mov	Temp2,	A
-	call	wait_ms_o
-
-startup_melody_loop_next_item:
-	inc	DPTR
-	djnz	Temp5,	startup_melody_loop
-
-startup_beep_done:
-	mov	DPTR,	#Eep_Dummy2
+	call startup_beep_melody			; Play startup beep melody
 	call	led_control				; Set LEDs to programmed values
 
 	call	wait250ms					; Wait for flight controller to get ready
