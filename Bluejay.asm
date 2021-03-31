@@ -1343,36 +1343,36 @@ beep_off:							; Fets off loop
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 startup_beep_melody:
-	mov	Temp5,	#40h
-	mov	DPTR,	#(Eep_Pgm_Startup_Tune + 04h)
+	mov	Temp5, #40h
+	mov	DPTR, #(Eep_Pgm_Startup_Tune + 04h)
 
 startup_melody_loop:
 	; Read current location at Eep_Pgm_Startup_Tune to Temp4 and increment DPTR. If the value is 0, no point trying to play this note
 	clr	A
-	movc	A,	@A+DPTR
+	movc	A, @A+DPTR
 	inc	DPTR
-	mov	Temp4,	A
+	mov	Temp4, A
 	jz	startup_beep_done
 
 	; Read current location at Eep_Pgm_Startup_Tune to Temp3. If the value zero, that means this is a silent note
 	clr	A
-	movc	A,	@A+DPTR
-	mov	Temp3,	A
+	movc	A, @A+DPTR
+	mov	Temp3, A
 	jz	startup_melody_item_wait_ms
 	call	beep
 	sjmp	startup_melody_loop_next_item
 
 startup_melody_item_wait_ms:
-	mov	A,	Temp4
-	mov	Temp2,	A
+	mov	A, Temp4
+	mov	Temp2, A
 	call	wait_ms_o
 
 startup_melody_loop_next_item:
 	inc	DPTR
-	djnz	Temp5,	startup_melody_loop
+	djnz	Temp5, startup_melody_loop
 
 startup_beep_done:
-	mov	DPTR,	#Eep_Dummy2
+	mov	DPTR, #Eep_Dummy2
 	ret
 
 
