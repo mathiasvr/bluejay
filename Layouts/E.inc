@@ -28,11 +28,11 @@
 ;**** **** **** **** ****
 
 PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
-COMPWM_ACTIVE_HIGH	EQU	1		; Damping inverted
+COM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 COMPARATOR_PORT	EQU	0		; All comparator (mux) pins must be on the same port
 
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	PCA0CPM_POWER	EQU	PCA0CPM0
 	PCA0CPL_POWER	EQU	PCA0CPL0
 	PCA0CPH_POWER	EQU	PCA0CPH0
@@ -100,24 +100,24 @@ P2_SKIP		EQU	0FFh
 ;**** **** **** **** ****
 ; ESC specific
 ;**** **** **** **** ****
-Initialize_Xbar MACRO
-	mov	XBR2, #40h	;; Xbar enabled
+Initialize_Crossbar MACRO
+	mov	XBR2, #40h	;; Crossbar enabled
 	mov	XBR1, #02h	;; CEX0 and CEX1 routed to pins
 
-	All_pwmFETs_off	;; For unlocking of HIP2103/4 driver circuits
+	All_Pwm_Fets_Off	;; For unlocking of HIP2103/4 driver circuits
 	call	wait100ms
-	AcomFET_on
-	BcomFET_on
-	CcomFET_on
+	A_Com_Fet_On
+	B_Com_Fet_On
+	C_Com_Fet_On
 	call	wait1ms
-	All_comFETs_off
+	All_Com_Fets_Off
 ENDM
 
 Set_Pwm_Polarity MACRO
 IF PCA0CPM_POWER == PCA0CPM0
-	mov	PCA0POL, #((COMPWM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
+	mov	PCA0POL, #((COM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
 ELSE
-	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COMPWM_ACTIVE_HIGH)
+	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COM_ACTIVE_HIGH)
 ENDIF
 ENDM
 

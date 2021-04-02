@@ -1,5 +1,6 @@
 # Current version
-VERSION		?= v0.10
+TAG			:= $(shell git describe --tags --abbrev=0)
+VERSION		?= $(TAG)
 
 # Target parameters
 LAYOUTS		= A B C D E F G H I J K L M N O P Q R S T U V W Z
@@ -30,7 +31,7 @@ OX51		= wine $(OX51_BIN)
 
 # Set up flags
 #AX51_FLAGS	= DEBUG NOMOD51
-AX51_FLAGS	= NOMOD51 NOLIST NOSYMBOLS
+AX51_FLAGS	= NOMOD51 REGISTERBANK(0,1,2) NOLIST NOSYMBOLS
 LX51_FLAGS	=
 
 # Source files
@@ -69,7 +70,7 @@ $(OUTPUT_DIR)/$(1)_$(2)_$(3)_$(4)_$(VERSION).OBJ : $(ASM_SRC) $(ASM_INC)
 	@$(AX51) $(ASM_SRC) \
 		"DEFINE(ESCNO=$(_ESCNO)) " \
 		"DEFINE(MCU_48MHZ=$(_MCU_48MHZ)) "\
-		"DEFINE(FETON_DELAY=$(_DEADTIME)) "\
+		"DEFINE(DEADTIME=$(_DEADTIME)) "\
 		"DEFINE(PWM_FREQ=$(_PWM_FREQ)) "\
 		"OBJECT($$@) "\
 		"PRINT($$(_LST)) "\
@@ -81,11 +82,11 @@ SINGLE_TARGET_HEX = $(HEX_DIR)/$(LAYOUT)_$(MCU)_$(DEADTIME)_$(PWM)_$(VERSION).he
 single_target : $(SINGLE_TARGET_HEX)
 
 # Create all obj targets using macro expansion
-$(foreach _t,$(LAYOUTS), \
+$(foreach _l, $(LAYOUTS), \
 	$(foreach _m, $(MCUS), \
-		$(foreach _f, $(DEADTIMES), \
+		$(foreach _d, $(DEADTIMES), \
 			$(foreach _p, $(filter-out $(subst L,96,$(_m)), $(PWM_FREQS)), \
-				$(eval $(call MAKE_OBJ,$(_t),$(_m),$(_f),$(_p)))))))
+				$(eval $(call MAKE_OBJ,$(_l),$(_m),$(_d),$(_p)))))))
 
 HEX_TARGETS = $(OBJS:%.OBJ=$(HEX_DIR)/%.hex)
 
@@ -93,7 +94,7 @@ all : $(HEX_TARGETS)
 	@echo "\nbuild finished. built $(shell ls -Aq $(HEX_DIR) | wc -l) hex targets\n"
 
 $(OUTPUT_DIR)/%.OMF : $(OUTPUT_DIR)/%.OBJ
-	$(eval MAP := $(OUTPUT_DIR)/$(basename $(notdir $@)).MAP)
+	$(eval MAP := $(OUTPUT_DIR)/$(shell echo $(basename $(notdir $@)).MAP | tr 'a-z' 'A-Z'))
 	@echo "LX51 : linking $< to $@"
 #	Linking should produce exactly 1 warning
 	@$(LX51) "$<" TO "$@" "$(LX51_FLAGS)" > /dev/null 2>&1; \

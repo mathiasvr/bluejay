@@ -115,12 +115,12 @@ ENDIF
 ENDIF
 
 ; Dead time number as chars
-DT_C2	EQU	"0" + (FETON_DELAY / 100)
-DT_C1	EQU	"0" + ((FETON_DELAY / 10) MOD 10)
-DT_C0	EQU	"0" + (FETON_DELAY MOD 10)
+DT_C2	EQU	"0" + (DEADTIME / 100)
+DT_C1	EQU	"0" + ((DEADTIME / 10) MOD 10)
+DT_C0	EQU	"0" + (DEADTIME MOD 10)
 
 CSEG AT 1A40h						; ESC layout tag
-IF FETON_DELAY < 100
+IF DEADTIME < 100
 Eep_ESC_Layout:	DB	"#", ESC_C, "_", MCU_C, "_", DT_C1, DT_C0, "#        "
 ELSE
 Eep_ESC_Layout:	DB	"#", ESC_C, "_", MCU_C, "_", DT_C2, DT_C1, DT_C0, "#       "
@@ -166,34 +166,34 @@ ENDIF
 ENDM
 
 Clear_COVF_Interrupt MACRO
-	anl	PCA0PWM, #0DFh
+	anl	PCA0PWM, #0DFh				;; Clear PCA cycle overflow flag
 ENDM
 
 Enable_COVF_Interrupt MACRO
-	orl	PCA0PWM, #40h
+	orl	PCA0PWM, #40h				;; Enable PCA interrupt on cycle overflow
 ENDM
 
 Disable_COVF_Interrupt MACRO
-	anl	PCA0PWM, #0BFh
+	anl	PCA0PWM, #0BFh				;; Disable PCA interrupt on cycle overflow
 ENDM
 
-IF FETON_DELAY == 0					; CCF interrupt is only used for FETON_DELAY == 0
+IF DEADTIME == 0					; CCF interrupt is only used for DEADTIME == 0
 Clear_CCF_Interrupt MACRO
-	anl	PCA0CN0, #0FEh
+	anl	PCA0CN0, #0FEh				;; Clear PCA capture/compare flag
 ENDM
 
 Enable_CCF_Interrupt MACRO
-	orl	PCA0CPM0,#01h
+	orl	PCA0CPM0, #01h				;; Enable PCA interrupt on capture/compare
 ENDM
 
 Disable_CCF_Interrupt MACRO
-	anl	PCA0CPM0,#0FEh
+	anl	PCA0CPM0, #0FEh			;; Disable PCA interrupt on capture/compare
 ENDM
 ENDIF
 
 Enable_PCA_Interrupt MACRO
 LOCAL pca_enabled set_pca_int_hi_pwm
-IF FETON_DELAY != 0
+IF DEADTIME != 0
 	Enable_COVF_Interrupt
 ELSE
 	jnb	Flag_Low_Pwm_Power, set_pca_int_hi_pwm

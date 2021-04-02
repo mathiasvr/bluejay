@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11](https://github.com/mathiasvr/bluejay/compare/v0.10...v0.11) (2021-03-30)
+
+- Major refactoring of the ESC layout configuration ([#9](https://github.com/mathiasvr/bluejay/pull/9))
+
+### Features
+
+* Add Z layout ([55eda69](https://github.com/mathiasvr/bluejay/commit/55eda69689249ce5e3946f223289618eca8d42f2))
+* Store programmed PWM frequency for display ([047c86b](https://github.com/mathiasvr/bluejay/commit/047c86b95c15c6cdeac47e0e197d30c3af71183f))
+
+### Bug Fixes
+
+* Avoid incorrect reload of the commutation wait timer ([a480fbf](https://github.com/mathiasvr/bluejay/commit/a480fbfdbd8628bd75cf9fa2661ff6496994c56b))
+
+### Performance Improvements
+
+* Optimize usage of startup phase flags ([14dfb1a](https://github.com/mathiasvr/bluejay/commit/14dfb1acc6e2a91325896d5c4adeaeb651b5c88f))
+
+
 ## [0.10](https://github.com/mathiasvr/bluejay/compare/v0.9...v0.10) (2021-02-10)
 
 ### Features

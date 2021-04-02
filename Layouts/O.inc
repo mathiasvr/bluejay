@@ -28,11 +28,11 @@
 ;**** **** **** **** ****
 
 PWM_ACTIVE_HIGH	EQU	1		; Pwm non-inverted
-COMPWM_ACTIVE_HIGH	EQU	0		; Damping non-inverted
+COM_ACTIVE_HIGH	EQU	0		; Damping non-inverted
 
 COMPARATOR_PORT	EQU	0		; All comparator (mux) pins must be on the same port
 
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	PCA0CPM_POWER	EQU	PCA0CPM0
 	PCA0CPL_POWER	EQU	PCA0CPL0
 	PCA0CPH_POWER	EQU	PCA0CPH0
@@ -101,8 +101,8 @@ P2_SKIP		EQU	0FFh
 ; Comparator setup
 ;**** **** **** **** ****
 Initialize_Comparator MACRO
-	mov	CMP_CN0, #80h	;; Comparator enabled, no hysteresis
-	mov	CMP_MD, #40h	;; Comparator response time 100ns, Output polarity inverted
+	mov	CMP_CN0, #80h			;; Comparator enabled, no hysteresis
+	mov	CMP_MD, #40h			;; Comparator response time 100ns, Output polarity inverted
 ENDM
 
 

@@ -25,7 +25,7 @@
 ; Base layout
 ;
 ; The inheriting layout should
-; - Specify PWM_ACTIVE_HIGH, COMPWM_ACTIVE_HIGH and COMPARATOR_PORT
+; - Specify PWM_ACTIVE_HIGH, COM_ACTIVE_HIGH and COMPARATOR_PORT
 ; - Set CUSTOM_* flags to override default implementation
 ;
 ;**** **** **** **** ****
@@ -47,16 +47,16 @@ RTX_PIN		EQU	Rcp_In			; RTX pin
 ;**** **** **** **** ****
 $if NOT CUSTOM_PWM_SETUP
 
-Initialize_Xbar MACRO
-	mov	XBR2, #40h				;; Xbar enabled
+Initialize_Crossbar MACRO
+	mov	XBR2, #40h				;; Crossbar enabled
 	mov	XBR1, #02h				;; CEX0 and CEX1 routed to pins
 ENDM
 
 Set_Pwm_Polarity MACRO
 IF PCA0CPM_POWER == PCA0CPM0
-	mov	PCA0POL, #((COMPWM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
+	mov	PCA0POL, #((COM_ACTIVE_HIGH SHL 1) + (1 - PWM_ACTIVE_HIGH))
 ELSE
-	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COMPWM_ACTIVE_HIGH)
+	mov	PCA0POL, #(((1 - PWM_ACTIVE_HIGH) SHL 1) + COM_ACTIVE_HIGH)
 ENDIF
 ENDM
 
@@ -69,7 +69,7 @@ $endif
 $if NOT CUSTOM_PWM_UPDATE
 
 Enable_Power_Pwm_Module MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	mov	PCA0CPM_POWER, #4Ah		;; Enable comparator of module, enable match, set pwm mode
 ELSE
 	mov	PCA0CPM_POWER, #42h		;; Enable comparator of module, set pwm mode
@@ -77,7 +77,7 @@ ENDIF
 ENDM
 
 Enable_Damp_Pwm_Module MACRO
-IF FETON_DELAY == 0
+IF DEADTIME == 0
 	mov	PCA0CPM_DAMP, #00h		;; Disable
 ELSE
 	mov	PCA0CPM_DAMP, #42h		;; Enable comparator of module, set pwm mode
@@ -154,7 +154,7 @@ pON	LIT	'clr'
 pOFF	LIT	'setb'
 ENDIF
 
-IF COMPWM_ACTIVE_HIGH == 1			; COM FET active high
+IF COM_ACTIVE_HIGH == 1				; COM FET active high
 cON	LIT	'setb'
 cOFF	LIT	'clr'
 ELSE								; COM FET active low
@@ -169,16 +169,16 @@ ENDIF
 $if NOT CUSTOM_PWM_PHASE
 
 ; All pwm and complementary pwm pins must be on port 1 to use the base code below
-P_ApwmFET		EQU	P1.A_pwm
-P_AcomFET		EQU	P1.A_com
-P_BpwmFET		EQU	P1.B_pwm
-P_BcomFET		EQU	P1.B_com
-P_CpwmFET		EQU	P1.C_pwm
-P_CcomFET		EQU	P1.C_com
+P_A_pwm		EQU	P1.A_pwm
+P_A_com		EQU	P1.A_com
+P_B_pwm		EQU	P1.B_pwm
+P_B_com		EQU	P1.B_com
+P_C_pwm		EQU	P1.C_pwm
+P_C_com		EQU	P1.C_com
 
 Set_Pwm_A MACRO
-IF FETON_DELAY == 0
-	cON	P_AcomFET
+IF DEADTIME == 0
+	cON	P_A_com
 	mov	P1SKIP, #(NOT (1 SHL A_pwm))
 ELSE
 	mov	P1SKIP, #(NOT ((1 SHL A_pwm) + (1 SHL A_com)))
@@ -186,8 +186,8 @@ ENDIF
 ENDM
 
 Set_Pwm_B MACRO
-IF FETON_DELAY == 0
-	cON	P_BcomFET
+IF DEADTIME == 0
+	cON	P_B_com
 	mov	P1SKIP, #(NOT (1 SHL B_pwm))
 ELSE
 	mov	P1SKIP, #(NOT ((1 SHL B_pwm) + (1 SHL B_com)))
@@ -195,8 +195,8 @@ ENDIF
 ENDM
 
 Set_Pwm_C MACRO
-IF FETON_DELAY == 0
-	cON	P_CcomFET
+IF DEADTIME == 0
+	cON	P_C_com
 	mov	P1SKIP, #(NOT (1 SHL C_pwm))
 ELSE
 	mov	P1SKIP, #(NOT ((1 SHL C_pwm) + (1 SHL C_com)))
@@ -215,95 +215,95 @@ $endif
 ;**** **** **** **** ****
 $if NOT CUSTOM_FET_TOGGLING
 
-ApwmFET_on MACRO
-	pON	P_ApwmFET
-IF FETON_DELAY == 0
-	cON	P_AcomFET
+A_Pwm_Fet_On MACRO
+	pON	P_A_pwm
+IF DEADTIME == 0
+	cON	P_A_com
 ENDIF
 ENDM
 
-ApwmFET_off MACRO
-IF FETON_DELAY != 0
-	pOFF	P_ApwmFET
+A_Pwm_Fet_Off MACRO
+IF DEADTIME != 0
+	pOFF	P_A_pwm
 ELSE
-	cOFF	P_AcomFET
+	cOFF	P_A_com
 ENDIF
 ENDM
 
-BpwmFET_on MACRO
-	pON	P_BpwmFET
-IF FETON_DELAY == 0
-	cON	P_BcomFET
+B_Pwm_Fet_On MACRO
+	pON	P_B_pwm
+IF DEADTIME == 0
+	cON	P_B_com
 ENDIF
 ENDM
 
-BpwmFET_off MACRO
-IF FETON_DELAY != 0
-	pOFF	P_BpwmFET
+B_Pwm_Fet_Off MACRO
+IF DEADTIME != 0
+	pOFF	P_B_pwm
 ELSE
-	cOFF	P_BcomFET
+	cOFF	P_B_com
 ENDIF
 ENDM
 
-CpwmFET_on MACRO
-	pON	P_CpwmFET
-IF FETON_DELAY == 0
-	cON	P_CcomFET
+C_Pwm_Fet_On MACRO
+	pON	P_C_pwm
+IF DEADTIME == 0
+	cON	P_C_com
 ENDIF
 ENDM
 
-CpwmFET_off MACRO
-IF FETON_DELAY != 0
-	pOFF	P_CpwmFET
+C_Pwm_Fet_Off MACRO
+IF DEADTIME != 0
+	pOFF	P_C_pwm
 ELSE
-	cOFF	P_CcomFET
+	cOFF	P_C_com
 ENDIF
 ENDM
 
-All_pwmFETs_Off MACRO
-	ApwmFET_off
-	BpwmFET_off
-	CpwmFET_off
+All_Pwm_Fets_Off MACRO
+	A_Pwm_Fet_Off
+	B_Pwm_Fet_Off
+	C_Pwm_Fet_Off
 ENDM
 
 
-AcomFET_on MACRO
-IF FETON_DELAY == 0
-	pOFF	P_ApwmFET
+A_Com_Fet_On MACRO
+IF DEADTIME == 0
+	pOFF	P_A_pwm
 ENDIF
-	cON	P_AcomFET
+	cON	P_A_com
 ENDM
 
-AcomFET_off MACRO
-	cOFF	P_AcomFET
+A_Com_Fet_Off MACRO
+	cOFF	P_A_com
 ENDM
 
-BcomFET_on MACRO
-IF FETON_DELAY == 0
-	pOFF	P_BpwmFET
+B_Com_Fet_On MACRO
+IF DEADTIME == 0
+	pOFF	P_B_pwm
 ENDIF
-	cON	P_BcomFET
+	cON	P_B_com
 ENDM
 
-BcomFET_off MACRO
-	cOFF	P_BcomFET
+B_Com_Fet_Off MACRO
+	cOFF	P_B_com
 ENDM
 
-CcomFET_on MACRO
-IF FETON_DELAY == 0
-	pOFF	P_CpwmFET
+C_Com_Fet_On MACRO
+IF DEADTIME == 0
+	pOFF	P_C_pwm
 ENDIF
-	cON	P_CcomFET
+	cON	P_C_com
 ENDM
 
-CcomFET_off MACRO
-	cOFF	P_CcomFET
+C_Com_Fet_Off MACRO
+	cOFF	P_C_com
 ENDM
 
-All_comFETs_Off MACRO
-	AcomFET_off
-	BcomFET_off
-	CcomFET_off
+All_Com_Fets_Off MACRO
+	A_Com_Fet_Off
+	B_Com_Fet_Off
+	C_Com_Fet_Off
 ENDM
 
 $endif
@@ -328,7 +328,7 @@ ENDIF
 ENDM
 
 Start_Adc MACRO
-	mov	ADC0CN0, #90h				;; ADC start
+	mov	ADC0CN0, #90h				;; Enable ADC and initiate conversion
 ENDM
 
 Stop_Adc MACRO
