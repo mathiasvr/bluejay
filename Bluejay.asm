@@ -3209,6 +3209,7 @@ read_eeprom_exit:
 erase_and_store_all_in_eeprom:
 	clr	IE_EA					; Disable interrupts
 	call	read_tags
+	call	read_melody
 	call	erase_flash				; Erase flash
 
 	mov	DPTR, #Eep_FW_Main_Revision	; Store firmware main revision
@@ -3243,6 +3244,7 @@ write_eeprom_block2:
 	djnz	Temp4, write_eeprom_block2
 
 	call	write_tags
+	call	write_melody
 	call	write_eeprom_signature
 	mov	DPTR, #Eep_Dummy			; Set pointer to uncritical area
 	ret
@@ -3359,6 +3361,44 @@ write_tag:
 	inc	Temp2
 	inc	DPTR
 	djnz	Temp3, write_tag
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Read bytes from flash and store in external memory
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+read_melody:
+	mov	Temp3, #140				; Number of bytes
+	mov	Temp2, #0					; Set XRAM address
+	mov	Temp1, #Bit_Access
+	mov	DPTR, #Eep_Pgm_Startup_Tune	; Set flash address
+read_melody_byte:
+	call	read_eeprom_byte
+	mov	A, Bit_Access
+	movx	@Temp2, A					; Write to XRAM
+	inc	Temp2
+	inc	DPTR
+	djnz	Temp3, read_melody_byte
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Write bytes from external memory and store in flash
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+write_melody:
+	mov	Temp3, #140				; Number of bytes
+	mov	Temp2, #0					; Set XRAM address
+	mov	DPTR, #Eep_Pgm_Startup_Tune	; Set flash address
+write_melody_byte:
+	movx	A, @Temp2					; Read from XRAM
+	call	write_eeprom_byte_from_acc
+	inc	Temp2
+	inc	DPTR
+	djnz	Temp3, write_melody_byte
 	ret
 
 
