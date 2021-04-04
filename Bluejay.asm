@@ -3844,7 +3844,7 @@ wait_for_power_telemetry_done:
 	ljmp	init_no_signal				; If pulses missing - go back to detect input signal
 
 wait_for_power_on_not_missing:
-	jnb	Flag_Rcp_Stop,	wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
+	jnb	Flag_Rcp_Stop, wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
 
 	mov	A, DShot_Cmd
 	jz	wait_for_power_on_loop		; Check DShot command if not zero, otherwise wait for power
@@ -4070,7 +4070,7 @@ initial_run_check_startup_rot:
 
 	jb	Flag_Pgm_Bidir, initial_run_continue_run	; Check if bidirectional operation
 
-	jb	Flag_Rcp_Stop,	run_to_wait_for_power_on		; Check if pulse is below stop value
+	jb	Flag_Rcp_Stop, run_to_wait_for_power_on		; Check if pulse is below stop value
 
 initial_run_continue_run:
 	jmp	run1						; Continue to run
