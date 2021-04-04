@@ -1349,6 +1349,12 @@ beep_off:							; Fets off loop
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 startup_beep_melody:
+	mov	DPTR, #(Eep_Pgm_Startup_Tune)
+	clr	A
+	movc	A, @A+DPTR
+	cpl	A
+	jz	startup_beep_done			; If first byte is 255, skip startup melody (settings may be invalid)
+
 	mov	Temp5, #40h
 	mov	DPTR, #(Eep_Pgm_Startup_Tune + 04h)
 
