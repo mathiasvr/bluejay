@@ -318,7 +318,7 @@ Temp_Storage:				DS	48	; Temporary storage
 CSEG AT 1A00h
 EEPROM_FW_MAIN_REVISION		EQU	0	; Main revision of the firmware
 EEPROM_FW_SUB_REVISION		EQU	11	; Sub revision of the firmware
-EEPROM_LAYOUT_REVISION		EQU	201	; Revision of the EEPROM layout
+EEPROM_LAYOUT_REVISION		EQU	203	; Revision of the EEPROM layout
 
 Eep_FW_Main_Revision:		DB	EEPROM_FW_MAIN_REVISION		; EEPROM firmware main revision number
 Eep_FW_Sub_Revision:		DB	EEPROM_FW_SUB_REVISION		; EEPROM firmware sub revision number
@@ -367,6 +367,10 @@ Eep_Dummy:				DB	0FFh						; EEPROM address for safety reason
 
 CSEG AT 1A60h
 Eep_Name:					DB	"Bluejay (BETA)  "			; Name tag (16 Bytes)
+
+CSEG AT 1A70h
+Eep_Pgm_Startup_Tune:		DB	2,58,4,32,52,66,13,0,69,45,13,0,52,66,13,0,78,39,211,0,69,45,208,25,52,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+Eep_Dummy2:				DB	0FFh						; EEPROM address for safety reason
 
 ;**** **** **** **** ****
 Interrupt_Table_Definition			; SiLabs interrupts
@@ -1329,6 +1333,58 @@ beep_off:							; Fets off loop
 	djnz	Temp4, beep_start			; Number of beep pulses (duration)
 
 	B_Com_Fet_Off
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Beep melody
+;
+; Plays a beep melody from eeprom storage
+;
+; Startup tune has 64 pairs of (item1, item2) - a total of 128 items.
+; the first 4 values of the 128 items are metadata
+; item2 - is the duration of each pulse of the musical note, lower the value, higher the pitch
+; item1 - if item2 is zero, it is the number of milliseconds of wait time, else it is the number of pulses of item2
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+startup_beep_melody:
+	mov	DPTR, #(Eep_Pgm_Startup_Tune)
+	clr	A
+	movc	A, @A+DPTR
+	cpl	A
+	jz	startup_beep_done			; If first byte is 255, skip startup melody (settings may be invalid)
+
+	mov	Temp5, #40h
+	mov	DPTR, #(Eep_Pgm_Startup_Tune + 04h)
+
+startup_melody_loop:
+	; Read current location at Eep_Pgm_Startup_Tune to Temp4 and increment DPTR. If the value is 0, no point trying to play this note
+	clr	A
+	movc	A, @A+DPTR
+	inc	DPTR
+	mov	Temp4, A
+	jz	startup_beep_done
+
+	; Read current location at Eep_Pgm_Startup_Tune to Temp3. If the value zero, that means this is a silent note
+	clr	A
+	movc	A, @A+DPTR
+	mov	Temp3, A
+	jz	startup_melody_item_wait_ms
+	call	beep
+	sjmp	startup_melody_loop_next_item
+
+startup_melody_item_wait_ms:
+	mov	A, Temp4
+	mov	Temp2, A
+	call	wait_ms_o
+
+startup_melody_loop_next_item:
+	inc	DPTR
+	djnz	Temp5, startup_melody_loop
+
+startup_beep_done:
+	mov	DPTR, #Eep_Dummy2
 	ret
 
 
@@ -3168,6 +3224,7 @@ read_eeprom_exit:
 erase_and_store_all_in_eeprom:
 	clr	IE_EA					; Disable interrupts
 	call	read_tags
+	call	read_melody
 	call	erase_flash				; Erase flash
 
 	mov	DPTR, #Eep_FW_Main_Revision	; Store firmware main revision
@@ -3202,6 +3259,7 @@ write_eeprom_block2:
 	djnz	Temp4, write_eeprom_block2
 
 	call	write_tags
+	call	write_melody
 	call	write_eeprom_signature
 	mov	DPTR, #Eep_Dummy			; Set pointer to uncritical area
 	ret
@@ -3318,6 +3376,44 @@ write_tag:
 	inc	Temp2
 	inc	DPTR
 	djnz	Temp3, write_tag
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Read bytes from flash and store in external memory
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+read_melody:
+	mov	Temp3, #140				; Number of bytes
+	mov	Temp2, #0					; Set XRAM address
+	mov	Temp1, #Bit_Access
+	mov	DPTR, #Eep_Pgm_Startup_Tune	; Set flash address
+read_melody_byte:
+	call	read_eeprom_byte
+	mov	A, Bit_Access
+	movx	@Temp2, A					; Write to XRAM
+	inc	Temp2
+	inc	DPTR
+	djnz	Temp3, read_melody_byte
+	ret
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Write bytes from external memory and store in flash
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+write_melody:
+	mov	Temp3, #140				; Number of bytes
+	mov	Temp2, #0					; Set XRAM address
+	mov	DPTR, #Eep_Pgm_Startup_Tune	; Set flash address
+write_melody_byte:
+	movx	A, @Temp2					; Read from XRAM
+	call	write_eeprom_byte_from_acc
+	inc	Temp2
+	inc	DPTR
+	djnz	Temp3, write_melody_byte
 	ret
 
 
@@ -3538,32 +3634,7 @@ ENDIF
 	; Initializing beeps
 	clr	IE_EA					; Disable interrupts explicitly
 	call	wait100ms					; Wait a bit to avoid audible resets if not properly powered
-
-	mov	Temp1, #Pgm_Startup_Beep		; Read programmed startup beep setting
-	mov	A, @Temp1
-	jnz	startup_beep_melody
-
-	call	beep_f2_short				; Short startup beep
-	call	wait250ms
-	call	wait250ms
-	call	wait250ms
-	call	wait250ms
-	sjmp	startup_beep_done
-
-startup_beep_melody:
-	call	beep_f1					; Normal startup melody
-	call	wait5ms
-	call	beep_f2
-	call	wait5ms
-	call	beep_f1
-	call	wait5ms
-	call	beep_f3
-	call	wait200ms
-	call	beep_f2
-	call	beep_f4
-	call	beep_f4
-
-startup_beep_done:
+	call startup_beep_melody			; Play startup beep melody
 	call	led_control				; Set LEDs to programmed values
 
 	call	wait250ms					; Wait for flight controller to get ready
