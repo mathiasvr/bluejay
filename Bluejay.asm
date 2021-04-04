@@ -1355,7 +1355,7 @@ startup_beep_melody:
 	cpl	A
 	jz	startup_beep_done			; If first byte is 255, skip startup melody (settings may be invalid)
 
-	mov	Temp5, #40h
+	mov	Temp5, #62
 	mov	DPTR, #(Eep_Pgm_Startup_Tune + 04h)
 
 startup_melody_loop:
