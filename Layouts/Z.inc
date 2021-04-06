@@ -94,7 +94,7 @@ DebugPin		EQU	0
 
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)
-P2_SKIP		EQU	0FFh
+P2_SKIP		EQU	01h
 
 
 ;**** **** **** **** ****

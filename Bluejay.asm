@@ -3613,8 +3613,10 @@ pgm_start:
 	mov	P2MDOUT, #P2_PUSHPULL
 IF MCU_48MHZ == 1
 	; Not available on BB1
+	mov	SFRPAGE, #20h
 	mov	P2MDIN, #P2_DIGITAL
 	mov	P2SKIP, #P2_SKIP
+	mov	SFRPAGE, #00h
 ENDIF
 	Initialize_Crossbar				; Initialize the crossbar and related functionality
 	call	switch_power_off			; Switch power off again, after initializing ports
