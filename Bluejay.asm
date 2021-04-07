@@ -3652,14 +3652,19 @@ init_no_signal:
 	mov	Flash_Key_1, #0			; Initialize flash keys to invalid values
 	mov	Flash_Key_2, #0
 
-	mov	Temp1, #250				; Check if input signal is high for more than 15ms
+	mov	Temp1, #9					; Check if input signal is high for ~150ms
 input_high_check_1:
-	mov	Temp2, #250
+	mov	Temp2, #0
 input_high_check_2:
+	mov	Temp3, #0
+input_high_check_3:
 	jnb	RTX_PORT.RTX_PIN, bootloader_done	; Look for low
+	djnz	Temp3, input_high_check_3
 	djnz	Temp2, input_high_check_2
 	djnz	Temp1, input_high_check_1
 
+	call	beep_f2_short				; Bootloader beep
+	call	beep_f1
 	ljmp	1C00h					; Jump to bootloader
 
 bootloader_done:
