@@ -3639,8 +3639,7 @@ ENDIF
 	call startup_beep_melody			; Play startup beep melody
 	call	led_control				; Set LEDs to programmed values
 
-	call	wait250ms					; Wait for flight controller to get ready
-	call	wait250ms
+	call	wait100ms					; Wait for flight controller to get ready
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
@@ -3674,13 +3673,13 @@ IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz				; Set clock frequency
 ENDIF
 
-	jnb	Flag_Had_Signal, setup_dshot
-	call	beep_f2					; Beep on signal loss or stall
+	jnb	Flag_Had_Signal, setup_dshot	; Check if DShot signal was lost (or stalled)
+	call	beep_f1					; Beep on signal loss
 	call	beep_f2
-	call	beep_f2
-	call	beep_f2
-	call	beep_f2
-	call	wait200ms
+	call	beep_f3
+	call	wait250ms					; Wait for flight controller to get ready
+	call	wait250ms
+	call	wait250ms
 	clr	Flag_Had_Signal
 
 setup_dshot:
