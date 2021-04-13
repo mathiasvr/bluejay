@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12](https://github.com/mathiasvr/bluejay/compare/v0.11...v0.12) (2021-04-13)
+
+### Features
+
+* Make startup melody user configurable ([#8](https://github.com/mathiasvr/bluejay/pull/8)) ([3b355fb](https://github.com/mathiasvr/bluejay/commit/3b355fb02a6ac54a26c1f9e6c5d39a94780180a2))
+
+### Bug Fixes
+
+* Avoid entering bootloader during FC reboot ([fb804ea](https://github.com/mathiasvr/bluejay/commit/fb804ea743dae63450f06f7657616f5f570ac9fe))
+* Change startup melody length from 64 to 62 notes ([#20](https://github.com/mathiasvr/bluejay/pull/20)) ([e2c249b](https://github.com/mathiasvr/bluejay/commit/e2c249bba2851928fb75ba5ffebb5330132a8249))
+* Increase bootloader signal duration ([bffd76e](https://github.com/mathiasvr/bluejay/commit/bffd76eb830c66cada459282271ba6f4cee7d676))
+* Port 2 was not skipped by crossbar ([0b15dc3](https://github.com/mathiasvr/bluejay/commit/0b15dc327f0aa753c90eae4a6683b51aefc2e54f))
+
+
 ## [0.11](https://github.com/mathiasvr/bluejay/compare/v0.10...v0.11) (2021-03-30)
 
 - Major refactoring of the ESC layout configuration ([#9](https://github.com/mathiasvr/bluejay/pull/9))
