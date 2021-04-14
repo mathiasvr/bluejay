@@ -318,7 +318,7 @@ Temp_Storage:				DS	48	; Temporary storage
 CSEG AT 1A00h
 EEPROM_FW_MAIN_REVISION		EQU	0	; Main revision of the firmware
 EEPROM_FW_SUB_REVISION		EQU	12	; Sub revision of the firmware
-EEPROM_LAYOUT_REVISION		EQU	203	; Revision of the EEPROM layout
+EEPROM_LAYOUT_REVISION		EQU	204	; Revision of the EEPROM layout
 
 Eep_FW_Main_Revision:		DB	EEPROM_FW_MAIN_REVISION		; EEPROM firmware main revision number
 Eep_FW_Sub_Revision:		DB	EEPROM_FW_SUB_REVISION		; EEPROM firmware sub revision number
@@ -370,6 +370,8 @@ Eep_Name:					DB	"Bluejay (BETA)  "			; Name tag (16 Bytes)
 
 CSEG AT 1A70h
 Eep_Pgm_Startup_Tune:		DB	2,58,4,32,52,66,13,0,69,45,13,0,52,66,13,0,78,39,211,0,69,45,208,25,52,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+Eep_Pgm_Tune_Wait_MSB_ms:	DB	0h						; Most significant byte of duration to wait after startup melody is done playing
+Eep_Pgm_Tune_Wait_LSB_ms:	DB	0h						; Least significant byte of duration to wait after startup melody is done playing
 Eep_Dummy2:				DB	0FFh						; EEPROM address for safety reason
 
 ;**** **** **** **** ****
@@ -1384,9 +1386,29 @@ startup_melody_loop_next_item:
 	djnz	Temp5, startup_melody_loop
 
 startup_beep_done:
-	mov	DPTR, #Eep_Dummy2
-	ret
+	; We now execute a wait. This wait duration has to be set automatically by the configurator,
+	; to make sure that this ESC waits for every other ESC to finish playing startup tune.
+	mov	DPTR,	#(Eep_Pgm_Tune_Wait_LSB_ms)
+	clr	A
+	movc	A,	@A+DPTR
+	mov	Temp2,	A
+	jz startup_beep_done_wait_lsb_done	; LSB represents the number of ms to wait. So we directly call wait_ms_o on Temp2 (Eep_Pgm_Tune_Wait_LSB_ms)
+	call	wait_ms_o
+startup_beep_done_wait_lsb_done:
 
+	mov DPTR, #(Eep_Pgm_Tune_Wait_MSB_ms)
+	clr A
+	movc A, @A+DPTR
+	mov Temp5, A
+	jz startup_beep_done_wait_msb_loop_done
+startup_beep_done_wait_msb_loop:	; MSB represents the multiples of 255ms we need to wait
+	mov	Temp2,	#0FFh
+	call	wait_ms_o
+	djnz	Temp5,	startup_beep_done_wait_msb_loop
+startup_beep_done_wait_msb_loop_done:
+
+	mov	DPTR,	#Eep_Dummy2 ; Clear the DPTR
+	ret
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
@@ -3477,6 +3499,9 @@ set_default_parameters:
 	imov	Temp1, #DEFAULT_PGM_BRAKE_ON_STOP		; Pgm_Brake_On_Stop
 	imov	Temp1, #DEFAULT_PGM_LED_CONTROL		; Pgm_LED_Control
 
+	mov	Temp1, #Eep_Pgm_Tune_Wait_MSB_ms
+	imov	Temp1, #0h	;Eep_Pgm_Tune_Wait_MSB_ms
+	imov	Temp1, #0h	;Eep_Pgm_Tune_Wait_LSB_ms
 	ret
 
 
