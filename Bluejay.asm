@@ -3481,7 +3481,7 @@ set_default_parameters:
 ;
 ; Decode settings
 ;
-; Decodes various settings
+; Decodes programmed settings and set RAM variables accordingly
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 decode_settings:
@@ -3626,8 +3626,7 @@ ENDIF
 
 	call	set_default_parameters		; Set default programmed parameters
 	call	read_all_eeprom_parameters	; Read all programmed parameters
-	mov	Temp1, #Pgm_Beep_Strength	; Read programmed beep strength
-	mov	Beep_Strength, @Temp1		; Set beep strength
+	call	decode_settings			; Decode programmed settings
 
 	; Initializing beeps
 	clr	IE_EA					; Disable interrupts explicitly
@@ -3663,7 +3662,6 @@ input_high_check_3:
 	ljmp	1C00h					; Jump to bootloader
 
 bootloader_done:
-	call	decode_settings
 	call	switch_power_off
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz				; Set clock frequency
