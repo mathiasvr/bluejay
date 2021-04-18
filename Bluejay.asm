@@ -2252,7 +2252,7 @@ comp_check_timeout_extend_timeout:
 
 comp_check_timeout_not_timed_out:
 	inc	Comparator_Read_Cnt			; Increment comparator read count
-	Read_Comp_Out					; Read comparator output
+	Read_Comparator_Output
 	anl	A, #40h
 	cjne	A, B, comp_read_wrong
 
@@ -2448,7 +2448,7 @@ comm1_comm2:						; C->A
 	A_Com_Fet_On
 	Set_Pwm_C						; Reapply power after a demag cut
 	setb	IE_EA
-	Set_Comp_Phase_B
+	Set_Comparator_Phase_B
 	ret
 
 comm1_comm2_rev:					; A->C
@@ -2457,7 +2457,7 @@ comm1_comm2_rev:					; A->C
 	C_Com_Fet_On
 	Set_Pwm_A						; Reapply power after a demag cut
 	setb	IE_EA
-	Set_Comp_Phase_B
+	Set_Comparator_Phase_B
 	ret
 
 ; Comm phase 2 to comm phase 3
@@ -2469,7 +2469,7 @@ comm2_comm3:						; B->A
 	Set_Pwm_B
 	A_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
-	Set_Comp_Phase_C
+	Set_Comparator_Phase_C
 	ret
 
 comm2_comm3_rev:					; B->C
@@ -2478,7 +2478,7 @@ comm2_comm3_rev:					; B->C
 	Set_Pwm_B
 	C_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
-	Set_Comp_Phase_A
+	Set_Comparator_Phase_A
 	ret
 
 ; Comm phase 3 to comm phase 4
@@ -2490,7 +2490,7 @@ comm3_comm4:						; B->C
 	C_Com_Fet_On
 	Set_Pwm_B						; Reapply power after a demag cut
 	setb	IE_EA
-	Set_Comp_Phase_A
+	Set_Comparator_Phase_A
 	ret
 
 comm3_comm4_rev:					; B->A
@@ -2499,7 +2499,7 @@ comm3_comm4_rev:					; B->A
 	A_Com_Fet_On
 	Set_Pwm_B						; Reapply power after a demag cut
 	setb	IE_EA
-	Set_Comp_Phase_C
+	Set_Comparator_Phase_C
 	ret
 
 ; Comm phase 4 to comm phase 5
@@ -2511,7 +2511,7 @@ comm4_comm5:						; A->C
 	Set_Pwm_A
 	C_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
-	Set_Comp_Phase_B
+	Set_Comparator_Phase_B
 	ret
 
 comm4_comm5_rev:					; C->A
@@ -2520,7 +2520,7 @@ comm4_comm5_rev:					; C->A
 	Set_Pwm_C
 	A_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
-	Set_Comp_Phase_B
+	Set_Comparator_Phase_B
 	ret
 
 ; Comm phase 5 to comm phase 6
@@ -2532,7 +2532,7 @@ comm5_comm6:						; A->B
 	B_Com_Fet_On
 	Set_Pwm_A						; Reapply power after a demag cut
 	setb	IE_EA
-	Set_Comp_Phase_C
+	Set_Comparator_Phase_C
 	ret
 
 comm5_comm6_rev:					; C->B
@@ -2541,7 +2541,7 @@ comm5_comm6_rev:					; C->B
 	B_Com_Fet_On
 	Set_Pwm_C						; Reapply power after a demag cut
 	setb	IE_EA
-	Set_Comp_Phase_A
+	Set_Comparator_Phase_A
 	ret
 
 ; Comm phase 6 to comm phase 1
@@ -2553,7 +2553,7 @@ comm6_comm1:						; C->B
 	Set_Pwm_C
 	B_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
-	Set_Comp_Phase_A
+	Set_Comparator_Phase_A
 	ret
 
 comm6_comm1_rev:					; A->B
@@ -2562,7 +2562,7 @@ comm6_comm1_rev:					; A->B
 	Set_Pwm_A
 	B_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
-	Set_Comp_Phase_C
+	Set_Comparator_Phase_C
 	ret
 
 

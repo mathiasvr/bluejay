@@ -109,5 +109,5 @@ ENDM
 ;**** **** **** **** ****
 ; Inherit base layout
 ;**** **** **** **** ****
-$set(CUSTOM_COMP_SETUP)
+$set(CUSTOM_COMPARATOR_SETUP)
 $include (Base.inc)

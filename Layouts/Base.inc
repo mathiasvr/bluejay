@@ -117,7 +117,7 @@ CMP_MD		EQU	CMP1MD
 CMP_MX		EQU	CMP1MX
 ENDIF
 
-$if NOT CUSTOM_COMP_SETUP
+$if NOT CUSTOM_COMPARATOR_SETUP
 
 Initialize_Comparator MACRO
 	mov	CMP_CN0, #80h				;; Comparator enabled, no hysteresis
@@ -126,22 +126,22 @@ ENDM
 
 $endif
 
-Read_Comp_Out MACRO
+Read_Comparator_Output MACRO
 	mov	A, CMP_CN0				;; Read comparator output
 ENDM
 
 ; Set comparator multiplexer to phase A
-Set_Comp_Phase_A MACRO
+Set_Comparator_Phase_A MACRO
 	mov	CMP_MX, #((A_Mux SHL 4) + V_Mux)
 ENDM
 
 ; Set comparator multiplexer to phase B
-Set_Comp_Phase_B MACRO
+Set_Comparator_Phase_B MACRO
 	mov	CMP_MX, #((B_Mux SHL 4) + V_Mux)
 ENDM
 
 ; Set comparator multiplexer to phase C
-Set_Comp_Phase_C MACRO
+Set_Comparator_Phase_C MACRO
 	mov	CMP_MX, #((C_Mux SHL 4) + V_Mux)
 ENDM
 
