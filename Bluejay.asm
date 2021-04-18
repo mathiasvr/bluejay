@@ -157,6 +157,7 @@ Bit_Access_Int:			DS	1			; Variable at bit accessible address (for interrupts)
 Flags0:					DS	1			; State flags. Reset upon init_start
 Flag_Startup_Phase			BIT	Flags0.0		; Set when in startup phase
 Flag_Initial_Run_Phase		BIT	Flags0.1		; Set when in initial run phase (or startup phase), before synchronized run is achieved.
+Flag_Motor_Dir_Rev			BIT	Flags0.2		; Set if the current spinning direction is reversed
 
 Flags1:					DS	1			; State flags. Reset upon init_start
 Flag_Timer3_Pending			BIT	Flags1.0		; Timer 3 pending flag
@@ -169,7 +170,7 @@ Flag_High_Rpm				BIT	Flags1.6		; Set when motor rpm is high (Comm_Period4x_H les
 Flag_Low_Pwm_Power			BIT	Flags1.7		; Set when pwm duty cycle is below 50%
 
 Flags2:					DS	1			; State flags. NOT reset upon init_start
-Flag_Motor_Dir_Rev			BIT	Flags2.0		; Set if the current spinning direction is reversed
+;						BIT	Flags2.0
 Flag_Pgm_Dir_Rev			BIT	Flags2.1		; Set if the programmed direction is reversed
 Flag_Pgm_Bidir				BIT	Flags2.2		; Set if the programmed control mode is bidirectional operation
 Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
@@ -2633,7 +2634,6 @@ dshot_cmd_direction_1:
 	mov	A, #3
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
-	clr	Flag_Motor_Dir_Rev
 	clr	Flag_Pgm_Dir_Rev
 
 	sjmp	dshot_cmd_exit
@@ -2652,7 +2652,6 @@ dshot_cmd_direction_2:
 	mov	A, #4
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
-	setb	Flag_Motor_Dir_Rev
 	setb	Flag_Pgm_Dir_Rev
 
 	sjmp	dshot_cmd_exit
@@ -2723,7 +2722,6 @@ dshot_cmd_direction_normal:
 	mov	@Temp1, A
 	rrc	A						; Lsb to carry
 	cpl	C
-	mov	Flag_Motor_Dir_Rev, C
 	mov	Flag_Pgm_Dir_Rev, C
 
 	sjmp	dshot_cmd_exit
@@ -2750,7 +2748,6 @@ dshot_cmd_direction_reverse:			; Temporary reverse
 	mov	@Temp1, A
 	rrc	A						; Lsb to carry
 	cpl	C
-	mov	Flag_Motor_Dir_Rev, C
 	mov	Flag_Pgm_Dir_Rev, C
 
 	sjmp	dshot_cmd_exit
@@ -3494,7 +3491,6 @@ decode_settings:
 	mov	C, ACC.1					; Set bidirectional mode
 	mov	Flag_Pgm_Bidir, C
 	mov	C, ACC.0					; Set direction (Normal / Reversed)
-	mov	Flag_Motor_Dir_Rev, C
 	mov	Flag_Pgm_Dir_Rev, C
 
 	; Check startup power
@@ -3930,6 +3926,10 @@ IF MCU_48MHZ == 1
 
 	mov	DShot_GCR_Start_Delay, #DSHOT_TLM_START_DELAY_48
 ENDIF
+
+	mov	C, Flag_Pgm_Dir_Rev			; Read spin direction setting
+	mov	Flag_Motor_Dir_Rev, C
+
 	jnb	Flag_Pgm_Bidir, init_start_bidir_done	; Check if bidirectional operation
 
 	mov	C, Flag_Rcp_Dir_Rev			; Read force direction
