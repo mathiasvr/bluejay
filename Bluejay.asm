@@ -550,10 +550,10 @@ t0_int:
 
 	; If last pulse is high, telemetry is finished,
 	; otherwise wait for it to return to high
-	jb	RTX_PORT.RTX_PIN, t0_int_dshot_tlm_finish
+	jb	RTX_BIT, t0_int_dshot_tlm_finish
 
 t0_int_dshot_tlm_transition:
-	cpl	RTX_PORT.RTX_PIN			; Invert signal level
+	cpl	RTX_BIT					; Invert signal level
 
 	mov	TL0, @Temp1				; Schedule next update
 
@@ -563,7 +563,7 @@ t0_int_dshot_tlm_transition:
 t0_int_dshot_tlm_finish:
 	; Configure RTX_PIN for digital input
 	anl	RTX_MDOUT, #(NOT (1 SHL RTX_PIN))	; Set RTX_PIN output mode to open-drain
-	setb	RTX_PORT.RTX_PIN			; Float high
+	setb	RTX_BIT					; Float high
 
 	clr	IE_ET0					; Disable timer 0 interrupts
 
@@ -975,7 +975,7 @@ ENDIF
 	mov	TMOD, #0A2h				; Timer 0 runs free not gated by INT0
 
 	; Configure RTX_PIN for digital output
-	setb	RTX_PORT.RTX_PIN			; Default to high level
+	setb	RTX_BIT					; Default to high level
 	orl	RTX_MDOUT, #(1 SHL RTX_PIN)	; Set output mode to push-pull
 
 	mov	Temp1, #0					; Set pointer to start
@@ -2585,13 +2585,13 @@ comm6_comm1_rev:					; A->B
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 detect_rcp_level:
 	mov	A, #50					; Must detect the same level 50 times (25 us)
-	mov	C, RTX_PORT.RTX_PIN
+	mov	C, RTX_BIT
 
 detect_rcp_level_read:
 	jc	($+5)
-	jb	RTX_PORT.RTX_PIN, detect_rcp_level	; Level changed from low to high - start over
+	jb	RTX_BIT, detect_rcp_level	; Level changed from low to high - start over
 	jnc	($+5)
-	jnb	RTX_PORT.RTX_PIN, detect_rcp_level	; Level changed from high to low - start over
+	jnb	RTX_BIT, detect_rcp_level	; Level changed from high to low - start over
 	djnz	ACC, detect_rcp_level_read
 
 	mov	Flag_Rcp_DShot_Inverted, C
@@ -3657,7 +3657,7 @@ input_high_check_1:
 input_high_check_2:
 	mov	Temp3, #0
 input_high_check_3:
-	jnb	RTX_PORT.RTX_PIN, bootloader_done	; Look for low
+	jnb	RTX_BIT, bootloader_done		; Look for low
 	djnz	Temp3, input_high_check_3
 	djnz	Temp2, input_high_check_2
 	djnz	Temp1, input_high_check_1

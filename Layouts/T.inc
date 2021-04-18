@@ -53,7 +53,7 @@ ENDIF
 ;*********************
 ; PORT 0 definitions *
 ;*********************
-Rcp_In		EQU	7
+RTX_PIN		EQU	7
 ;			EQU	6
 A_Mux		EQU	5
 ;			EQU	4
@@ -73,17 +73,17 @@ P0_SKIP		EQU	0FFh
 ;*********************
 ;			EQU	7
 ;			EQU	6
-C_pwm		EQU	5
-B_pwm		EQU	4
-A_pwm		EQU	3
-A_com		EQU	2
-B_com		EQU	1
-C_com		EQU	0
+C_Pwm		EQU	5
+B_Pwm		EQU	4
+A_Pwm		EQU	3
+A_Com		EQU	2
+B_Com		EQU	1
+C_Com		EQU	0
 
 
-P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
+P1_DIGITAL	EQU	(1 SHL A_Pwm) + (1 SHL B_Pwm) + (1 SHL C_Pwm) + (1 SHL A_Com) + (1 SHL B_Com) + (1 SHL C_Com)
 P1_INIT		EQU	00h
-P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
+P1_PUSHPULL	EQU	(1 SHL A_Pwm) + (1 SHL B_Pwm) + (1 SHL C_Pwm) + (1 SHL A_Com) + (1 SHL B_Com) + (1 SHL C_Com)
 P1_SKIP		EQU	0FFh
 
 
@@ -94,7 +94,7 @@ DebugPin		EQU	0
 
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)
-P2_SKIP		EQU	01h
+P2_SKIP		EQU	(1 SHL DebugPin)
 
 
 ;**** **** **** **** ****

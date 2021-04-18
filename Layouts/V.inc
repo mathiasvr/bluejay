@@ -53,9 +53,9 @@ ENDIF
 ;*********************
 ; PORT 0 definitions *
 ;*********************
-C_com		EQU	7
+C_Com		EQU	7
 ;			EQU	6
-Rcp_In		EQU	5
+RTX_PIN		EQU	5
 ;			EQU	4
 C_Mux		EQU	3
 V_Mux		EQU	2
@@ -64,8 +64,8 @@ A_Mux		EQU	0
 
 
 P0_DIGITAL	EQU	NOT((1 SHL A_Mux) + (1 SHL B_Mux) + (1 SHL C_Mux) + (1 SHL V_Mux))
-P0_INIT		EQU	NOT(1 SHL C_com)
-P0_PUSHPULL	EQU	(1 SHL C_com)
+P0_INIT		EQU	NOT(1 SHL C_Com)
+P0_PUSHPULL	EQU	(1 SHL C_Com)
 P0_SKIP		EQU	0FFh
 
 
@@ -73,18 +73,18 @@ P0_SKIP		EQU	0FFh
 ; PORT 1 definitions *
 ;*********************
 ;			EQU	7
-A_pwm		EQU	6
-A_com		EQU	5
-B_pwm		EQU	4
+A_Pwm		EQU	6
+A_Com		EQU	5
+B_Pwm		EQU	4
 ;			EQU	3
 ;			EQU	2
-B_com		EQU	1
-C_pwm		EQU	0
+B_Com		EQU	1
+C_Pwm		EQU	0
 
 
-P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com)
+P1_DIGITAL	EQU	(1 SHL A_Pwm) + (1 SHL B_Pwm) + (1 SHL C_Pwm) + (1 SHL A_Com) + (1 SHL B_Com)
 P1_INIT		EQU	00h
-P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com)
+P1_PUSHPULL	EQU	(1 SHL A_Pwm) + (1 SHL B_Pwm) + (1 SHL C_Pwm) + (1 SHL A_Com) + (1 SHL B_Com)
 P1_SKIP		EQU	0FFh
 
 
@@ -95,49 +95,49 @@ DebugPin		EQU	0
 
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)
-P2_SKIP		EQU	01h
+P2_SKIP		EQU	(1 SHL DebugPin)
 
 
 ;**** **** **** **** ****
 ; PWM Phase
 ;**** **** **** **** ****
-P_A_pwm		EQU	P1.A_pwm
-P_A_com		EQU	P1.A_com
-P_B_pwm		EQU	P1.B_pwm
-P_B_com		EQU	P1.B_com
-P_C_pwm		EQU	P1.C_pwm
-P_C_com		EQU	P0.C_com
+P_A_Pwm		EQU	P1.A_Pwm
+P_A_Com		EQU	P1.A_Com
+P_B_Pwm		EQU	P1.B_Pwm
+P_B_Com		EQU	P1.B_Com
+P_C_Pwm		EQU	P1.C_Pwm
+P_C_Com		EQU	P0.C_Com
 
 Set_Pwm_A MACRO
 IF DEADTIME == 0
-	cON	P_A_com
+	cON	P_A_Com
 	mov	P0SKIP, #0FFh
-	mov	P1SKIP, #(NOT (1 SHL A_pwm))
+	mov	P1SKIP, #(NOT (1 SHL A_Pwm))
 ELSE
 	mov	P0SKIP, #0FFh
-	mov	P1SKIP, #(NOT ((1 SHL A_pwm) + (1 SHL A_com)))
+	mov	P1SKIP, #(NOT ((1 SHL A_Pwm) + (1 SHL A_Com)))
 ENDIF
 ENDM
 
 Set_Pwm_B MACRO
 IF DEADTIME == 0
-	cON	P_B_com
+	cON	P_B_Com
 	mov	P0SKIP, #0FFh
-	mov	P1SKIP, #(NOT (1 SHL B_pwm))
+	mov	P1SKIP, #(NOT (1 SHL B_Pwm))
 ELSE
 	mov	P0SKIP, #0FFh
-	mov	P1SKIP, #(NOT ((1 SHL B_pwm) + (1 SHL B_com)))
+	mov	P1SKIP, #(NOT ((1 SHL B_Pwm) + (1 SHL B_Com)))
 ENDIF
 ENDM
 
 Set_Pwm_C MACRO
 IF DEADTIME == 0
-	cON	P_C_com
+	cON	P_C_Com
 	mov	P0SKIP, #0FFh
-	mov	P1SKIP, #(NOT (1 SHL C_pwm))
+	mov	P1SKIP, #(NOT (1 SHL C_Pwm))
 ELSE
-	mov	P0SKIP, #(NOT (1 SHL C_com))
-	mov	P1SKIP, #(NOT (1 SHL C_pwm))
+	mov	P0SKIP, #(NOT (1 SHL C_Com))
+	mov	P1SKIP, #(NOT (1 SHL C_Pwm))
 ENDIF
 ENDM
 

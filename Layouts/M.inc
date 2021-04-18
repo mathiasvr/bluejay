@@ -57,7 +57,7 @@ A_Mux		EQU	7
 C_Mux		EQU	6
 V_Mux		EQU	5
 B_Mux		EQU	4
-Rcp_In		EQU	3
+RTX_PIN		EQU	3
 LED_0		EQU	2
 ;			EQU	1
 ;			EQU	0
@@ -72,18 +72,18 @@ P0_SKIP		EQU	0FFh
 ; PORT 1 definitions *
 ;*********************
 ;			EQU	7
-C_com		EQU	6
-B_com		EQU	5
-A_com		EQU	4
-C_pwm		EQU	3
-B_pwm		EQU	2
-A_pwm		EQU	1
+C_Com		EQU	6
+B_Com		EQU	5
+A_Com		EQU	4
+C_Pwm		EQU	3
+B_Pwm		EQU	2
+A_Pwm		EQU	1
 ;			EQU	0
 
 
-P1_DIGITAL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
+P1_DIGITAL	EQU	(1 SHL A_Pwm) + (1 SHL B_Pwm) + (1 SHL C_Pwm) + (1 SHL A_Com) + (1 SHL B_Com) + (1 SHL C_Com)
 P1_INIT		EQU	00h
-P1_PUSHPULL	EQU	(1 SHL A_pwm) + (1 SHL B_pwm) + (1 SHL C_pwm) + (1 SHL A_com) + (1 SHL B_com) + (1 SHL C_com)
+P1_PUSHPULL	EQU	(1 SHL A_Pwm) + (1 SHL B_Pwm) + (1 SHL C_Pwm) + (1 SHL A_Com) + (1 SHL B_Com) + (1 SHL C_Com)
 P1_SKIP		EQU	0FFh
 
 
@@ -94,7 +94,7 @@ DebugPin		EQU	0
 
 P2_DIGITAL	EQU	(1 SHL DebugPin)
 P2_PUSHPULL	EQU	(1 SHL DebugPin)
-P2_SKIP		EQU	01h
+P2_SKIP		EQU	(1 SHL DebugPin)
 
 
 ;**** **** **** **** ****

@@ -39,7 +39,8 @@ RTX_PORT		EQU	P0				; Receive/Transmit port
 RTX_MDOUT		EQU	P0MDOUT			; Set to 1 for PUSHPULL
 RTX_MDIN		EQU	P0MDIN			; Set to 1 for DIGITAL
 RTX_SKIP		EQU	P0SKIP			; Set to 1 for SKIP
-RTX_PIN		EQU	Rcp_In			; RTX pin
+
+RTX_BIT		EQU	RTX_PORT.RTX_PIN	; RTX pin value
 
 
 ;**** **** **** **** ****
@@ -169,37 +170,37 @@ ENDIF
 $if NOT CUSTOM_PWM_PHASE
 
 ; All pwm and complementary pwm pins must be on port 1 to use the base code below
-P_A_pwm		EQU	P1.A_pwm
-P_A_com		EQU	P1.A_com
-P_B_pwm		EQU	P1.B_pwm
-P_B_com		EQU	P1.B_com
-P_C_pwm		EQU	P1.C_pwm
-P_C_com		EQU	P1.C_com
+P_A_Pwm		EQU	P1.A_Pwm
+P_A_Com		EQU	P1.A_Com
+P_B_Pwm		EQU	P1.B_Pwm
+P_B_Com		EQU	P1.B_Com
+P_C_Pwm		EQU	P1.C_Pwm
+P_C_Com		EQU	P1.C_Com
 
 Set_Pwm_A MACRO
 IF DEADTIME == 0
-	cON	P_A_com
-	mov	P1SKIP, #(NOT (1 SHL A_pwm))
+	cON	P_A_Com
+	mov	P1SKIP, #(NOT (1 SHL A_Pwm))
 ELSE
-	mov	P1SKIP, #(NOT ((1 SHL A_pwm) + (1 SHL A_com)))
+	mov	P1SKIP, #(NOT ((1 SHL A_Pwm) + (1 SHL A_Com)))
 ENDIF
 ENDM
 
 Set_Pwm_B MACRO
 IF DEADTIME == 0
-	cON	P_B_com
-	mov	P1SKIP, #(NOT (1 SHL B_pwm))
+	cON	P_B_Com
+	mov	P1SKIP, #(NOT (1 SHL B_Pwm))
 ELSE
-	mov	P1SKIP, #(NOT ((1 SHL B_pwm) + (1 SHL B_com)))
+	mov	P1SKIP, #(NOT ((1 SHL B_Pwm) + (1 SHL B_Com)))
 ENDIF
 ENDM
 
 Set_Pwm_C MACRO
 IF DEADTIME == 0
-	cON	P_C_com
-	mov	P1SKIP, #(NOT (1 SHL C_pwm))
+	cON	P_C_Com
+	mov	P1SKIP, #(NOT (1 SHL C_Pwm))
 ELSE
-	mov	P1SKIP, #(NOT ((1 SHL C_pwm) + (1 SHL C_com)))
+	mov	P1SKIP, #(NOT ((1 SHL C_Pwm) + (1 SHL C_Com)))
 ENDIF
 ENDM
 
@@ -216,47 +217,47 @@ $endif
 $if NOT CUSTOM_FET_TOGGLING
 
 A_Pwm_Fet_On MACRO
-	pON	P_A_pwm
+	pON	P_A_Pwm
 IF DEADTIME == 0
-	cON	P_A_com
+	cON	P_A_Com
 ENDIF
 ENDM
 
 A_Pwm_Fet_Off MACRO
 IF DEADTIME != 0
-	pOFF	P_A_pwm
+	pOFF	P_A_Pwm
 ELSE
-	cOFF	P_A_com
+	cOFF	P_A_Com
 ENDIF
 ENDM
 
 B_Pwm_Fet_On MACRO
-	pON	P_B_pwm
+	pON	P_B_Pwm
 IF DEADTIME == 0
-	cON	P_B_com
+	cON	P_B_Com
 ENDIF
 ENDM
 
 B_Pwm_Fet_Off MACRO
 IF DEADTIME != 0
-	pOFF	P_B_pwm
+	pOFF	P_B_Pwm
 ELSE
-	cOFF	P_B_com
+	cOFF	P_B_Com
 ENDIF
 ENDM
 
 C_Pwm_Fet_On MACRO
-	pON	P_C_pwm
+	pON	P_C_Pwm
 IF DEADTIME == 0
-	cON	P_C_com
+	cON	P_C_Com
 ENDIF
 ENDM
 
 C_Pwm_Fet_Off MACRO
 IF DEADTIME != 0
-	pOFF	P_C_pwm
+	pOFF	P_C_Pwm
 ELSE
-	cOFF	P_C_com
+	cOFF	P_C_Com
 ENDIF
 ENDM
 
@@ -269,35 +270,35 @@ ENDM
 
 A_Com_Fet_On MACRO
 IF DEADTIME == 0
-	pOFF	P_A_pwm
+	pOFF	P_A_Pwm
 ENDIF
-	cON	P_A_com
+	cON	P_A_Com
 ENDM
 
 A_Com_Fet_Off MACRO
-	cOFF	P_A_com
+	cOFF	P_A_Com
 ENDM
 
 B_Com_Fet_On MACRO
 IF DEADTIME == 0
-	pOFF	P_B_pwm
+	pOFF	P_B_Pwm
 ENDIF
-	cON	P_B_com
+	cON	P_B_Com
 ENDM
 
 B_Com_Fet_Off MACRO
-	cOFF	P_B_com
+	cOFF	P_B_Com
 ENDM
 
 C_Com_Fet_On MACRO
 IF DEADTIME == 0
-	pOFF	P_C_pwm
+	pOFF	P_C_Pwm
 ENDIF
-	cON	P_C_com
+	cON	P_C_Com
 ENDM
 
 C_Com_Fet_Off MACRO
-	cOFF	P_C_com
+	cOFF	P_C_Com
 ENDM
 
 All_Com_Fets_Off MACRO
