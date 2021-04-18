@@ -170,8 +170,8 @@ Flag_Low_Pwm_Power			BIT	Flags1.7		; Set when pwm duty cycle is below 50%
 
 Flags2:					DS	1			; State flags. NOT reset upon init_start
 Flag_Motor_Dir_Rev			BIT	Flags2.0		; Set if the current spinning direction is reversed
-Flag_Pgm_Bidir_Rev			BIT	Flags2.1		; Programmed bidirectional direction. 0=normal, 1=reversed
-Flag_Pgm_Bidir				BIT	Flags2.2		; Programmed bidirectional operation. 0=normal, 1=bidirectional
+Flag_Pgm_Dir_Rev			BIT	Flags2.1		; Set if the programmed direction is reversed
+Flag_Pgm_Bidir				BIT	Flags2.2		; Set if the programmed control mode is bidirectional operation
 Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
 Flag_Clock_At_48MHz			BIT	Flags2.4		; Set if 48MHz MCUs run at 48MHz
 Flag_Rcp_Stop				BIT	Flags2.5		; Set if the RC pulse value is zero
@@ -742,7 +742,7 @@ t1_normal_range:
 	setb	Flag_Rcp_Dir_Rev
 
 t1_int_bidir_rev_chk:
-	jb	Flag_Pgm_Bidir_Rev, ($+5)
+	jb	Flag_Pgm_Dir_Rev, ($+5)
 	cpl	Flag_Rcp_Dir_Rev
 
 	clr	C						; Multiply throttle value by 2
@@ -2634,7 +2634,7 @@ dshot_cmd_direction_1:
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
 	clr	Flag_Motor_Dir_Rev
-	clr	Flag_Pgm_Bidir_Rev
+	clr	Flag_Pgm_Dir_Rev
 
 	sjmp	dshot_cmd_exit
 
@@ -2653,7 +2653,7 @@ dshot_cmd_direction_2:
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
 	setb	Flag_Motor_Dir_Rev
-	setb	Flag_Pgm_Bidir_Rev
+	setb	Flag_Pgm_Dir_Rev
 
 	sjmp	dshot_cmd_exit
 
@@ -2724,7 +2724,7 @@ dshot_cmd_direction_normal:
 	rrc	A						; Lsb to carry
 	cpl	C
 	mov	Flag_Motor_Dir_Rev, C
-	mov	Flag_Pgm_Bidir_Rev, C
+	mov	Flag_Pgm_Dir_Rev, C
 
 	sjmp	dshot_cmd_exit
 
@@ -2751,7 +2751,7 @@ dshot_cmd_direction_reverse:			; Temporary reverse
 	rrc	A						; Lsb to carry
 	cpl	C
 	mov	Flag_Motor_Dir_Rev, C
-	mov	Flag_Pgm_Bidir_Rev, C
+	mov	Flag_Pgm_Dir_Rev, C
 
 	sjmp	dshot_cmd_exit
 
@@ -3495,7 +3495,7 @@ decode_settings:
 	mov	Flag_Pgm_Bidir, C
 	mov	C, ACC.0					; Set direction (Normal / Reversed)
 	mov	Flag_Motor_Dir_Rev, C
-	mov	Flag_Pgm_Bidir_Rev, C
+	mov	Flag_Pgm_Dir_Rev, C
 
 	; Check startup power
 	mov	Temp1, #Pgm_Startup_Power_Max
