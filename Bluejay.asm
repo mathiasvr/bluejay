@@ -169,7 +169,7 @@ Flag_High_Rpm				BIT	Flags1.6		; Set when motor rpm is high (Comm_Period4x_H les
 Flag_Low_Pwm_Power			BIT	Flags1.7		; Set when pwm duty cycle is below 50%
 
 Flags2:					DS	1			; State flags. NOT reset upon init_start
-Flag_Pgm_Dir_Rev			BIT	Flags2.0		; Programmed direction. 0=normal, 1=reversed
+Flag_Motor_Dir_Rev			BIT	Flags2.0		; Set if the current spinning direction is reversed
 Flag_Pgm_Bidir_Rev			BIT	Flags2.1		; Programmed bidirectional direction. 0=normal, 1=reversed
 Flag_Pgm_Bidir				BIT	Flags2.2		; Programmed bidirectional operation. 0=normal, 1=bidirectional
 Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
@@ -2441,7 +2441,7 @@ wait_for_comm_wait:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ; Comm phase 1 to comm phase 2
 comm1_comm2:						; C->A
-	jb	Flag_Pgm_Dir_Rev, comm1_comm2_rev
+	jb	Flag_Motor_Dir_Rev, comm1_comm2_rev
 
 	clr	IE_EA
 	B_Com_Fet_Off
@@ -2462,7 +2462,7 @@ comm1_comm2_rev:					; A->C
 
 ; Comm phase 2 to comm phase 3
 comm2_comm3:						; B->A
-	jb	Flag_Pgm_Dir_Rev, comm2_comm3_rev
+	jb	Flag_Motor_Dir_Rev, comm2_comm3_rev
 
 	clr	IE_EA
 	C_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
@@ -2483,7 +2483,7 @@ comm2_comm3_rev:					; B->C
 
 ; Comm phase 3 to comm phase 4
 comm3_comm4:						; B->C
-	jb	Flag_Pgm_Dir_Rev, comm3_comm4_rev
+	jb	Flag_Motor_Dir_Rev, comm3_comm4_rev
 
 	clr	IE_EA
 	A_Com_Fet_Off
@@ -2504,7 +2504,7 @@ comm3_comm4_rev:					; B->A
 
 ; Comm phase 4 to comm phase 5
 comm4_comm5:						; A->C
-	jb	Flag_Pgm_Dir_Rev, comm4_comm5_rev
+	jb	Flag_Motor_Dir_Rev, comm4_comm5_rev
 
 	clr	IE_EA
 	B_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
@@ -2525,7 +2525,7 @@ comm4_comm5_rev:					; C->A
 
 ; Comm phase 5 to comm phase 6
 comm5_comm6:						; A->B
-	jb	Flag_Pgm_Dir_Rev, comm5_comm6_rev
+	jb	Flag_Motor_Dir_Rev, comm5_comm6_rev
 
 	clr	IE_EA
 	C_Com_Fet_Off
@@ -2546,7 +2546,7 @@ comm5_comm6_rev:					; C->B
 
 ; Comm phase 6 to comm phase 1
 comm6_comm1:						; C->B
-	jb	Flag_Pgm_Dir_Rev, comm6_comm1_rev
+	jb	Flag_Motor_Dir_Rev, comm6_comm1_rev
 
 	clr	IE_EA
 	A_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
@@ -2633,7 +2633,7 @@ dshot_cmd_direction_1:
 	mov	A, #3
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
-	clr	Flag_Pgm_Dir_Rev
+	clr	Flag_Motor_Dir_Rev
 	clr	Flag_Pgm_Bidir_Rev
 
 	sjmp	dshot_cmd_exit
@@ -2652,7 +2652,7 @@ dshot_cmd_direction_2:
 	mov	A, #4
 	mov	Temp1, #Pgm_Direction
 	mov	@Temp1, A
-	setb	Flag_Pgm_Dir_Rev
+	setb	Flag_Motor_Dir_Rev
 	setb	Flag_Pgm_Bidir_Rev
 
 	sjmp	dshot_cmd_exit
@@ -2723,7 +2723,7 @@ dshot_cmd_direction_normal:
 	mov	@Temp1, A
 	rrc	A						; Lsb to carry
 	cpl	C
-	mov	Flag_Pgm_Dir_Rev, C
+	mov	Flag_Motor_Dir_Rev, C
 	mov	Flag_Pgm_Bidir_Rev, C
 
 	sjmp	dshot_cmd_exit
@@ -2750,7 +2750,7 @@ dshot_cmd_direction_reverse:			; Temporary reverse
 	mov	@Temp1, A
 	rrc	A						; Lsb to carry
 	cpl	C
-	mov	Flag_Pgm_Dir_Rev, C
+	mov	Flag_Motor_Dir_Rev, C
 	mov	Flag_Pgm_Bidir_Rev, C
 
 	sjmp	dshot_cmd_exit
@@ -3494,7 +3494,7 @@ decode_settings:
 	mov	C, ACC.1					; Set bidirectional mode
 	mov	Flag_Pgm_Bidir, C
 	mov	C, ACC.0					; Set direction (Normal / Reversed)
-	mov	Flag_Pgm_Dir_Rev, C
+	mov	Flag_Motor_Dir_Rev, C
 	mov	Flag_Pgm_Bidir_Rev, C
 
 	; Check startup power
@@ -3933,7 +3933,7 @@ ENDIF
 	jnb	Flag_Pgm_Bidir, init_start_bidir_done	; Check if bidirectional operation
 
 	mov	C, Flag_Rcp_Dir_Rev			; Read force direction
-	mov	Flag_Pgm_Dir_Rev, C			; Set spinning direction
+	mov	Flag_Motor_Dir_Rev, C		; Set spinning direction
 
 ;**** **** **** **** ****
 ; Motor start beginning
@@ -4110,7 +4110,7 @@ run6_check_timeout:
 run6_check_dir:
 	jnb	Flag_Pgm_Bidir, run6_check_speed		; Check if bidirectional operation
 
-	jb	Flag_Pgm_Dir_Rev, run6_check_dir_rev	; Check if actual rotation direction
+	jb	Flag_Motor_Dir_Rev, run6_check_dir_rev	; Check if actual rotation direction
 	jb	Flag_Rcp_Dir_Rev, run6_check_dir_change	; Matches force direction
 	sjmp	run6_check_speed
 
@@ -4143,7 +4143,7 @@ run6_brake_done:
 	; Turn spinning direction
 	clr	Flag_Dir_Change_Brake		; Clear brake
 	mov	C, Flag_Rcp_Dir_Rev			; Read force direction
-	mov	Flag_Pgm_Dir_Rev, C			; Set spinning direction
+	mov	Flag_Motor_Dir_Rev, C		; Set spinning direction
 	setb	Flag_Initial_Run_Phase
 	mov	Initial_Run_Rot_Cntd, #18
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
