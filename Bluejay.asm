@@ -1445,7 +1445,7 @@ led_3_done:
 switch_power_off:
 	All_Pwm_Fets_Off				; Turn off all pwm fets
 	All_Com_Fets_Off				; Turn off all commutation fets
-	Set_Pwms_Off
+	Set_All_Pwm_Phases_Off
 	ret
 
 
@@ -2419,7 +2419,7 @@ wait_for_comm:
 	jc	wait_for_comm_wait			; Cut power if many consecutive demags. This will help retain sync during hard accelerations
 
 	All_Pwm_Fets_Off
-	Set_Pwms_Off
+	Set_All_Pwm_Phases_Off
 
 wait_for_comm_wait:
 	Wait_For_Timer3
@@ -2446,7 +2446,7 @@ comm1_comm2:						; C->A
 	clr	IE_EA
 	B_Com_Fet_Off
 	A_Com_Fet_On
-	Set_Pwm_C						; Reapply power after a demag cut
+	Set_Pwm_Phase_C				; Reapply power after a demag cut
 	setb	IE_EA
 	Set_Comparator_Phase_B
 	ret
@@ -2455,7 +2455,7 @@ comm1_comm2_rev:					; A->C
 	clr	IE_EA
 	B_Com_Fet_Off
 	C_Com_Fet_On
-	Set_Pwm_A						; Reapply power after a demag cut
+	Set_Pwm_Phase_A				; Reapply power after a demag cut
 	setb	IE_EA
 	Set_Comparator_Phase_B
 	ret
@@ -2466,7 +2466,7 @@ comm2_comm3:						; B->A
 
 	clr	IE_EA
 	C_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
-	Set_Pwm_B
+	Set_Pwm_Phase_B
 	A_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
 	Set_Comparator_Phase_C
@@ -2475,7 +2475,7 @@ comm2_comm3:						; B->A
 comm2_comm3_rev:					; B->C
 	clr	IE_EA
 	A_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
-	Set_Pwm_B
+	Set_Pwm_Phase_B
 	C_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
 	Set_Comparator_Phase_A
@@ -2488,7 +2488,7 @@ comm3_comm4:						; B->C
 	clr	IE_EA
 	A_Com_Fet_Off
 	C_Com_Fet_On
-	Set_Pwm_B						; Reapply power after a demag cut
+	Set_Pwm_Phase_B				; Reapply power after a demag cut
 	setb	IE_EA
 	Set_Comparator_Phase_A
 	ret
@@ -2497,7 +2497,7 @@ comm3_comm4_rev:					; B->A
 	clr	IE_EA
 	C_Com_Fet_Off
 	A_Com_Fet_On
-	Set_Pwm_B						; Reapply power after a demag cut
+	Set_Pwm_Phase_B				; Reapply power after a demag cut
 	setb	IE_EA
 	Set_Comparator_Phase_C
 	ret
@@ -2508,7 +2508,7 @@ comm4_comm5:						; A->C
 
 	clr	IE_EA
 	B_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
-	Set_Pwm_A
+	Set_Pwm_Phase_A
 	C_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
 	Set_Comparator_Phase_B
@@ -2517,7 +2517,7 @@ comm4_comm5:						; A->C
 comm4_comm5_rev:					; C->A
 	clr	IE_EA
 	B_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
-	Set_Pwm_C
+	Set_Pwm_Phase_C
 	A_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
 	Set_Comparator_Phase_B
@@ -2530,7 +2530,7 @@ comm5_comm6:						; A->B
 	clr	IE_EA
 	C_Com_Fet_Off
 	B_Com_Fet_On
-	Set_Pwm_A						; Reapply power after a demag cut
+	Set_Pwm_Phase_A				; Reapply power after a demag cut
 	setb	IE_EA
 	Set_Comparator_Phase_C
 	ret
@@ -2539,7 +2539,7 @@ comm5_comm6_rev:					; C->B
 	clr	IE_EA
 	A_Com_Fet_Off
 	B_Com_Fet_On
-	Set_Pwm_C						; Reapply power after a demag cut
+	Set_Pwm_Phase_C				; Reapply power after a demag cut
 	setb	IE_EA
 	Set_Comparator_Phase_A
 	ret
@@ -2550,7 +2550,7 @@ comm6_comm1:						; C->B
 
 	clr	IE_EA
 	A_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
-	Set_Pwm_C
+	Set_Pwm_Phase_C
 	B_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
 	Set_Comparator_Phase_A
@@ -2559,7 +2559,7 @@ comm6_comm1:						; C->B
 comm6_comm1_rev:					; A->B
 	clr	IE_EA
 	C_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
-	Set_Pwm_A
+	Set_Pwm_Phase_A
 	B_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
 	Set_Comparator_Phase_C

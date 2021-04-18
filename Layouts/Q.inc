@@ -108,7 +108,7 @@ P_B_Com		EQU	P1.B_Com
 P_C_Pwm		EQU	P0.C_Pwm
 P_C_Com		EQU	P1.C_Com
 
-Set_Pwm_A MACRO
+Set_Pwm_Phase_A MACRO
 IF DEADTIME == 0
 	cON	P_A_Com
 	mov	P0SKIP, #(NOT (1 SHL A_Pwm))
@@ -119,7 +119,7 @@ ELSE
 ENDIF
 ENDM
 
-Set_Pwm_B MACRO
+Set_Pwm_Phase_B MACRO
 IF DEADTIME == 0
 	cON	P_B_Com
 	mov	P0SKIP, #(NOT (1 SHL B_Pwm))
@@ -130,7 +130,7 @@ ELSE
 ENDIF
 ENDM
 
-Set_Pwm_C MACRO
+Set_Pwm_Phase_C MACRO
 IF DEADTIME == 0
 	cON	P_C_Com
 	mov	P0SKIP, #(NOT (1 SHL C_Pwm))
@@ -141,7 +141,7 @@ ELSE
 ENDIF
 ENDM
 
-Set_Pwms_Off MACRO
+Set_All_Pwm_Phases_Off MACRO
 	mov	P0SKIP, #0FFh
 	mov	P1SKIP, #0FFh
 ENDM

@@ -151,22 +151,22 @@ All_Com_Fets_Off MACRO
 	anl	P1MDIN, #(NOT((1 SHL A_Pwm) + (1 SHL B_Pwm) + (1 SHL C_Pwm)))	; analog in -> pullup, driver and digital in is disable = floating
 ENDM
 
-Set_Pwm_A MACRO
+Set_Pwm_Phase_A MACRO
 	mov	P1SKIP, #(NOT(1 SHL A_Pwm));
 	orl	P1MDIN, #(1 SHL A_Pwm)	; enable pin driver
 ENDM
 
-Set_Pwm_B MACRO
+Set_Pwm_Phase_B MACRO
 	mov	P1SKIP, #(NOT(1 SHL B_Pwm));
 	orl	P1MDIN, #(1 SHL B_Pwm)	; enable pin driver
 ENDM
 
-Set_Pwm_C MACRO
+Set_Pwm_Phase_C MACRO
 	mov	P1SKIP, #(NOT(1 SHL C_Pwm));
 	orl	P1MDIN, #(1 SHL C_Pwm)	; enable pin driver
 ENDM
 
-Set_Pwms_Off MACRO
+Set_All_Pwm_Phases_Off MACRO
 	mov	P1SKIP, #P1_SKIP;
 ENDM
 
