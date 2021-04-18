@@ -2613,33 +2613,28 @@ dshot_cmd_check:
 	mov	Temp1, A
 	clr	C
 	subb	A, #6					; Beacon beeps for command 1-5
-	jnc	dshot_cmd_direction_1
+	jnc	dshot_cmd_direction_normal
 
 	call	beacon_beep
 	call	wait200ms
 
 	sjmp	dshot_cmd_exit
 
-dshot_cmd_direction_1:
-	; Change programmed motor direction to normal
-	cjne	Temp1, #7, dshot_cmd_direction_2
+dshot_cmd_direction_normal:
+	; Set motor spinning direction to normal
+	cjne	Temp1, #7, dshot_cmd_direction_reverse
 
 	clr	C
 	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
-	mov	A, #1
-	jnb	Flag_Pgm_Bidir, ($+5)
-	mov	A, #3
-	mov	Temp1, #Pgm_Direction
-	mov	@Temp1, A
 	clr	Flag_Pgm_Dir_Rev
 
 	sjmp	dshot_cmd_exit
 
-dshot_cmd_direction_2:
-	; Change programmed motor direction to reversed
+dshot_cmd_direction_reverse:
+	; Set motor spinning direction to reversed
 	cjne	Temp1, #8, dshot_cmd_direction_bidir_off
 
 	clr	C
@@ -2647,17 +2642,12 @@ dshot_cmd_direction_2:
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
-	mov	A, #2
-	jnb	Flag_Pgm_Bidir, ($+5)
-	mov	A, #4
-	mov	Temp1, #Pgm_Direction
-	mov	@Temp1, A
 	setb	Flag_Pgm_Dir_Rev
 
 	sjmp	dshot_cmd_exit
 
 dshot_cmd_direction_bidir_off:
-	; Change programmed motor mode to normal (not bidirectional)
+	; Set motor control mode to normal (not bidirectional)
 	cjne	Temp1, #9, dshot_cmd_direction_bidir_on
 
 	clr	C
@@ -2665,69 +2655,42 @@ dshot_cmd_direction_bidir_off:
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
-	jnb	Flag_Pgm_Bidir, dshot_cmd_exit
-
-	clr	C
-	mov	Temp1, #Pgm_Direction
-	mov	A, @Temp1
-	dec	A
-	clr	ACC.1
-	inc	A
-	mov	@Temp1, A
 	clr	Flag_Pgm_Bidir
 
 	sjmp	dshot_cmd_exit
 
 dshot_cmd_direction_bidir_on:
-	; Change programmed motor mode to bidirectional
-	cjne	Temp1, #10, dshot_cmd_direction_normal
+	; Set motor control mode to bidirectional
+	cjne	Temp1, #10, dshot_cmd_direction_user_normal
 
 	clr	C
 	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
-	jb	Flag_Pgm_Bidir, dshot_cmd_exit
-
-	mov	Temp1, #Pgm_Direction
-	mov	A, @Temp1
-	dec	A
-	setb	ACC.1
-	inc	A
-	mov	@Temp1, A
 	setb	Flag_Pgm_Bidir
 
-dshot_cmd_exit:
-	mov	DShot_Cmd, #0
-	mov	DShot_Cmd_Cnt, #0
+	sjmp	dshot_cmd_exit
 
-dshot_cmd_exit_no_clear:
-	ret
-
-dshot_cmd_direction_normal:
-	; Change programmed motor direction to that stored in eeprom
-	cjne	Temp1, #20, dshot_cmd_direction_reverse
+dshot_cmd_direction_user_normal:
+	; Set motor spinning direction to user programmed direction
+	cjne	Temp1, #20, dshot_cmd_direction_user_reverse
 
 	clr	C
 	mov	A, DShot_Cmd_Cnt
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
-	clr	IE_EA					; DPTR used in interrupts
-	mov	DPTR, #Eep_Pgm_Direction		; Read from flash
-	mov	A, #0
-	movc	A, @A+DPTR
-	setb	IE_EA
-	mov	Temp1, #Pgm_Direction
-	mov	@Temp1, A
-	rrc	A						; Lsb to carry
-	cpl	C
+	mov	Temp2, #Pgm_Direction		; Read programmed direction
+	mov	A, @Temp2
+	dec	A
+	mov	C, ACC.0					; Set direction
 	mov	Flag_Pgm_Dir_Rev, C
 
 	sjmp	dshot_cmd_exit
 
-dshot_cmd_direction_reverse:			; Temporary reverse
-	; Change programmed motor direction to the reverse of what is stored in eeprom
+dshot_cmd_direction_user_reverse:		; Temporary reverse
+	; Set motor spinning direction to reverse of user programmed direction
 	cjne	Temp1, #21, dshot_cmd_save_settings
 
 	clr	C
@@ -2735,22 +2698,19 @@ dshot_cmd_direction_reverse:			; Temporary reverse
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
-	clr	IE_EA					; DPTR used in interrupts
-	mov	DPTR, #Eep_Pgm_Direction		; Read from flash
-	mov	A, #0
-	movc	A, @A+DPTR
-	setb	IE_EA
-
+	mov	Temp2, #Pgm_Direction		; Read programmed direction
+	mov	A, @Temp2
 	dec	A
-	cpl	ACC.0
-	inc	A
-	mov	Temp1, #Pgm_Direction
-	mov	@Temp1, A
-	rrc	A						; Lsb to carry
-	cpl	C
+	mov	C, ACC.0
+	cpl	C						; Set reverse direction
 	mov	Flag_Pgm_Dir_Rev, C
 
-	sjmp	dshot_cmd_exit
+dshot_cmd_exit:
+	mov	DShot_Cmd, #0
+	mov	DShot_Cmd_Cnt, #0
+
+dshot_cmd_exit_no_clear:
+	ret
 
 dshot_cmd_save_settings:
 	cjne	Temp1, #12, dshot_cmd_exit
@@ -2760,12 +2720,21 @@ dshot_cmd_save_settings:
 	subb	A, #6					; Needs to receive it 6 times in a row
 	jc	dshot_cmd_exit_no_clear
 
+	clr	A						; Set programmed direction from flags
+	mov	C, Flag_Pgm_Dir_Rev
+	mov	ACC.0, C
+	mov	C, Flag_Pgm_Bidir
+	mov	ACC.1, C
+	inc A
+	mov	Temp2, #Pgm_Direction		; Store programmed direction
+	mov	@Temp2, A
+
 	mov	Flash_Key_1, #0A5h			; Initialize flash keys to valid values
 	mov	Flash_Key_2, #0F1h
 
 	call	erase_and_store_all_in_eeprom
 
-	mov	Flash_Key_1, #0			; Initialize flash keys to invalid values
+	mov	Flash_Key_1, #0			; Reset flash keys to invalid values
 	mov	Flash_Key_2, #0
 
 	setb	IE_EA
