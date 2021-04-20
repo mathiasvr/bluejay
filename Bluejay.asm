@@ -663,9 +663,8 @@ t1_int_outside_range:
 	jc	t1_int_exit_timeout			; If outside limits - ignore first pulses
 
 	setb	Flag_Rcp_Stop				; Set pulse length to zero
-	clr	A
-	mov	DShot_Cmd, A				; Clear DShot command
-	mov	DShot_Cmd_Cnt, A			; Clear DShot command count
+	mov	DShot_Cmd, #0				; Reset DShot command
+	mov	DShot_Cmd_Cnt, #0
 
 	ajmp	t1_int_exit_no_tlm			; Exit without resetting timeout
 
@@ -3665,9 +3664,6 @@ setup_dshot:
 	call	wait1ms
 
 	mov	Startup_Stall_Cnt, #0		; Reset stall count
-
-	mov	DShot_Cmd, #0				; Clear DShot command
-	mov	DShot_Cmd_Cnt, #0			; Clear DShot command count
 	clr	Flag_Telemetry_Pending		; Clear DShot telemetry
 
 	call	detect_rcp_level			; Detect RCP level (normal or inverted DShot)
@@ -3696,8 +3692,6 @@ IF MCU_48MHZ == 0
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
-	mov	DShot_Cmd, #0
-	mov	DShot_Cmd_Cnt, #0
 	jz	arming_begin
 ENDIF
 
@@ -3714,8 +3708,6 @@ ENDIF
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
-	mov	DShot_Cmd, #0
-	mov	DShot_Cmd_Cnt, #0
 	jz	arming_begin
 
 	; Setup variables for DShot600
@@ -3729,8 +3721,6 @@ ENDIF
 	mov	Rcp_Outside_Range_Cnt, #10	; Set out of range counter
 	call	wait100ms					; Wait for new RC pulse
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
-	mov	DShot_Cmd, #0
-	mov	DShot_Cmd_Cnt, #0
 	jz	arming_begin
 
 	ljmp	init_no_signal
@@ -3759,6 +3749,8 @@ wait_for_power_on:					; Armed and waiting for power on
 	clr	A
 	mov	Comm_Period4x_L, A			; Reset commutation period for telemetry
 	mov	Comm_Period4x_H, A
+	mov	DShot_Cmd, A				; Reset DShot command
+	mov	DShot_Cmd_Cnt, A
 	mov	Power_On_Wait_Cnt_L, A		; Clear beacon wait counter
 	mov	Power_On_Wait_Cnt_H, A
 
