@@ -3817,15 +3817,13 @@ wait_for_power_on_not_missing:
 	sjmp	wait_for_power_on_not_missing	; Check DShot command again, in case it needs to be received multiple times
 
 wait_for_power_on_nonzero:
-	call	wait100ms					; Wait to see if start pulse was only a glitch
-
 	mov	DShot_Cmd, #0				; Reset DShot command
 	mov	DShot_Cmd_Cnt, #0
 
-	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
-	jnz	init_start				; If it is not zero - proceed
+	call	wait100ms					; Wait to see if start pulse was glitch
 
-	ljmp	init_no_signal				; If it is zero (pulses missing) - go back to detect input signal
+	; If Rcp returned to stop - start over
+	jb	Flag_Rcp_Stop, wait_for_power_on_loop
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
