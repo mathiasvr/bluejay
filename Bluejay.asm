@@ -1026,10 +1026,13 @@ t2_int_start:
 ENDIF
 	; Update RC pulse timeout counter
 	mov	A, Rcp_Timeout_Cntd			; RC pulse timeout count zero?
-	jz	($+4)					; Yes - do not decrement
+	jz	t2_int_rcp_stop
 	dec	Rcp_Timeout_Cntd			; No - decrement
 
 	jnb	Flag_Rcp_Stop, t2_int_exit	; Exit if pulse is above stop value
+
+t2_int_rcp_stop:
+	setb	Flag_Rcp_Stop				; Set rcp stop in case of timeout
 
 	; Update RC pulse stop counter
 	inc	Rcp_Stop_Cnt				; Increment stop counter
