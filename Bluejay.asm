@@ -60,35 +60,35 @@
 ;
 ;**** **** **** **** ****
 ; List of enumerated supported ESCs
-				; PORT 0					PORT 1
-				; P0 P1 P2 P3 P4 P5 P6 P7	P0 P1 P2 P3 P4 P5 P6 P7
-				; -----------------------	-----------------------
-A_	EQU	1		; Vn Am Bm Cm __ RX __ __	Ap Ac Bp Bc Cp Cc __ __
-B_	EQU	2		; Vn Am Bm Cm __ RX __ __	Cc Cp Bc Bp Ac Ap __ __
-C_	EQU	3		; RX __ Vn Am Bm Cm Ap Ac	Bp Bc Cp Cc __ __ __ __
-D_	EQU	4		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Com fets inverted
-E_	EQU	5		; Vn Am Bm Cm __ RX L0 L1	Ap Ac Bp Bc Cp Cc L2 __	A with LEDs
-F_	EQU	6		; Vn Cm Bm Am __ RX __ __	Ap Ac Bp Bc Cp Cc __ __
-G_	EQU	7		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Like D, but non-inverted com fets
-H_	EQU	8		; Cm Vn Bm Am __ __ __ RX	Cc Bc Ac __ Cp Bp Ap __
-I_	EQU	9		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __
-J_	EQU	10		; Am Cm Bm Vn RX L0 L1 L2	Ap Bp Cp Ac Bc Cc __ __	LEDs
-K_	EQU	11		; RX Am Vn Bm __ Cm __ __	Ac Bc Cc Cp Bp Ap __ __	Com fets inverted
-L_	EQU	12		; Cm Bm Am Vn __ RX __ __	Cp Bp Ap Cc Bc Ac __ __	Like I with different mux pins
-M_	EQU	13		; __ __ L0 RX Bm Vn Cm Am	__ Ap Bp Cp Ac Bc Cc __	LED
-N_	EQU	14		; Vn Am Bm Cm __ RX __ __	Ac Ap Bc Bp Cc Cp __ __	Like B, with A and C fets swapped
-O_	EQU	15		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Like D, but low side pwm
-P_	EQU	16		; __ Cm Bm Vn Am RX __ __	__ Ap Bp Cp Ac Bc Cc __	Like M, without LEDs and different mux
-Q_	EQU	17		; __ RX __ L0 L1 Ap Bp Cp	Ac Bc Cc Vn Cm Bm Am __	LEDs
-R_	EQU	18		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __	Like L, with different mux pins
-S_	EQU	19		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __	Like O, but com fets inverted
-T_	EQU	20		; __ Cm Vn Bm __ Am __ RX	Cc Bc Ac Ap Bp Cp __ __
-U_	EQU	21		; L2 L1 L0 RX Bm Vn Cm Am	__ Ap Bp Cp Ac Bc Cc __	Like M, but with 3 LEDs
-V_	EQU	22		; Am Bm Vn Cm __ RX __ Cc	Cp Bc __ __ Bp Ac Ap __
-W_	EQU	23		; __ __ Am Vn __ Bm Cm RX	__ __ __ __ Cp Bp Ap __	Tristate gate driver
+				; PORT 0					PORT 1					PWM	COM	PWM	LED
+				; P0 P1 P2 P3 P4 P5 P6 P7	P0 P1 P2 P3 P4 P5 P6 P7		inv	inv	side	n
+				; -----------------------	-----------------------		------------------
+A_	EQU	1		; Vn Am Bm Cm __ RX __ __	Ap Ac Bp Bc Cp Cc __ __		no	no	high	_
+B_	EQU	2		; Vn Am Bm Cm __ RX __ __	Cc Cp Bc Bp Ac Ap __ __		no	no	high	_
+C_	EQU	3		; RX __ Vn Am Bm Cm Ap Ac	Bp Bc Cp Cc __ __ __ __		no	no	high	_
+D_	EQU	4		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __		no	yes	high	_
+E_	EQU	5		; Vn Am Bm Cm __ RX L0 L1	Ap Ac Bp Bc Cp Cc L2 __		no	no	high	3	Pinout like A, with LEDs
+F_	EQU	6		; Vn Cm Bm Am __ RX __ __	Ap Ac Bp Bc Cp Cc __ __		no	no	high	_
+G_	EQU	7		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __		no	no	high	_	Pinout like D, but non-inverted com fets
+H_	EQU	8		; Cm Vn Bm Am __ __ __ RX	Cc Bc Ac __ Cp Bp Ap __		no	no	high	_
+I_	EQU	9		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __		no	no	high	_
+J_	EQU	10		; Am Cm Bm Vn RX L0 L1 L2	Ap Bp Cp Ac Bc Cc __ __		no	no	high	3
+K_	EQU	11		; RX Am Vn Bm __ Cm __ __	Ac Bc Cc Cp Bp Ap __ __		no	yes	high	_
+L_	EQU	12		; Cm Bm Am Vn __ RX __ __	Cp Bp Ap Cc Bc Ac __ __		no	no	high	_
+M_	EQU	13		; __ __ L0 RX Bm Vn Cm Am	__ Ap Bp Cp Ac Bc Cc __		no	no	high	1
+N_	EQU	14		; Vn Am Bm Cm __ RX __ __	Ac Ap Bc Bp Cc Cp __ __		no	no	high	_
+O_	EQU	15		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __		no	yes	low	_	Pinout Like D, but low side pwm
+P_	EQU	16		; __ Cm Bm Vn Am RX __ __	__ Ap Bp Cp Ac Bc Cc __		no	no	high	_
+Q_	EQU	17		; __ RX __ L0 L1 Ap Bp Cp	Ac Bc Cc Vn Cm Bm Am __		no	no	high	2
+R_	EQU	18		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __		no	no	high	_	Same as I
+S_	EQU	19		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __		no	no	high	_
+T_	EQU	20		; __ Cm Vn Bm __ Am __ RX	Cc Bc Ac Ap Bp Cp __ __		no	no	high	_
+U_	EQU	21		; L2 L1 L0 RX Bm Vn Cm Am	__ Ap Bp Cp Ac Bc Cc __		no	no	high	3	Pinout like M, with 3 LEDs
+V_	EQU	22		; Am Bm Vn Cm __ RX __ Cc	Cp Bc __ __ Bp Ac Ap __		no	no	high	_
+W_	EQU	23		; __ __ Am Vn __ Bm Cm RX	__ __ __ __ Cp Bp Ap __		n/a	n/a	high	_	Tristate gate driver
 X_	EQU	24
 Y_	EQU	25
-Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __	Pwm fets inverted
+Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __		yes	no	high	-	Pinout like S, but inverted pwm fets
 
 ;**** **** **** **** ****
 ; Select the port mapping to use (or unselect all for use with external batch compile file)
