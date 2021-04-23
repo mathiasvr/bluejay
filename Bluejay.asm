@@ -3904,7 +3904,8 @@ ENDIF
 init_start_bidir_done:
 	setb	Flag_Startup_Phase			; Set startup phase flags
 	setb	Flag_Initial_Run_Phase
-	mov	Startup_Cnt, #0			; Reset counter
+	mov	Startup_Cnt, #0			; Reset startup phase run counter
+	mov	Initial_Run_Rot_Cntd, #12	; Set initial run rotation countdown
 	call	comm5_comm6				; Initialize commutation
 	call	comm6_comm1
 	call	initialize_timing			; Initialize timing
@@ -4016,7 +4017,6 @@ run6:
 
 startup_phase_done:
 	clr	Flag_Startup_Phase			; Clear startup phase flag
-	mov	Initial_Run_Rot_Cntd, #12	; Set initial run rotation count
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
 
