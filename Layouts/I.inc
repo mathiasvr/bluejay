@@ -68,8 +68,6 @@ P0_PUSHPULL	EQU	0
 P0_SKIP		EQU	0FFh
 
 
-
-
 ;*********************
 ; PORT 1 definitions *
 ;*********************

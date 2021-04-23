@@ -82,7 +82,7 @@ A_Com		EQU	0
 
 
 P1_DIGITAL	EQU	(1 SHL A_Pwm) + (1 SHL B_Pwm) + (1 SHL C_Pwm) + (1 SHL A_Com) + (1 SHL B_Com) + (1 SHL C_Com)
-P1_INIT		EQU	(1 SHL A_Com) + (1 SHL B_Com) + (1 SHL C_Com)
+P1_INIT		EQU	(1 SHL A_Com) + (1 SHL B_Com) + (1 SHL C_Com)	; Active low com fets
 P1_PUSHPULL	EQU	(1 SHL A_Pwm) + (1 SHL B_Pwm) + (1 SHL C_Pwm) + (1 SHL A_Com) + (1 SHL B_Com) + (1 SHL C_Com)
 P1_SKIP		EQU	0FFh
 
