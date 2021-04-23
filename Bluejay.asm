@@ -194,8 +194,8 @@ Rcp_Outside_Range_Cnt:		DS	1	; RC pulse outside range counter (incrementing)
 Rcp_Timeout_Cntd:			DS	1	; RC pulse timeout counter (decrementing)
 Rcp_Stop_Cnt:				DS	1	; Counter for RC pulses below stop value
 
-Power_On_Wait_Cnt_L:		DS	1	; Power on wait counter (lo byte)
-Power_On_Wait_Cnt_H:		DS	1	; Power on wait counter (hi byte)
+Wait_For_Start_Cnt_L:		DS	1	; Power on wait counter (lo byte)
+Wait_For_Start_Cnt_H:		DS	1	; Power on wait counter (hi byte)
 
 Startup_Cnt:				DS	1	; Startup phase commutations counter (incrementing)
 Startup_Zc_Timeout_Cntd:		DS	1	; Startup zero cross timeout counter (decrementing)
@@ -2386,7 +2386,7 @@ evaluate_comparator_integrity:
 
 	dec	SP								; Routine exit without "ret" command
 	dec	SP
-	ljmp	run_to_wait_for_power_on_fail			; Exit run mode if timeout has elapsed
+	ljmp	exit_run_mode_on_timeout				; Exit run mode if timeout has elapsed
 
 eval_comp_startup:
 	inc	Startup_Cnt						; Increment startup counter
@@ -3755,22 +3755,22 @@ arming_wait:
 	call	beep_f2_short				; Beep signal that ESC is armed
 	setb	IE_EA
 
-wait_for_power_on:					; Armed and waiting for power on
+wait_for_start:					; Armed and waiting for power on
 	clr	A
 	mov	Comm_Period4x_L, A			; Reset commutation period for telemetry
 	mov	Comm_Period4x_H, A
 	mov	DShot_Cmd, A				; Reset DShot command
 	mov	DShot_Cmd_Cnt, A
-	mov	Power_On_Wait_Cnt_L, A		; Clear beacon wait counter
-	mov	Power_On_Wait_Cnt_H, A
+	mov	Wait_For_Start_Cnt_L, A		; Clear beacon wait counter
+	mov	Wait_For_Start_Cnt_H, A
 
-wait_for_power_on_loop:
-	inc	Power_On_Wait_Cnt_L			; Increment low wait counter
-	mov	A, Power_On_Wait_Cnt_L
+wait_for_start_loop:
+	inc	Wait_For_Start_Cnt_L		; Increment low wait counter
+	mov	A, Wait_For_Start_Cnt_L
 	cpl	A
-	jnz	wait_for_power_on_no_beep	; Counter wrapping (about 3 sec)
+	jnz	wait_for_start_no_beep		; Counter wrapping (about 3 sec)
 
-	inc	Power_On_Wait_Cnt_H			; Increment high wait counter
+	inc	Wait_For_Start_Cnt_H		; Increment high wait counter
 	mov	Temp1, #Pgm_Beacon_Delay
 	mov	A, @Temp1
 	mov	Temp1, #20				; 1 min
@@ -3789,45 +3789,45 @@ wait_for_power_on_loop:
 	dec	A
 	jz	beep_delay_set
 
-	mov	Power_On_Wait_Cnt_H, #0		; Reset counter for infinite delay
+	mov	Wait_For_Start_Cnt_H, #0		; Reset counter for infinite delay
 
 beep_delay_set:
 	clr	C
-	mov	A, Power_On_Wait_Cnt_H
+	mov	A, Wait_For_Start_Cnt_H
 	subb	A, Temp1					; Check against chosen delay
-	jc	wait_for_power_on_no_beep	; Has delay elapsed?
+	jc	wait_for_start_no_beep		; Has delay elapsed?
 
-	dec	Power_On_Wait_Cnt_H			; Decrement high wait counter for continued beeping
+	dec	Wait_For_Start_Cnt_H		; Decrement high wait counter for continued beeping
 
 	mov	Temp1, #4					; Beep tone 4
 	call	beacon_beep
 
-wait_for_power_on_no_beep:
+wait_for_start_no_beep:
 	call	wait10ms
-	jb	Flag_Telemetry_Pending, wait_for_power_on_not_missing
+	jb	Flag_Telemetry_Pending, wait_for_start_check_rcp
 	setb	Flag_Timer3_Pending			; Set flag to avoid early return
 	call	dshot_tlm_create_packet		; Create telemetry packet (0 rpm)
 
-wait_for_power_on_not_missing:
-	jnb	Flag_Rcp_Stop, wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
+wait_for_start_check_rcp:
+	jnb	Flag_Rcp_Stop, wait_for_start_nonzero	; Higher than stop, Yes - proceed
 
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	ljz	init_no_signal				; If pulses are missing - go back to detect input signal
 
 	mov	A, DShot_Cmd
-	jz	wait_for_power_on_loop		; Check DShot command if not zero, otherwise wait for power
+	jz	wait_for_start_loop			; Check DShot command if not zero, otherwise wait for power
 
 	call	dshot_cmd_check
-	sjmp	wait_for_power_on_not_missing	; Check DShot command again, in case it needs to be received multiple times
+	sjmp	wait_for_start_check_rcp		; Check DShot command again, in case it needs to be received multiple times
 
-wait_for_power_on_nonzero:
+wait_for_start_nonzero:
 	mov	DShot_Cmd, #0				; Reset DShot command
 	mov	DShot_Cmd_Cnt, #0
 
 	call	wait100ms					; Wait to see if start pulse was glitch
 
 	; If Rcp returned to stop - start over
-	jb	Flag_Rcp_Stop, wait_for_power_on_loop
+	jb	Flag_Rcp_Stop, wait_for_start_loop
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -4013,7 +4013,7 @@ run6:
 	jnc	startup_phase_done
 
 	jnb	Flag_Rcp_Stop, run1			; If pulse is above stop value - Continue to run
-	ajmp	run_to_wait_for_power_on
+	ajmp	run_to_wait_for_start
 
 startup_phase_done:
 	clr	Flag_Startup_Phase			; Clear startup phase flag
@@ -4040,7 +4040,7 @@ initial_run_check_startup_rot:
 
 	jb	Flag_Pgm_Bidir, initial_run_continue_run	; Check if bidirectional operation
 
-	jb	Flag_Rcp_Stop, run_to_wait_for_power_on		; Check if pulse is below stop value
+	jb	Flag_Rcp_Stop, run_to_wait_for_start	; Check if pulse is below stop value
 
 initial_run_continue_run:
 	jmp	run1						; Continue to run
@@ -4065,11 +4065,11 @@ initial_run_phase_done:
 	clr	C
 	mov	A, Rcp_Stop_Cnt			; Load stop RC pulse counter low byte value
 	subb	A, Temp1					; Is number of stop RC pulses above limit?
-	jnc	run_to_wait_for_power_on		; Yes, go back to wait for power on
+	jnc	run_to_wait_for_start		; Yes, go back to wait for power on
 
 run6_check_timeout:
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
-	jz	run_to_wait_for_power_on		; If it is zero - go back to wait for power on
+	jz	run_to_wait_for_start		; If it is zero - go back to wait for power on
 
 run6_check_dir:
 	jnb	Flag_Pgm_Bidir, run6_check_speed		; Check if bidirectional operation
@@ -4102,7 +4102,7 @@ run6_brake_done:
 	subb	A, Temp1
 	ljc	run1						; No - go back to run 1
 
-	jnb	Flag_Dir_Change_Brake, run_to_wait_for_power_on	; If it is not a direction change - stop
+	jnb	Flag_Dir_Change_Brake, run_to_wait_for_start	; If it is not a direction change - stop
 
 	; Turn spinning direction
 	clr	Flag_Dir_Change_Brake		; Clear brake
@@ -4113,11 +4113,11 @@ run6_brake_done:
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
 	jmp	run1						; Go back to run 1
 
-run_to_wait_for_power_on_fail:
-	jb	Flag_Motor_Running, run_to_wait_for_power_on
+exit_run_mode_on_timeout:
+	jb	Flag_Motor_Running, run_to_wait_for_start
 	inc	Startup_Stall_Cnt			; Increment stall count if motors did not properly start
 
-run_to_wait_for_power_on:
+run_to_wait_for_start:
 	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off
 	mov	Flags0, #0				; Clear flags0
@@ -4150,20 +4150,20 @@ ENDIF
 
 	mov	Temp1, #Pgm_Brake_On_Stop	; Check if using brake on stop
 	mov	A, @Temp1
-	jz	run_to_wait_for_power_on_brake_done
+	jz	run_to_wait_for_start_brake_done
 
 	A_Com_Fet_On
 	B_Com_Fet_On
 	C_Com_Fet_On
 
-run_to_wait_for_power_on_brake_done:
+run_to_wait_for_start_brake_done:
 	jnb	Flag_Rcp_Stop, ($+6)		; Check if RCP is zero, then it is a normal stop
 	mov	Startup_Stall_Cnt, #0
 
 	clr	C
 	mov	A, Startup_Stall_Cnt
 	subb	A, #4					; Maximum consecutive stalls before stopping
-	ljc	wait_for_power_on			; Go back to wait for power on
+	ljc	wait_for_start				; Go back to wait for power on
 
 	ljmp	init_no_signal				; Stalled too many times
 
