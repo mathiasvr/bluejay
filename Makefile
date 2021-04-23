@@ -3,7 +3,7 @@ TAG			:= $(shell git describe --tags --abbrev=0)
 VERSION		?= $(TAG)
 
 # Target parameters
-LAYOUTS		= A B C D E F G H I J K L M N O P Q R S T U V W Z
+LAYOUTS		= A B C D E F G H I J K L M N O P Q R S T U V W Z @
 MCUS		= H L
 DEADTIMES	= 0 5 10 15 20 25 30 40 50 70 90 120
 PWM_FREQS	= 24 48 96
@@ -36,7 +36,7 @@ LX51_FLAGS	=
 
 # Source files
 ASM_SRC		= Bluejay.asm
-ASM_INC		= $(LAYOUTS:%=Layouts/%.inc) Layouts/Base.inc Common.inc BLHeliBootLoad.inc Silabs/SI_EFM8BB1_Defs.inc Silabs/SI_EFM8BB2_Defs.inc
+ASM_INC		= Layouts/*.inc Common.inc BLHeliBootLoad.inc Silabs/SI_EFM8BB1_Defs.inc Silabs/SI_EFM8BB2_Defs.inc
 
 # Check that wine/simplicity studio is available
 EXECUTABLES	= $(AX51_BIN) $(LX51_BIN) $(OX51_BIN)

@@ -93,6 +93,8 @@ $include (Layouts/W.inc)				; Select pinout W
 ;$include (Layouts/Y.inc)			; Select pinout Y
 ELSEIF ESCNO == Z_
 $include (Layouts/Z.inc)				; Select pinout Z
+ELSEIF ESCNO == 0
+$include (Layouts/Yolo.inc)			; Temporary
 ENDIF
 
 SIGNATURE_001			EQU	0E8h		; Device signature
