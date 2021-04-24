@@ -513,6 +513,13 @@ LOCAL skip
 skip:
 ENDM
 
+ljz MACRO label					;; Long jump if accumulator is zero
+LOCAL skip
+	jnz	skip
+	jmp	label
+skip:
+ENDM
+
 imov MACRO reg, val					;; Increment pointer register and move
 	inc	reg
 	mov	@reg, val					;; Write value to memory address pointed to by register
@@ -3796,19 +3803,16 @@ beep_delay_set:
 	call	beacon_beep
 
 wait_for_power_on_no_beep:
-	jb	Flag_Telemetry_Pending, wait_for_power_telemetry_done
+	call	wait10ms
+	jb	Flag_Telemetry_Pending, wait_for_power_on_not_missing
 	setb	Flag_Timer3_Pending			; Set flag to avoid early return
 	call	dshot_tlm_create_packet		; Create telemetry packet (0 rpm)
 
-wait_for_power_telemetry_done:
-	call	wait10ms
-	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
-	jnz	wait_for_power_on_not_missing	; If it is not zero - proceed
-
-	ljmp	init_no_signal				; If pulses missing - go back to detect input signal
-
 wait_for_power_on_not_missing:
 	jnb	Flag_Rcp_Stop, wait_for_power_on_nonzero	; Higher than stop, Yes - proceed
+
+	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
+	ljz	init_no_signal				; If pulses are missing - go back to detect input signal
 
 	mov	A, DShot_Cmd
 	jz	wait_for_power_on_loop		; Check DShot command if not zero, otherwise wait for power
