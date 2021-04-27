@@ -3645,7 +3645,7 @@ IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz				; Set clock frequency
 ENDIF
 
-	jnb	Flag_Had_Signal, setup_dshot	; Check if DShot signal was lost (or stalled)
+	jnb	Flag_Had_Signal, setup_dshot	; Check if DShot signal was lost
 	call	beep_f1					; Beep on signal loss
 	call	beep_f2
 	call	beep_f3
@@ -3673,9 +3673,6 @@ setup_dshot:
 	Initialize_Adc					; Initialize ADC operation
 	call	wait1ms
 
-	mov	Startup_Stall_Cnt, #0		; Reset stall count
-	clr	Flag_Telemetry_Pending		; Clear DShot telemetry
-
 	call	detect_rcp_level			; Detect RCP level (normal or inverted DShot)
 
 	; Route RCP according to detected DShot signal (normal or inverted)
@@ -3684,6 +3681,7 @@ setup_dshot:
 	mov	IT01CF, #(08h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to INT0/1, with INT0 inverted
 
 	; Setup interrupts for DShot
+	clr	Flag_Telemetry_Pending		; Clear DShot telemetry flag
 	mov	IE, #2Dh					; Enable timer 1/2 interrupts and INT0/1 interrupts
 	mov	EIE1, #90h				; Enable timer 3 and PCA0 interrupts
 	mov	IP, #03h					; High priority to timer 0 and INT0 interrupts
@@ -3742,6 +3740,7 @@ arming_begin:
 	pop	PSW
 
 	setb	Flag_Had_Signal			; Mark that a signal has been detected
+	mov	Startup_Stall_Cnt, #0		; Reset stall count
 
 	clr	IE_EA
 	call	beep_f1_short				; Beep signal that RC pulse is ready
@@ -4148,25 +4147,36 @@ ENDIF
 	call	wait100ms					; Wait for pwm to be stopped
 	call	switch_power_off
 
+	; Check if RCP is zero, then it is a normal stop or signal timeout
+	jb	Flag_Rcp_Stop, run_to_wait_for_start_no_stall
+
+	clr	C						; Otherwise - it's a stall
+	mov	A, Startup_Stall_Cnt
+	subb	A, #4					; Maximum consecutive stalls
+	ljc	init_start				; Go back and try starting motors again
+
+	; Stalled too many times
+	clr	IE_EA					; Stall beeps
+	call	beep_f3
+	call	beep_f2
+	call	beep_f1
+	setb	IE_EA
+
+	ljmp	arming_begin				; Go back and wait for arming
+
+run_to_wait_for_start_no_stall:
+	mov	Startup_Stall_Cnt, #0
+
 	mov	Temp1, #Pgm_Brake_On_Stop	; Check if using brake on stop
 	mov	A, @Temp1
 	jz	run_to_wait_for_start_brake_done
 
-	A_Com_Fet_On
+	A_Com_Fet_On					; Brake on stop
 	B_Com_Fet_On
 	C_Com_Fet_On
 
 run_to_wait_for_start_brake_done:
-	jnb	Flag_Rcp_Stop, ($+6)		; Check if RCP is zero, then it is a normal stop
-	mov	Startup_Stall_Cnt, #0
-
-	clr	C
-	mov	A, Startup_Stall_Cnt
-	subb	A, #4					; Maximum consecutive stalls before stopping
-	ljc	wait_for_start				; Go back to wait for power on
-
-	ljmp	init_no_signal				; Stalled too many times
-
+	ljmp	wait_for_start				; Go back to wait for power on
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
