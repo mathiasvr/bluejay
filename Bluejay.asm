@@ -154,12 +154,12 @@ DSEG AT 20h
 Bit_Access:				DS	1			; MUST BE AT THIS ADDRESS. Variable at bit accessible address (for non interrupt routines)
 Bit_Access_Int:			DS	1			; Variable at bit accessible address (for interrupts)
 
-Flags0:					DS	1			; State flags. Reset upon init_start
+Flags0:					DS	1			; State flags. Reset upon motor_start
 Flag_Startup_Phase			BIT	Flags0.0		; Set when in startup phase
 Flag_Initial_Run_Phase		BIT	Flags0.1		; Set when in initial run phase (or startup phase), before synchronized run is achieved.
 Flag_Motor_Dir_Rev			BIT	Flags0.2		; Set if the current spinning direction is reversed
 
-Flags1:					DS	1			; State flags. Reset upon init_start
+Flags1:					DS	1			; State flags. Reset upon motor_start
 Flag_Timer3_Pending			BIT	Flags1.0		; Timer 3 pending flag
 Flag_Demag_Detected			BIT	Flags1.1		; Set when excessive demag time is detected
 Flag_Comp_Timed_Out			BIT	Flags1.2		; Set when comparator reading timed out
@@ -169,7 +169,7 @@ Flag_Dir_Change_Brake		BIT	Flags1.5		; Set when braking before direction change
 Flag_High_Rpm				BIT	Flags1.6		; Set when motor rpm is high (Comm_Period4x_H less than 2)
 Flag_Low_Pwm_Power			BIT	Flags1.7		; Set when pwm duty cycle is below 50%
 
-Flags2:					DS	1			; State flags. NOT reset upon init_start
+Flags2:					DS	1			; State flags. NOT reset upon motor_start
 ;						BIT	Flags2.0
 Flag_Pgm_Dir_Rev			BIT	Flags2.1		; Set if the programmed direction is reversed
 Flag_Pgm_Bidir				BIT	Flags2.2		; Set if the programmed control mode is bidirectional operation
@@ -179,7 +179,7 @@ Flag_Rcp_Stop				BIT	Flags2.5		; Set if the RC pulse value is zero
 Flag_Rcp_Dir_Rev			BIT	Flags2.6		; RC pulse direction in bidirectional mode
 Flag_Rcp_DShot_Inverted		BIT	Flags2.7		; DShot RC pulse input is inverted (and supports telemetry)
 
-Flags3:					DS	1			; State flags. NOT reset upon init_start
+Flags3:					DS	1			; State flags. NOT reset upon motor_start
 Flag_Telemetry_Pending		BIT	Flags3.0		; DShot telemetry data packet is ready to be sent
 Flag_Dithering				BIT	Flags3.1		; PWM dithering enabled
 Flag_Had_Signal			BIT	Flags3.2		; Used to detect reset after having had a valid signal
@@ -3834,7 +3834,7 @@ wait_for_start_nonzero:
 ; Motor start entry point
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-init_start:
+motor_start:
 	clr	IE_EA					; Disable interrupts
 	call	switch_power_off
 	setb	IE_EA					; Enable interrupts
@@ -3893,14 +3893,14 @@ ENDIF
 	mov	C, Flag_Pgm_Dir_Rev			; Read spin direction setting
 	mov	Flag_Motor_Dir_Rev, C
 
-	jnb	Flag_Pgm_Bidir, init_start_bidir_done	; Check if bidirectional operation
+	jnb	Flag_Pgm_Bidir, motor_start_bidir_done	; Check if bidirectional operation
 
 	mov	C, Flag_Rcp_Dir_Rev			; Read force direction
 	mov	Flag_Motor_Dir_Rev, C		; Set spinning direction
 
 ;**** **** **** **** ****
 ; Motor start beginning
-init_start_bidir_done:
+motor_start_bidir_done:
 	setb	Flag_Startup_Phase			; Set startup phase flags
 	setb	Flag_Initial_Run_Phase
 	mov	Startup_Cnt, #0			; Reset startup phase run counter
@@ -4153,7 +4153,7 @@ ENDIF
 	clr	C						; Otherwise - it's a stall
 	mov	A, Startup_Stall_Cnt
 	subb	A, #4					; Maximum consecutive stalls
-	ljc	init_start				; Go back and try starting motors again
+	ljc	motor_start				; Go back and try starting motors again
 
 	; Stalled too many times
 	clr	IE_EA					; Stall beeps
