@@ -3650,6 +3650,11 @@ init_no_signal:
 	clr	IE_EA					; Disable interrupts explicitly
 	mov	Flash_Key_1, #0			; Initialize flash keys to invalid values
 	mov	Flash_Key_2, #0
+	call	switch_power_off
+
+IF MCU_48MHZ == 1
+	Set_MCU_Clk_24MHz				; Set clock frequency
+ENDIF
 
 	mov	Temp1, #9					; Check if input signal is high for ~150ms
 input_high_check_1:
@@ -3667,12 +3672,6 @@ input_high_check_3:
 	ljmp	1C00h					; Jump to bootloader
 
 bootloader_done:
-	call	decode_settings
-	call	switch_power_off
-IF MCU_48MHZ == 1
-	Set_MCU_Clk_24MHz				; Set clock frequency
-ENDIF
-
 	jnb	Flag_Had_Signal, setup_dshot	; Check if DShot signal was lost (or stalled)
 	call	beep_f1					; Beep on signal loss
 	call	beep_f2
