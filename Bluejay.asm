@@ -194,7 +194,7 @@ Rcp_Outside_Range_Cnt:		DS	1	; RC pulse outside range counter (incrementing)
 Rcp_Timeout_Cntd:			DS	1	; RC pulse timeout counter (decrementing)
 Rcp_Stop_Cnt:				DS	1	; Counter for RC pulses below stop value
 
-Wait_For_Start_Cnt:			DS	1	; Power on wait counter (hi byte)
+Beacon_Delay_Cnt:			DS	1	; Counter to trigger beacon during wait for start
 
 Startup_Cnt:				DS	1	; Startup phase commutations counter (incrementing)
 Startup_Zc_Timeout_Cntd:		DS	1	; Startup zero cross timeout counter (decrementing)
@@ -3759,7 +3759,7 @@ wait_for_start:					; Armed and waiting for power on
 	mov	Comm_Period4x_H, A
 	mov	DShot_Cmd, A				; Reset DShot command
 	mov	DShot_Cmd_Cnt, A
-	mov	Wait_For_Start_Cnt, A		; Clear beacon wait counter
+	mov	Beacon_Delay_Cnt, A			; Clear beacon wait counter
 	mov	Timer2_X, A				; Clear timer 2 extended byte
 
 wait_for_start_loop:
@@ -3769,7 +3769,7 @@ wait_for_start_loop:
 	jc	wait_for_start_no_beep		; Counter wrapping (about 3 sec)
 
 	mov	Timer2_X, #0
-	inc	Wait_For_Start_Cnt			; Increment high wait counter
+	inc	Beacon_Delay_Cnt			; Increment beacon wait counter
 
 	mov	Temp1, #Pgm_Beacon_Delay
 	mov	A, @Temp1
@@ -3789,15 +3789,15 @@ wait_for_start_loop:
 	dec	A
 	jz	beep_delay_set
 
-	mov	Wait_For_Start_Cnt, #0		; Reset counter for infinite delay
+	mov	Beacon_Delay_Cnt, #0		; Reset beacon counter for infinite delay
 
 beep_delay_set:
 	clr	C
-	mov	A, Wait_For_Start_Cnt
+	mov	A, Beacon_Delay_Cnt
 	subb	A, Temp1					; Check against chosen delay
 	jc	wait_for_start_no_beep		; Has delay elapsed?
 
-	dec	Wait_For_Start_Cnt			; Decrement high wait counter for continued beeping
+	dec	Beacon_Delay_Cnt			; Decrement counter for continued beeping
 
 	mov	Temp1, #4					; Beep tone 4
 	call	beacon_beep
