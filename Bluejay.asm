@@ -1344,6 +1344,23 @@ beep_off:							; Fets off loop
 	B_Com_Fet_Off
 	ret
 
+; Beep sequences
+beep_signal_lost:
+	call	beep_f1
+	call	beep_f2
+	call	beep_f3
+	ret
+
+beep_enter_bootloader:
+	call	beep_f2_short
+	call	beep_f1
+	ret
+
+beep_motor_stalled:
+	call	beep_f3
+	call	beep_f2
+	call	beep_f1
+	ret
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
@@ -3639,15 +3656,13 @@ input_high_check_3:
 	djnz	Temp2, input_high_check_2
 	djnz	Temp1, input_high_check_1
 
-	call	beep_f2_short				; Bootloader beep
-	call	beep_f1
+	call	beep_enter_bootloader
+
 	ljmp	1C00h					; Jump to bootloader
 
 bootloader_done:
 	jnb	Flag_Had_Signal, setup_dshot	; Check if DShot signal was lost
-	call	beep_f1					; Beep on signal loss
-	call	beep_f2
-	call	beep_f3
+	call	beep_signal_lost
 	call	wait250ms					; Wait for flight controller to get ready
 	call	wait250ms
 	call	wait250ms
@@ -4157,10 +4172,8 @@ ENDIF
 	ljc	motor_start				; Go back and try starting motors again
 
 	; Stalled too many times
-	clr	IE_EA					; Stall beeps
-	call	beep_f3
-	call	beep_f2
-	call	beep_f1
+	clr	IE_EA
+	call	beep_motor_stalled
 	setb	IE_EA
 
 	ljmp	arming_begin				; Go back and wait for arming
