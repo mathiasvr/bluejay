@@ -2646,13 +2646,13 @@ dshot_cmd_check:
 	sjmp	dshot_cmd_exit
 
 dshot_cmd_direction_normal:
+	clr	C						; Remaining commands must be received 6 times in a row
+	mov	A, DShot_Cmd_Cnt
+	subb	A, #6
+	jc	dshot_cmd_exit_no_clear
+
 	; Set motor spinning direction to normal
 	cjne	Temp1, #7, dshot_cmd_direction_reverse
-
-	clr	C
-	mov	A, DShot_Cmd_Cnt
-	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dshot_cmd_exit_no_clear
 
 	clr	Flag_Pgm_Dir_Rev
 
@@ -2662,11 +2662,6 @@ dshot_cmd_direction_reverse:
 	; Set motor spinning direction to reversed
 	cjne	Temp1, #8, dshot_cmd_direction_bidir_off
 
-	clr	C
-	mov	A, DShot_Cmd_Cnt
-	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dshot_cmd_exit_no_clear
-
 	setb	Flag_Pgm_Dir_Rev
 
 	sjmp	dshot_cmd_exit
@@ -2674,11 +2669,6 @@ dshot_cmd_direction_reverse:
 dshot_cmd_direction_bidir_off:
 	; Set motor control mode to normal (not bidirectional)
 	cjne	Temp1, #9, dshot_cmd_direction_bidir_on
-
-	clr	C
-	mov	A, DShot_Cmd_Cnt
-	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dshot_cmd_exit_no_clear
 
 	clr	Flag_Pgm_Bidir
 
@@ -2688,11 +2678,6 @@ dshot_cmd_direction_bidir_on:
 	; Set motor control mode to bidirectional
 	cjne	Temp1, #10, dshot_cmd_direction_user_normal
 
-	clr	C
-	mov	A, DShot_Cmd_Cnt
-	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dshot_cmd_exit_no_clear
-
 	setb	Flag_Pgm_Bidir
 
 	sjmp	dshot_cmd_exit
@@ -2700,11 +2685,6 @@ dshot_cmd_direction_bidir_on:
 dshot_cmd_direction_user_normal:
 	; Set motor spinning direction to user programmed direction
 	cjne	Temp1, #20, dshot_cmd_direction_user_reverse
-
-	clr	C
-	mov	A, DShot_Cmd_Cnt
-	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dshot_cmd_exit_no_clear
 
 	mov	Temp2, #Pgm_Direction		; Read programmed direction
 	mov	A, @Temp2
@@ -2718,11 +2698,6 @@ dshot_cmd_direction_user_reverse:		; Temporary reverse
 	; Set motor spinning direction to reverse of user programmed direction
 	cjne	Temp1, #21, dshot_cmd_save_settings
 
-	clr	C
-	mov	A, DShot_Cmd_Cnt
-	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dshot_cmd_exit_no_clear
-
 	mov	Temp2, #Pgm_Direction		; Read programmed direction
 	mov	A, @Temp2
 	dec	A
@@ -2730,20 +2705,10 @@ dshot_cmd_direction_user_reverse:		; Temporary reverse
 	cpl	C						; Set reverse direction
 	mov	Flag_Pgm_Dir_Rev, C
 
-dshot_cmd_exit:
-	mov	DShot_Cmd, #0
-	mov	DShot_Cmd_Cnt, #0
-
-dshot_cmd_exit_no_clear:
-	ret
+	sjmp	dshot_cmd_exit
 
 dshot_cmd_save_settings:
 	cjne	Temp1, #12, dshot_cmd_exit
-
-	clr	C
-	mov	A, DShot_Cmd_Cnt
-	subb	A, #6					; Needs to receive it 6 times in a row
-	jc	dshot_cmd_exit_no_clear
 
 	clr	A						; Set programmed direction from flags
 	mov	C, Flag_Pgm_Dir_Rev
@@ -2764,8 +2729,12 @@ dshot_cmd_save_settings:
 
 	setb	IE_EA
 
-	sjmp	dshot_cmd_exit
+dshot_cmd_exit:
+	mov	DShot_Cmd, #0				; Clear DShot command and exit
+	mov	DShot_Cmd_Cnt, #0
 
+dshot_cmd_exit_no_clear:
+	ret
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
