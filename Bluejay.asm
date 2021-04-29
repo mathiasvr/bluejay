@@ -3787,9 +3787,7 @@ beep_delay_set:
 	call	beacon_beep
 
 wait_for_start_no_beep:
-	call	wait10ms
 	jb	Flag_Telemetry_Pending, wait_for_start_check_rcp
-	setb	Flag_Timer3_Pending			; Set flag to avoid early return
 	call	dshot_tlm_create_packet		; Create telemetry packet (0 rpm)
 
 wait_for_start_check_rcp:
@@ -3798,11 +3796,9 @@ wait_for_start_check_rcp:
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	ljz	init_no_signal				; If pulses are missing - go back to detect input signal
 
-	mov	A, DShot_Cmd
-	jz	wait_for_start_loop			; Check DShot command if not zero, otherwise wait for power
+	call	dshot_cmd_check			; Check and process DShot command
 
-	call	dshot_cmd_check
-	sjmp	wait_for_start_check_rcp		; Check DShot command again, in case it needs to be received multiple times
+	sjmp	wait_for_start_loop			; Go back to beginning of wait loop
 
 wait_for_start_nonzero:
 	mov	DShot_Cmd, #0				; Reset DShot command
