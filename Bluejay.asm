@@ -698,7 +698,7 @@ t1_int_decode_checksum:
 	clr	C
 	mov	A, Temp4
 	cpl	A
-	mov	Temp3, A
+	mov	Temp3, A					; Store in case it is a DShot command
 	subb	A, #96
 	mov	Temp4, A
 	mov	A, Temp5
@@ -711,21 +711,22 @@ t1_int_decode_checksum:
 	mov	A, Temp3					; Check for 0 or DShot command
 	mov	Temp5, #0
 	mov	Temp4, #0
-	jz	t1_normal_range
+	jz	t1_dshot_set_cmd			; Clear DShot command when RCP is zero
 
-	mov	Temp3, #0
 	clr	C						; We are in the special DShot range
-	rrc	A						; Divide by 2
-	jnc	t1_dshot_set_cmd			; Check for tlm bit set (if not telemetry, Temp3 will be zero and result in invalid command)
+	rrc	A						; Shift tlm bit
+	jnc	t1_dshot_clear_cmd			; Check for tlm bit set (if not telemetry, invalid command)
 
-	mov	Temp3, A
 	cjne	A, DShot_Cmd, t1_dshot_set_cmd
 
 	inc	DShot_Cmd_Cnt
 	sjmp	t1_normal_range
 
+t1_dshot_clear_cmd:
+	clr	A
+
 t1_dshot_set_cmd:
-	mov	DShot_Cmd, Temp3
+	mov	DShot_Cmd, A
 	mov	DShot_Cmd_Cnt, #0
 
 t1_normal_range:
@@ -3741,7 +3742,7 @@ wait_for_start:					; Armed and waiting for power on
 	clr	A
 	mov	Comm_Period4x_L, A			; Reset commutation period for telemetry
 	mov	Comm_Period4x_H, A
-	mov	DShot_Cmd, A				; Reset DShot command
+	mov	DShot_Cmd, A				; Reset DShot command (only considered in this loop)
 	mov	DShot_Cmd_Cnt, A
 	mov	Beacon_Delay_Cnt, A			; Clear beacon wait counter
 	mov	Timer2_X, A				; Clear timer 2 extended byte
@@ -3801,9 +3802,6 @@ wait_for_start_check_rcp:
 	sjmp	wait_for_start_loop			; Go back to beginning of wait loop
 
 wait_for_start_nonzero:
-	mov	DShot_Cmd, #0				; Reset DShot command
-	mov	DShot_Cmd_Cnt, #0
-
 	call	wait100ms					; Wait to see if start pulse was glitch
 
 	; If Rcp returned to stop - start over
