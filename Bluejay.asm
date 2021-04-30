@@ -377,6 +377,7 @@ Interrupt_Table_Definition			; SiLabs interrupts
 CSEG AT 80h						; Code segment after interrupt vectors
 
 
+
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
@@ -1243,6 +1244,7 @@ wait250ms:
 
 wait_ms_o:						; Outer loop
 	mov	Temp1, #23
+
 wait_ms_m:						; Middle loop
 	clr	A
 	djnz	ACC, $					; Inner loop (41.8us - 1024 cycles)
@@ -1430,24 +1432,28 @@ led_control:
 	Set_LED_0
 	jnz	led_0_done
 	Clear_LED_0
+
 led_0_done:
 	mov	A, Temp2
 	anl	A, #0Ch
 	Set_LED_1
 	jnz	led_1_done
 	Clear_LED_1
+
 led_1_done:
 	mov	A, Temp2
 	anl	A, #030h
 	Set_LED_2
 	jnz	led_2_done
 	Clear_LED_2
+
 led_2_done:
 	mov	A, Temp2
 	anl	A, #0C0h
 	Set_LED_3
 	jnz	led_3_done
 	Clear_LED_3
+
 led_3_done:
 	ret
 
@@ -1693,17 +1699,20 @@ calc_next_comm_timing:				; Entry point for run phase
 	inc	Temp3					; If it is pending, then timer has already wrapped
 	setb	TMR2CN0_TR2				; Timer 2 enabled
 	setb	IE_EA
+
 IF MCU_48MHZ == 1
 	clr	C
 	rrca	Temp3
 	rrca	Temp2
 	rrca	Temp1
 ENDIF
+
 	; Calculate this commutation time
 	mov	Temp4, Prev_Comm_L
 	mov	Temp5, Prev_Comm_H
 	mov	Prev_Comm_L, Temp1			; Store timestamp as previous commutation
 	mov	Prev_Comm_H, Temp2
+
 	clr	C
 	mov	A, Temp1
 	subb	A, Temp4					; Calculate the new commutation time
@@ -1711,11 +1720,11 @@ ENDIF
 	mov	A, Temp2
 	subb	A, Temp5
 	jb	Flag_Startup_Phase, calc_next_comm_startup
-
 IF MCU_48MHZ == 1
 	anl	A, #7Fh
 ENDIF
 	mov	Temp2, A
+
 	jnb	Flag_High_Rpm, calc_next_comm_normal	; Branch normal rpm
 	ajmp	calc_next_comm_timing_fast			; Branch high rpm
 
@@ -1781,6 +1790,7 @@ calc_next_comm_normal:
 	mov	Temp6, Comm_Period4x_H
 	mov	Temp7, #4					; Divide Comm_Period4x 4 times as default
 	mov	Temp8, #2					; Divide new commutation time 2 times as default
+
 	clr	C
 	mov	A, Temp4
 	subb	A, #04h
@@ -1812,6 +1822,7 @@ calc_next_comm_avg_period_div:
 	mov	A, Temp4
 	subb	A, Temp6
 	mov	Temp4, A
+
 	mov	A, Temp8					; Divide new time
 	jz	calc_next_comm_new_period_div_done
 
@@ -1842,7 +1853,6 @@ calc_new_wait_times_setup:
 	mov	A, Temp4
 	subb	A, #2
 	jnc	($+4)
-
 	setb	Flag_High_Rpm				; Set high rpm bit
 
 	; Load programmed commutation timing
@@ -1855,6 +1865,7 @@ calc_new_wait_per_startup_done:
 	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
 	mov	A, @Temp1
 	mov	Temp8, A					; Store in Temp8
+
 	clr	C
 	mov	A, Demag_Detected_Metric		; Check demag metric
 	subb	A, #130
@@ -1879,6 +1890,7 @@ calc_new_wait_per_startup_done:
 calc_new_wait_per_demag_done:
 	; Set timing reduction
 	mov	Temp7, #2
+
 	; Load current commutation timing
 	mov	A, Comm_Period4x_H			; Divide 4 times
 	swap	A
@@ -1901,6 +1913,7 @@ calc_new_wait_per_demag_done:
 	mov	A, Temp2
 	subb	A, #0
 	mov	Temp4, A
+
 	jc	load_min_time				; Check that result is still positive
 	jnz	calc_next_comm_timing_exit	; Check that result is still above minimum
 	mov	A, Temp3
@@ -1927,6 +1940,7 @@ calc_next_comm_timing_fast:
 	anl	A, #0Fh
 	orl	A, Temp7
 	mov	Temp5, A
+
 	clr	C
 	mov	A, Temp3					; Subtract a fraction
 	subb	A, Temp5
@@ -1934,6 +1948,7 @@ calc_next_comm_timing_fast:
 	mov	A, Temp4
 	subb	A, #0
 	mov	Temp4, A
+
 	clr	C
 	mov	A, Temp1
 	rrc	A						; Divide by 2 2 times
@@ -1946,12 +1961,13 @@ calc_next_comm_timing_fast:
 	mov	A, Temp4
 	addc	A, #0
 	mov	Temp4, A
+
 	mov	Comm_Period4x_L, Temp3		; Store Comm_Period4x_X
 	mov	Comm_Period4x_H, Temp4
+
 	clr	C
 	subb	A, #2					; If erpm below 156k - go to normal case
 	jc	($+4)
-
 	clr	Flag_High_Rpm				; Clear high rpm bit
 
 	; Set timing reduction
@@ -2027,6 +2043,7 @@ ENDIF
 	mov	Temp3, A
 	mov	A, Temp2
 	mov	Temp4, A
+
 	setb	C						; Negative numbers - set carry
 	mov	A, Temp2
 	rrc	A						; Divide by 2
@@ -2034,8 +2051,10 @@ ENDIF
 	mov	A, Temp1
 	rrc	A
 	mov	Temp5, A
+
 	mov	Wt_Zc_Tout_Start_L, Temp1	; Set 15deg time for zero cross scan timeout
 	mov	Wt_Zc_Tout_Start_H, Temp2
+
 	clr	C
 	mov	A, Temp8					; (Temp8 has Pgm_Comm_Timing)
 	subb	A, #3					; Is timing normal?
@@ -2050,10 +2069,12 @@ ENDIF
 	mov	A, Temp2
 	addc	A, Temp6
 	mov	Temp2, A
+
 	mov	A, Temp5					; Store 7.5deg in Temp3/4
 	mov	Temp3, A
 	mov	A, Temp6
 	mov	Temp4, A
+
 	sjmp	store_times_up_or_down
 
 adjust_timing_two_steps:
@@ -2109,7 +2130,9 @@ calc_new_wait_times_fast:
 	setb	C						; Negative numbers - set carry
 	rrc	A						; Divide by 2
 	mov	Temp5, A
+
 	mov	Wt_Zc_Tout_Start_L, Temp1	; Set 15deg time for zero cross scan timeout
+
 	clr	C
 	mov	A, Temp8					; (Temp8 has Pgm_Comm_Timing)
 	subb	A, #3					; Is timing normal?
@@ -2164,6 +2187,7 @@ wait_before_zc_scan:
 	Wait_For_Timer3
 
 	mov	Startup_Zc_Timeout_Cntd, #2
+
 setup_zc_scan_timeout:
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable timer 3 interrupts
@@ -2443,16 +2467,16 @@ wait_for_comm:
 	clr	C
 	mov	A, Demag_Detected_Metric		; Check demag metric
 	subb	A, Demag_Pwr_Off_Thresh
-	jc	wait_for_comm_wait			; Cut power if many consecutive demags. This will help retain sync during hard accelerations
+	jc	wait_for_comm_wait
 
+	; Cut power if many consecutive demags. This will help retain sync during hard accelerations
 	All_Pwm_Fets_Off
 	Set_All_Pwm_Phases_Off
 
 wait_for_comm_wait:
 	Wait_For_Timer3
 
-	; Setup next wait time
-	mov	TMR3RLL, Wt_Zc_Scan_Start_L
+	mov	TMR3RLL, Wt_Zc_Scan_Start_L	; Setup next wait time
 	mov	TMR3RLH, Wt_Zc_Scan_Start_H
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable timer 3 interrupts
@@ -2716,7 +2740,7 @@ dshot_cmd_save_settings:
 	mov	ACC.0, C
 	mov	C, Flag_Pgm_Bidir
 	mov	ACC.1, C
-	inc A
+	inc	A
 	mov	Temp2, #Pgm_Direction		; Store programmed direction
 	mov	@Temp2, A
 
@@ -3595,7 +3619,7 @@ ENDIF
 	; Initializing beeps
 	clr	IE_EA					; Disable interrupts explicitly
 	call	wait100ms					; Wait a bit to avoid audible resets if not properly powered
-	call startup_beep_melody			; Play startup beep melody
+	call	startup_beep_melody			; Play startup beep melody
 	call	led_control				; Set LEDs to programmed values
 
 	call	wait100ms					; Wait for flight controller to get ready
@@ -4022,8 +4046,6 @@ initial_run_check_startup_rot:
 
 initial_run_continue_run:
 	jmp	run1						; Continue to run
-
-
 
 initial_run_phase_done:
 	; Reset stall count
