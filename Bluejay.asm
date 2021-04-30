@@ -175,7 +175,7 @@ Flag_Pgm_Dir_Rev			BIT	Flags2.1		; Set if the programmed direction is reversed
 Flag_Pgm_Bidir				BIT	Flags2.2		; Set if the programmed control mode is bidirectional operation
 Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
 Flag_Clock_At_48MHz			BIT	Flags2.4		; Set if 48MHz MCUs run at 48MHz
-Flag_Rcp_Stop				BIT	Flags2.5		; Set if the RC pulse value is zero
+Flag_Rcp_Stop				BIT	Flags2.5		; Set if the RC pulse value is zero or if timeout occurs
 Flag_Rcp_Dir_Rev			BIT	Flags2.6		; RC pulse direction in bidirectional mode
 Flag_Rcp_DShot_Inverted		BIT	Flags2.7		; DShot RC pulse input is inverted (and supports telemetry)
 
@@ -210,8 +210,8 @@ Prev_Comm_H:				DS	1	; Previous commutation timer 2 timestamp (hi byte)
 Prev_Comm_X:				DS	1	; Previous commutation timer 2 timestamp (ext byte)
 Prev_Prev_Comm_L:			DS	1	; Pre-previous commutation timer 2 timestamp (lo byte)
 Prev_Prev_Comm_H:			DS	1	; Pre-previous commutation timer 2 timestamp (hi byte)
-Comm_Period4x_L:			DS	1	; Timer 2 counts between the last 4 commutations (lo byte)
-Comm_Period4x_H:			DS	1	; Timer 2 counts between the last 4 commutations (hi byte)
+Comm_Period4x_L:			DS	1	; Timer 2 ticks between the last 4 commutations (lo byte)
+Comm_Period4x_H:			DS	1	; Timer 2 ticks between the last 4 commutations (hi byte)
 Comparator_Read_Cnt:		DS	1	; Number of comparator reads done
 
 Wt_Adv_Start_L:			DS	1	; Timer 3 start point for commutation advance timing (lo byte)
@@ -611,8 +611,8 @@ t1_int:
 	push	ACC
 	push	B
 
-	; Note: Interrupts (of higher priority) are not explicitly disabled because
-	; int0 is already disabled and timer 0 is assumed to be disabled at this point
+	; Note: Interrupts are not explicitly disabled because those of higher priority:
+	; int0_int is already disabled and t0_int is assumed to be disabled at this point
 	clr	TMR2CN0_TR2				; Timer 2 disabled
 	mov	Temp2, TMR2L				; Read timer value
 	mov	Temp3, TMR2H
@@ -669,6 +669,7 @@ t1_int_outside_range:
 	subb	A, #50					; Allow a given number of outside pulses
 	jc	t1_int_exit_timeout			; If outside limits - ignore first pulses
 
+	; RCP signal has not timed out, but pulses are not recognized as DShot
 	setb	Flag_Rcp_Stop				; Set pulse length to zero
 	mov	DShot_Cmd, #0				; Reset DShot command
 	mov	DShot_Cmd_Cnt, #0
@@ -715,7 +716,7 @@ t1_int_decode_checksum:
 	jz	t1_dshot_set_cmd			; Clear DShot command when RCP is zero
 
 	clr	C						; We are in the special DShot range
-	rrc	A						; Shift tlm bit
+	rrc	A						; Shift tlm bit into carry
 	jnc	t1_dshot_clear_cmd			; Check for tlm bit set (if not telemetry, invalid command)
 
 	cjne	A, DShot_Cmd, t1_dshot_set_cmd
@@ -744,7 +745,7 @@ t1_normal_range:
 	clr	Flag_Rcp_Dir_Rev
 	jc	t1_int_bidir_rev_chk		; If result is negative - branch
 
-	mov	Temp4, B
+	mov	Temp4, B					; Else store subtracted value
 	mov	Temp5, A
 
 	setb	Flag_Rcp_Dir_Rev
@@ -1022,7 +1023,7 @@ t1_int_exit_no_int:
 t2_int:
 	push	ACC
 	clr	TMR2CN0_TF2H				; Clear interrupt flag
-	inc	Timer2_X
+	inc	Timer2_X					; Increment extended byte
 
 IF MCU_48MHZ == 1
 	jnb	Flag_Clock_At_48MHz, t2_int_start	; Always run if clock is 24MHz
@@ -1066,7 +1067,7 @@ t3_int:
 	clr	IE_EA					; Disable all interrupts
 	anl	EIE1, #7Fh				; Disable timer 3 interrupts
 	anl	TMR3CN0, #07Fh				; Clear timer 3 interrupt flag
-	mov	TMR3RLL, #0FAh				; Set a short delay before next interrupt
+	mov	TMR3RLL, #0FAh				; Short delay to avoid re-loading regular delay
 	mov	TMR3RLH, #0FFh
 	clr	Flag_Timer3_Pending			; Flag that timer has wrapped
 	setb	IE_EA					; Enable all interrupts
@@ -1111,8 +1112,9 @@ int1_int:
 	clr	IE_EX1					; Disable int1 interrupts
 	setb	TCON_TR1					; Start timer 1
 
-	; Note: Interrupts (of higher priority) are not explicitly disabled because
-	; a valid dshot signal should not trigger int0 yet and timer 0 is assumed to be disabled at this point
+	; Note: Interrupts are not explicitly disabled because those of higher priority:
+	; int0_int should not yet trigger if dshot signal is valid
+	; t0_int is assumed to be disabled at this point
 	clr	TMR2CN0_TR2				; Timer 2 disabled
 	mov	DShot_Frame_Start_L, TMR2L	; Read timer value
 	mov	DShot_Frame_Start_H, TMR2H
@@ -1681,14 +1683,15 @@ initialize_timing:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Calculate next commutation timing routine
+; Calculate next commutation period
+;
+; Measure the duration of current commutation period,
+; and update Comm_Period4x by averaging a fraction of it.
 ;
 ; Called immediately after each commutation
-; Also sets up timer 3 to wait advance timing
-; Two entry points are used
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-calc_next_comm_timing:				; Entry point for run phase
+calc_next_comm_timing:
 	; Read commutation time
 	clr	IE_EA
 	clr	TMR2CN0_TR2				; Timer 2 disabled
@@ -1701,7 +1704,7 @@ calc_next_comm_timing:				; Entry point for run phase
 	setb	IE_EA
 
 IF MCU_48MHZ == 1
-	clr	C
+	clr	C						; Divide time by 2 on 48MHz
 	rrca	Temp3
 	rrca	Temp2
 	rrca	Temp1
@@ -1740,16 +1743,18 @@ ENDIF
 	mov	Temp3, A
 	jz	calc_next_comm_startup_no_X
 
+	; Extended byte is not zero, so commutation time is above 0xFFFF
 	mov	Temp1, #0FFh
 	mov	Temp2, #0FFh
 	sjmp	calc_next_comm_startup_average
 
 calc_next_comm_startup_no_X:
+	; Extended byte = 0, so commutation time fits within two bytes
 	mov	Temp7, Prev_Prev_Comm_L
 	mov	Temp8, Prev_Prev_Comm_H
 	mov	Prev_Prev_Comm_L, Temp4
 	mov	Prev_Prev_Comm_H, Temp5
-	mov	Temp1, Prev_Comm_L			; Reload this commutation time
+	mov	Temp1, Prev_Comm_L			; Reload this commutation timestamp
 	mov	Temp2, Prev_Comm_H
 
 	; Calculate the new commutation time based upon the two last commutations (to reduce sensitivity to offset)
@@ -1783,8 +1788,8 @@ calc_next_comm_startup_average:
 	sjmp	calc_new_wait_times_setup
 
 calc_next_comm_normal:
-	; Calculate new commutation time
-	mov	Temp3, Comm_Period4x_L		; Comm_Period4x(-l-h) holds the time of 4 commutations
+	; Prepare averaging by dividing Comm_Period4x and current commutation period (Temp2/1) according to speed.
+	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
 	mov	Temp4, Comm_Period4x_H
 	mov	Temp5, Comm_Period4x_L		; Copy variables
 	mov	Temp6, Comm_Period4x_H
@@ -1848,12 +1853,12 @@ calc_next_comm_new_period_div_done:
 	mov	Comm_Period4x_H, Temp4
 
 calc_new_wait_times_setup:
-	; Set high rpm bit (if above 156k erpm)
+	; Set high rpm flag (if above 156k erpm)
 	clr	C
 	mov	A, Temp4
-	subb	A, #2
+	subb	A, #2					; Is Comm_Period4x_H below 2?
 	jnc	($+4)
-	setb	Flag_High_Rpm				; Set high rpm bit
+	setb	Flag_High_Rpm				; Yes - Set high rpm flag
 
 	; Load programmed commutation timing
 	jnb	Flag_Startup_Phase, calc_new_wait_per_startup_done	; Set dedicated timing during startup
@@ -1871,28 +1876,32 @@ calc_new_wait_per_startup_done:
 	subb	A, #130
 	jc	calc_new_wait_per_demag_done
 
-	inc	Temp8					; Increase timing
+	inc	Temp8					; Increase timing (if metric 130 or above)
 
 	clr	C
 	mov	A, Demag_Detected_Metric
 	subb	A, #160
 	jc	($+3)
 
-	inc	Temp8					; Increase timing again
+	inc	Temp8					; Increase timing again (if metric 160 or above)
 
 	clr	C
 	mov	A, Temp8					; Limit timing to max
 	subb	A, #6
 	jc	($+4)
 
-	mov	Temp8, #5					; Set timing to max
+	mov	Temp8, #5					; Set timing to max (if timing 6 or above)
 
 calc_new_wait_per_demag_done:
 	; Set timing reduction
 	mov	Temp7, #2
 
-	; Load current commutation timing
-	mov	A, Comm_Period4x_H			; Divide 4 times
+	; Commutation period: 60 deg / 6 runs = 60 deg
+	; 60 deg / 4 = 15 deg
+
+	; Load current commutation timing and compute 15 deg timing
+	; Divide Comm_Period4x by 16 (Comm_Period1x divided by 4) and store in Temp4/3
+	mov	A, Comm_Period4x_H			; Divide by 16
 	swap	A
 	anl	A, #00Fh
 	mov	Temp2, A
@@ -1906,6 +1915,7 @@ calc_new_wait_per_demag_done:
 	add	A, Temp1
 	mov	Temp1, A
 
+	; Subtract timing reduction
 	clr	C
 	mov	A, Temp1
 	subb	A, Temp7
@@ -1920,7 +1930,7 @@ calc_new_wait_per_demag_done:
 	jnz	calc_next_comm_timing_exit
 
 load_min_time:
-	mov	Temp3, #1					; Set minimum time
+	mov	Temp3, #1					; Set minimum waiting time (Timers cannot wait for a delay of 0)
 	mov	Temp4, #0
 
 	sjmp	calc_next_comm_timing_exit
@@ -1930,9 +1940,9 @@ load_min_time:
 ; Fast calculation (Comm_Period4x_H less than 2)
 calc_next_comm_timing_fast:
 	; Calculate new commutation time
-	mov	Temp3, Comm_Period4x_L		; Comm_Period4x(-l-h) holds the time of 4 commutations
+	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
 	mov	Temp4, Comm_Period4x_H
-	mov	A, Temp4					; Divide by 2 4 times
+	mov	A, Temp4					; Divide by 16 and store in Temp5
 	swap	A
 	mov	Temp7, A
 	mov	A, Temp3
@@ -1949,9 +1959,10 @@ calc_next_comm_timing_fast:
 	subb	A, #0
 	mov	Temp4, A
 
+	; Note: Temp2 is assumed to be zero (approx. Comm_Period4x_H / 4)
 	clr	C
 	mov	A, Temp1
-	rrc	A						; Divide by 2 2 times
+	rrc	A						; Divide by 4
 	clr	C
 	rrc	A
 	mov	Temp1, A
@@ -1972,10 +1983,10 @@ calc_next_comm_timing_fast:
 
 	; Set timing reduction
 	mov	Temp1, #2
-	mov	A, Temp4					; Divide by 2 4 times
+	mov	A, Temp4					; Divide Comm_Period4x by 16 and store in Temp4/3
 	swap	A
 	mov	Temp7, A
-	mov	Temp4, #0
+	mov	Temp4, #0					; Clear waiting time high byte
 	mov	A, Temp3
 	swap	A
 	anl	A, #0Fh
@@ -1988,7 +1999,7 @@ calc_next_comm_timing_fast:
 	jnz	calc_new_wait_times_fast_done	; Check that result is still above minimum
 
 load_min_time_fast:
-	mov	Temp3, #1					; Set minimum time
+	mov	Temp3, #1					; Set minimum waiting time (Timers cannot wait for a delay of 0)
 
 calc_new_wait_times_fast_done:
 	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
@@ -2001,16 +2012,21 @@ calc_next_comm_timing_exit:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Wait advance timing routine
-; NOTE: Be VERY careful if using temp registers. They are passed over this routine
 ;
-; Waits for the advance timing to elapse and sets up the next zero cross wait
+; Waits for the advance timing to elapse
+;
+; NOTE: Be VERY careful if using temp registers. They are passed over this routine
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_advance_timing:
+	; If it has not already, we wait here for the Wt_Adv_Start_ delay to elapse.
 	Wait_For_Timer3
 
-	; Setup next wait time
-	mov	TMR3RLL, Wt_ZC_Tout_Start_L
+	; At this point timer 3 has (already) wrapped and been reloaded with the Wt_Zc_Scan_Start_ delay.
+	; In case this delay has also elapsed, timer 3 has been reloaded with a short delay any number of times.
+	; - The interrupt flag is set and the pending flag will clear immediately after enabling the interrupt.
+
+	mov	TMR3RLL, Wt_ZC_Tout_Start_L	; Setup next wait time
 	mov	TMR3RLH, Wt_ZC_Tout_Start_H
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable timer 3 interrupts
@@ -2037,6 +2053,8 @@ IF MCU_48MHZ == 1
 	rlca	Temp2
 ENDIF
 
+	; Temp2/1 = 15deg timer 2 period
+
 	jb	Flag_High_Rpm, calc_new_wait_times_fast	; Branch if high rpm
 
 	mov	A, Temp1					; Copy values
@@ -2045,8 +2063,8 @@ ENDIF
 	mov	Temp4, A
 
 	setb	C						; Negative numbers - set carry
-	mov	A, Temp2
-	rrc	A						; Divide by 2
+	mov	A, Temp2					; Store 7.5deg in Temp5/6 (15deg / 2)
+	rrc	A
 	mov	Temp6, A
 	mov	A, Temp1
 	rrc	A
@@ -2063,7 +2081,8 @@ ENDIF
 	mov	A, Temp8
 	jb	ACC.0, adjust_timing_two_steps; If an odd number - branch
 
-	mov	A, Temp1					; Add 7.5deg and store in Temp1/2
+	; Commutation timing setting is 2 or 4
+	mov	A, Temp1					; Store 22.5deg in Temp1/2 (15deg + 7.5deg)
 	add	A, Temp5
 	mov	Temp1, A
 	mov	A, Temp2
@@ -2078,14 +2097,16 @@ ENDIF
 	sjmp	store_times_up_or_down
 
 adjust_timing_two_steps:
-	mov	A, Temp1					; Add 15deg and store in Temp1/2
+	; Commutation timing setting is 1 or 5
+	mov	A, Temp1					; Store 30deg in Temp1/2 (15deg + 15deg)
 	setb	C						; Add 1 to final result (Temp1/2 * 2 + 1)
 	addc	A, Temp1
 	mov	Temp1, A
 	mov	A, Temp2
 	addc	A, Temp2
 	mov	Temp2, A
-	mov	Temp3, #-1				; Store minimum time in Temp3/4
+
+	mov	Temp3, #-1				; Store minimum time (0deg) in Temp3/4
 	mov	Temp4, #-1
 
 store_times_up_or_down:
@@ -2180,11 +2201,15 @@ calc_new_wait_times_exit:
 ; Wait before zero cross scan routine
 ;
 ; Waits for the zero cross scan wait time to elapse
-; Also sets up timer 3 for the zero cross scan timeout time
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_before_zc_scan:
+	; If it has not already, we wait here for the Wt_Zc_Scan_Start_ delay to elapse.
 	Wait_For_Timer3
+
+	; At this point timer 3 has (already) wrapped and been reloaded with the Wt_ZC_Tout_Start_ delay.
+	; In case this delay has also elapsed, timer 3 has been reloaded with a short delay any number of times.
+	; - The interrupt flag is set and the pending flag will clear immediately after enabling the interrupt.
 
 	mov	Startup_Zc_Timeout_Cntd, #2
 
@@ -2234,8 +2259,8 @@ wait_before_zc_scan_exit:
 ;
 ; Wait for comparator to go low/high routines
 ;
-; Waits for the zero cross scan wait time to elapse
-; Then scans for comparator going low/high
+; Scans for comparator going low/high
+; Exit if zero cross timeout has elapsed
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait_for_comp_out_low:
@@ -2254,7 +2279,7 @@ comp_init:
 	mov	Comparator_Read_Cnt, #0		; Reset number of comparator reads
 
 comp_start:
-	; Set number of comparator readings
+	; Set number of comparator readings required
 	mov	Temp3, #(1 SHL MCU_48MHZ)	; Number of OK readings required
 	mov	Temp4, #(1 SHL MCU_48MHZ)	; Max number of readings required
 	jb	Flag_High_Rpm, comp_check_timeout	; Branch if high rpm
@@ -2288,10 +2313,11 @@ comp_check_timeout:
 	jb	Flag_Timer3_Pending, comp_check_timeout_not_timed_out	; Has zero cross scan timeout elapsed?
 
 	mov	A, Comparator_Read_Cnt			; Check that comparator has been read
-	jz	comp_check_timeout_not_timed_out	; If not read - branch
+	jz	comp_check_timeout_not_timed_out	; If not yet read - ignore zero cross timeout
 
-	jnb	Flag_Startup_Phase, comp_check_timeout_timeout_extended	; Extend timeout during startup
+	jnb	Flag_Startup_Phase, comp_check_timeout_timeout_extended
 
+	; Extend timeout during startup
 	djnz	Startup_Zc_Timeout_Cntd, comp_check_timeout_extend_timeout
 
 comp_check_timeout_timeout_extended:
@@ -2356,7 +2382,7 @@ comp_read_wrong_timeout_set:
 
 comp_read_wrong_low_rpm:
 	mov	A, Comm_Period4x_H			; Set timeout to ~4x comm period 4x value
-	mov	Temp7, #0FFh				; Default to long
+	mov	Temp7, #0FFh				; Default to long timeout
 
 IF MCU_48MHZ == 1
 	clr	C
@@ -2398,6 +2424,8 @@ setup_comm_wait:
 
 	; It is necessary to update the timer reload registers before the timer registers,
 	; to avoid a reload of the previous values in case of a short Wt_Comm_Start delay.
+
+	; Advance wait time will be loaded by timer 3 immediately after the commutation wait elapses
 	mov	TMR3RLL, Wt_Adv_Start_L		; Setup next wait time
 	mov	TMR3RLH, Wt_Adv_Start_H
 	mov	TMR3CN0, #00h				; Timer 3 disabled and interrupt flag cleared
@@ -2474,7 +2502,12 @@ wait_for_comm:
 	Set_All_Pwm_Phases_Off
 
 wait_for_comm_wait:
+	; If it has not already, we wait here for the Wt_Comm_Start_ delay to elapse.
 	Wait_For_Timer3
+
+	; At this point timer 3 has (already) wrapped and been reloaded with the Wt_Adv_Start_ delay.
+	; In case this delay has also elapsed, timer 3 has been reloaded with a short delay any number of times.
+	; - The interrupt flag is set and the pending flag will clear immediately after enabling the interrupt.
 
 	mov	TMR3RLL, Wt_Zc_Scan_Start_L	; Setup next wait time
 	mov	TMR3RLH, Wt_Zc_Scan_Start_H
@@ -3756,7 +3789,7 @@ arming_begin:
 
 arming_wait:
 	call	wait100ms
-	jnb	Flag_Rcp_Stop, arming_wait	; Wait until throttle is zero
+	jnb	Flag_Rcp_Stop, arming_wait	; Wait for rcp stop (zero throttle)
 
 	clr	IE_EA
 	call	beep_f2_short				; Beep signal that ESC is armed
@@ -3843,8 +3876,8 @@ motor_start:
 	setb	IE_EA					; Enable interrupts
 
 	clr	A
-	mov	Flags0, A					; Clear flags0
-	mov	Flags1, A					; Clear flags1
+	mov	Flags0, A					; Clear run time flags
+	mov	Flags1, A
 	mov	Demag_Detected_Metric, A		; Clear demag metric
 
 	call	wait1ms
@@ -3885,7 +3918,7 @@ IF MCU_48MHZ == 1
 	clr	C
 	rlca	DShot_Pwm_Thr				; Scale pulse width criteria
 
-	; Scale DShot telemetry for 24MHz
+	; Scale DShot telemetry for 48MHz
 	xcha	DShot_GCR_Pulse_Time_1, DShot_GCR_Pulse_Time_1_Tmp
 	xcha	DShot_GCR_Pulse_Time_2, DShot_GCR_Pulse_Time_2_Tmp
 	xcha	DShot_GCR_Pulse_Time_3, DShot_GCR_Pulse_Time_3_Tmp
@@ -4093,7 +4126,7 @@ run6_check_speed:
 	mov	Temp1, #0F0h				; Default minimum speed
 	jnb	Flag_Dir_Change_Brake, run6_brake_done; Is it a direction change?
 
-	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking
+	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking to initial power limit
 	mov	Temp1, #20h				; Bidirectional braking termination speed
 
 run6_brake_done:
@@ -4113,6 +4146,12 @@ run6_brake_done:
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
 	jmp	run1						; Go back to run 1
 
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Exit run mode and power off
+; on normal stop or comparator timeout
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
 exit_run_mode_on_timeout:
 	jb	Flag_Motor_Running, run_to_wait_for_start
 	inc	Startup_Stall_Cnt			; Increment stall count if motors did not properly start
@@ -4120,8 +4159,8 @@ exit_run_mode_on_timeout:
 run_to_wait_for_start:
 	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off
-	mov	Flags0, #0				; Clear flags0
-	mov	Flags1, #0				; Clear flags1
+	mov	Flags0, #0				; Clear run time flags (in case they are used in interrupts)
+	mov	Flags1, #0
 
 IF MCU_48MHZ == 1
 	Set_MCU_Clk_24MHz
@@ -4179,17 +4218,27 @@ run_to_wait_for_start_brake_done:
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-
-$include (BLHeliBootLoad.inc)			; Include source code for bootloader
-
+;
+; Reset
+;
+; Should execution ever reach this point the ESC will be reset,
+; as code flash after offset 1A00 is used for EEPROM storage
+;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-
-
-
 CSEG AT 19FDh
 reset:
-ljmp	pgm_start
+	ljmp	pgm_start
 
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Bootloader
+;
+; Include source code for BLHeli bootloader
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;CSEG AT 1C00h
+$include (BLHeliBootLoad.inc)
 
 
 END
