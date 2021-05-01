@@ -2085,8 +2085,8 @@ adjust_timing_two_steps:
 	mov	A, Temp2
 	addc	A, Temp2
 	mov	Temp2, A
-	mov	Temp3, #0FFh				; Store minimum time in Temp3/4
-	mov	Temp4, #0FFh
+	mov	Temp3, #-1				; Store minimum time in Temp3/4
+	mov	Temp4, #-1
 
 store_times_up_or_down:
 	clr	C
@@ -2113,12 +2113,12 @@ store_times_decrease:
 
 	; Set very short delays for all but advance time during startup, in order to widen zero cross capture range
 	jnb	Flag_Startup_Phase, calc_new_wait_times_exit
-	mov	Wt_Comm_Start_L, #0F0h
-	mov	Wt_Comm_Start_H, #0FFh
-	mov	Wt_Zc_Scan_Start_L, #0F0h
-	mov	Wt_Zc_Scan_Start_H, #0FFh
-	mov	Wt_Zc_Tout_Start_L, #0F0h
-	mov	Wt_Zc_Tout_Start_H, #0FFh
+	mov	Wt_Comm_Start_L, #-16
+	mov	Wt_Comm_Start_H, #-1
+	mov	Wt_Zc_Scan_Start_L, #-16
+	mov	Wt_Zc_Scan_Start_H, #-1
+	mov	Wt_Zc_Tout_Start_L, #-16
+	mov	Wt_Zc_Tout_Start_H, #-1
 
 	sjmp	calc_new_wait_times_exit
 
@@ -2153,7 +2153,7 @@ adjust_timing_two_steps_fast:
 	add	A, Temp1
 	add	A, #1
 	mov	Temp1, A
-	mov	Temp3, #0FFh				; Store minimum time in Temp3
+	mov	Temp3, #-1				; Store minimum time in Temp3
 
 store_times_up_or_down_fast:
 	clr	C
@@ -2345,7 +2345,7 @@ comp_read_wrong_extend_timeout:
 	mov	TMR3CN0, #00h				; Timer 3 disabled and interrupt flag cleared
 	jnb	Flag_High_Rpm, comp_read_wrong_low_rpm	; Branch if not high rpm
 
-	mov	TMR3L, #00h				; Set timeout to ~1ms
+	mov	TMR3L, #0					; Set timeout to ~1ms
 	mov	TMR3H, #-(8 SHL MCU_48MHZ)
 
 comp_read_wrong_timeout_set:
