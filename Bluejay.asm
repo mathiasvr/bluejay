@@ -2067,6 +2067,8 @@ ENDIF
 	rrc	A
 	mov	Temp5, A
 
+	mov	Wt_Zc_Scan_Start_L, Temp5	; Set 7.5deg time for zero cross scan delay
+	mov	Wt_Zc_Scan_Start_H, Temp6
 	mov	Wt_Zc_Tout_Start_L, Temp1	; Set 15deg time for zero cross scan timeout
 	mov	Wt_Zc_Tout_Start_H, Temp2
 
@@ -2117,8 +2119,6 @@ store_times_increase:
 	mov	Wt_Comm_Start_H, Temp4
 	mov	Wt_Adv_Start_L, Temp1		; New commutation advance time (~15deg nominal)
 	mov	Wt_Adv_Start_H, Temp2
-	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
-	mov	Wt_Zc_Scan_Start_H, Temp6
 	sjmp	calc_new_wait_times_exit
 
 store_times_decrease:
@@ -2126,8 +2126,6 @@ store_times_decrease:
 	mov	Wt_Comm_Start_H, Temp2
 	mov	Wt_Adv_Start_L, Temp3		; New commutation advance time (~15deg nominal)
 	mov	Wt_Adv_Start_H, Temp4
-	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
-	mov	Wt_Zc_Scan_Start_H, Temp6
 
 	; Set very short delays for all but advance time during startup, in order to widen zero cross capture range
 	jnb	Flag_Startup_Phase, calc_new_wait_times_exit
@@ -2149,6 +2147,7 @@ calc_new_wait_times_fast:
 	rrc	A						; Divide by 2
 	mov	Temp5, A
 
+	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 	mov	Wt_Zc_Tout_Start_L, Temp1	; Set 15deg time for zero cross scan timeout
 
 	clr	C
@@ -2182,13 +2181,11 @@ store_times_up_or_down_fast:
 store_times_increase_fast:
 	mov	Wt_Comm_Start_L, Temp3		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
 	mov	Wt_Adv_Start_L, Temp1		; New commutation advance time (~15deg nominal)
-	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 	sjmp	calc_new_wait_times_exit
 
 store_times_decrease_fast:
 	mov	Wt_Comm_Start_L, Temp1		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
 	mov	Wt_Adv_Start_L, Temp3		; New commutation advance time (~15deg nominal)
-	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 
 calc_new_wait_times_exit:
 
