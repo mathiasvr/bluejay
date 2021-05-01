@@ -1837,12 +1837,10 @@ calc_next_comm_new_period_div:
 calc_next_comm_new_period_div_done:
 	mov	A, Temp3
 	add	A, Temp1					; Add the divided new time
-	mov	Temp3, A
+	mov	Comm_Period4x_L, A
 	mov	A, Temp4
 	addc	A, Temp2
-	mov	Temp4, A
-	mov	Comm_Period4x_L, Temp3		; Store Comm_Period4x_X
-	mov	Comm_Period4x_H, Temp4
+	mov	Comm_Period4x_H, A
 	jnc	calc_new_wait_times_setup	; Is period larger than 0xffff?
 	mov	Comm_Period4x_L, #0FFh		; Yes - Set commutation period registers to very slow timing (0xffff)
 	mov	Comm_Period4x_H, #0FFh
@@ -1888,9 +1886,6 @@ calc_new_wait_per_startup_done:
 	mov	Temp8, #5					; Set timing to max (if timing 6 or above)
 
 calc_new_wait_per_demag_done:
-	; Set timing reduction
-	mov	Temp7, #2
-
 	; Commutation period: 60 deg / 6 runs = 60 deg
 	; 60 deg / 4 = 15 deg
 
@@ -1898,10 +1893,10 @@ calc_new_wait_per_demag_done:
 	; Divide Comm_Period4x by 16 (Comm_Period1x divided by 4) and store in Temp4/3
 	mov	A, Comm_Period4x_H			; Divide by 16
 	swap	A
+	mov	Temp3, A
 	anl	A, #00Fh
 	mov	Temp2, A
-	mov	A, Comm_Period4x_H
-	swap	A
+	mov	A, Temp3
 	anl	A, #0F0h
 	mov	Temp1, A
 	mov	A, Comm_Period4x_L
@@ -1913,7 +1908,7 @@ calc_new_wait_per_demag_done:
 	; Subtract timing reduction
 	clr	C
 	mov	A, Temp1
-	subb	A, Temp7
+	subb	A, #2				; Set timing reduction
 	mov	Temp3, A
 	mov	A, Temp2
 	subb	A, #0
@@ -1955,14 +1950,12 @@ calc_next_comm_timing_fast:
 	mov	Temp4, A
 
 	; Note: Temp2 is assumed to be zero (approx. Comm_Period4x_H / 4)
-	clr	C
-	mov	A, Temp1
-	rrc	A						; Divide by 4
-	clr	C
-	rrc	A
-	mov	Temp1, A
-	mov	A, Temp3					; Add the divided new time
-	add	A, Temp1
+	mov	A, Temp1					; Divide by 4
+	rr	A
+	rr	A
+	anl	A, #03Fh
+
+	add	A, Temp3					; Add the divided new time
 	mov	Temp3, A
 	mov	A, Temp4
 	addc	A, #0
@@ -1976,8 +1969,6 @@ calc_next_comm_timing_fast:
 	jc	($+4)
 	clr	Flag_High_Rpm				; Clear high rpm bit
 
-	; Set timing reduction
-	mov	Temp1, #2
 	mov	A, Temp4					; Divide Comm_Period4x by 16 and store in Temp4/3
 	swap	A
 	mov	Temp7, A
@@ -1986,9 +1977,8 @@ calc_next_comm_timing_fast:
 	swap	A
 	anl	A, #0Fh
 	orl	A, Temp7
-	mov	Temp3, A
 	clr	C
-	subb	A, Temp1
+	subb	A, #2					; Timing reduction
 	mov	Temp3, A
 	jc	load_min_time_fast			; Check that result is still positive
 	jnz	calc_new_wait_times_fast_done	; Check that result is still above minimum
