@@ -1843,16 +1843,14 @@ calc_next_comm_new_period_div_done:
 	mov	Temp4, A
 	mov	Comm_Period4x_L, Temp3		; Store Comm_Period4x_X
 	mov	Comm_Period4x_H, Temp4
-	jnc	calc_new_wait_times_setup	; If period larger than 0xffff - go to slow case
-
-	mov	Temp4, #0FFh
-	mov	Comm_Period4x_L, Temp4		; Set commutation period registers to very slow timing (0xffff)
-	mov	Comm_Period4x_H, Temp4
+	jnc	calc_new_wait_times_setup	; Is period larger than 0xffff?
+	mov	Comm_Period4x_L, #0FFh		; Yes - Set commutation period registers to very slow timing (0xffff)
+	mov	Comm_Period4x_H, #0FFh
 
 calc_new_wait_times_setup:
 	; Set high rpm flag (if above 156k erpm)
 	clr	C
-	mov	A, Temp4
+	mov	A, Comm_Period4x_H
 	subb	A, #2					; Is Comm_Period4x_H below 2?
 	jnc	($+4)
 	setb	Flag_High_Rpm				; Yes - Set high rpm flag
