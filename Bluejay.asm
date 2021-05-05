@@ -1764,25 +1764,12 @@ calc_next_comm_startup_no_X:
 	mov	Temp2, A
 
 calc_next_comm_startup_average:
-	clr	C
-	mov	A, Comm_Period4x_H			; Average with previous and save
-	rrc	A
-	mov	Temp4, A
-	mov	A, Comm_Period4x_L
-	rrc	A
-	mov	Temp3, A
-	mov	A, Temp1
-	add	A, Temp3
-	mov	Comm_Period4x_L, A
-	mov	A, Temp2
-	addc	A, Temp4
-	mov	Comm_Period4x_H, A
-	jnc	($+8)
+	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
+	mov	Temp4, Comm_Period4x_H
+	mov	Temp7, #2
+	mov	Temp8, #0
+	sjmp	calc_next_comm_avg_period_div
 
-	mov	Comm_Period4x_L, #0FFh
-	mov	Comm_Period4x_H, #0FFh
-
-	sjmp	calc_new_wait_times_setup
 
 calc_next_comm_normal:
 	; Prepare averaging by dividing Comm_Period4x and current commutation period (Temp2/1) according to speed.
