@@ -3672,6 +3672,7 @@ input_high_check_3:
 	ljmp	1C00h					; Jump to bootloader
 
 bootloader_done:
+	call	decode_settings
 	jnb	Flag_Had_Signal, setup_dshot	; Check if DShot signal was lost (or stalled)
 	call	beep_f1					; Beep on signal loss
 	call	beep_f2
