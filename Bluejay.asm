@@ -1688,7 +1688,7 @@ initialize_timing:
 ; Called immediately after each commutation
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-calc_next_comm_timing:
+calc_next_comm_period:
 	; Read commutation time
 	clr	IE_EA
 	clr	TMR2CN0_TR2				; Timer 2 disabled
@@ -1724,7 +1724,7 @@ ENDIF
 	mov	Temp2, A					; Store commutation period in Temp2 (hi byte)
 
 	jnb	Flag_High_Rpm, calc_next_comm_normal	; Branch normal rpm
-	ajmp	calc_next_comm_timing_fast			; Branch high rpm
+	ajmp	calc_next_comm_period_fast			; Branch high rpm
 
 calc_next_comm_startup:
 	; Calculate this commutation time
@@ -1750,7 +1750,7 @@ ENDIF
 	; Extended byte is not zero, so commutation time is above 0xFFFF
 	mov	Comm_Period4x_L, #0FFh
 	mov	Comm_Period4x_H, #0FFh
-	sjmp	calc_new_wait_times_setup
+	sjmp	calc_next_comm_done
 
 calc_next_comm_startup_no_X:
 	; Extended byte = 0, so commutation time fits within two bytes
@@ -1831,11 +1831,12 @@ calc_next_comm_new_period_div_done:
 	mov	A, Temp4
 	addc	A, Temp2
 	mov	Comm_Period4x_H, A
-	jnc	calc_new_wait_times_setup	; Is period larger than 0xffff?
+
+	jnc	calc_next_comm_done			; Is period larger than 0xffff?
 	mov	Comm_Period4x_L, #0FFh		; Yes - Set commutation period registers to very slow timing (0xffff)
 	mov	Comm_Period4x_H, #0FFh
 
-calc_new_wait_times_setup:
+calc_next_comm_done:
 	; Set high rpm flag (if above 156k erpm)
 	clr	C
 	mov	A, Comm_Period4x_H
@@ -1844,12 +1845,12 @@ calc_new_wait_times_setup:
 	setb	Flag_High_Rpm				; Yes - Set high rpm flag
 
 	; Load programmed commutation timing
-	jnb	Flag_Startup_Phase, calc_new_wait_per_startup_done	; Set dedicated timing during startup
+	jnb	Flag_Startup_Phase, load_comm_timing_setting
 
-	mov	Temp8, #3
-	sjmp	calc_new_wait_per_demag_done
+	mov	Temp8, #3					; Set dedicated timing during startup
+	sjmp	calc_next_comm_15deg
 
-calc_new_wait_per_startup_done:
+load_comm_timing_setting:
 	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
 	mov	A, @Temp1
 	mov	Temp8, A					; Store in Temp8
@@ -1857,7 +1858,7 @@ calc_new_wait_per_startup_done:
 	clr	C
 	mov	A, Demag_Detected_Metric		; Check demag metric
 	subb	A, #130
-	jc	calc_new_wait_per_demag_done
+	jc	calc_next_comm_15deg
 
 	inc	Temp8					; Increase timing (if metric 130 or above)
 
@@ -1875,7 +1876,7 @@ calc_new_wait_per_startup_done:
 
 	mov	Temp8, #5					; Set timing to max (if timing 6 or above)
 
-calc_new_wait_per_demag_done:
+calc_next_comm_15deg:
 	; Commutation period: 60 deg / 6 runs = 60 deg
 	; 60 deg / 4 = 15 deg
 
@@ -1904,21 +1905,21 @@ calc_new_wait_per_demag_done:
 	subb	A, #0
 	mov	Temp4, A
 
-	jc	load_min_time				; Check that result is still positive
-	jnz	calc_next_comm_timing_exit	; Check that result is still above minimum
+	jc	calc_next_comm_15deg_set_min	; Check that result is still positive
+	jnz	calc_next_comm_period_exit	; Check that result is still above minimum
 	mov	A, Temp3
-	jnz	calc_next_comm_timing_exit
+	jnz	calc_next_comm_period_exit
 
-load_min_time:
+calc_next_comm_15deg_set_min:
 	mov	Temp3, #1					; Set minimum waiting time (Timers cannot wait for a delay of 0)
 	mov	Temp4, #0
 
-	sjmp	calc_next_comm_timing_exit
+	sjmp	calc_next_comm_period_exit
 
 ;**** **** **** **** ****
 ; Calculate next commutation timing fast routine
 ; Fast calculation (Comm_Period4x_H less than 2)
-calc_next_comm_timing_fast:
+calc_next_comm_period_fast:
 	; Calculate new commutation time
 	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
 	mov	Temp4, Comm_Period4x_H
@@ -1970,18 +1971,18 @@ calc_next_comm_timing_fast:
 	clr	C
 	subb	A, #2					; Timing reduction
 	mov	Temp3, A
-	jc	load_min_time_fast			; Check that result is still positive
-	jnz	calc_new_wait_times_fast_done	; Check that result is still above minimum
+	jc	calc_next_comm_fast_set_min	; Check that result is still positive
+	jnz	calc_next_comm_fast_done		; Check that result is still above minimum
 
-load_min_time_fast:
+calc_next_comm_fast_set_min:
 	mov	Temp3, #1					; Set minimum waiting time (Timers cannot wait for a delay of 0)
 
-calc_new_wait_times_fast_done:
+calc_next_comm_fast_done:
 	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
 	mov	A, @Temp1
 	mov	Temp8, A					; Store in Temp8
 
-calc_next_comm_timing_exit:
+calc_next_comm_period_exit:
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -3916,9 +3917,9 @@ motor_start_bidir_done:
 	call	comm5_comm6				; Initialize commutation
 	call	comm6_comm1
 	call	initialize_timing			; Initialize timing
-	call	calc_next_comm_timing		; Set virtual commutation point
+	call	calc_next_comm_period		; Set virtual commutation point
 	call	initialize_timing			; Initialize timing
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 	call	initialize_timing			; Initialize timing
 
 
@@ -3937,7 +3938,7 @@ run1:
 ;		evaluate_comparator_integrity	; Check whether comparator reading has been normal
 	call	wait_for_comm				; Wait from zero cross to commutation
 	call	comm1_comm2				; Commutate
-	call	calc_next_comm_timing		; Calculate next timing and wait advance timing wait
+	call	calc_next_comm_period		; Calculate next timing and wait advance timing wait
 ;		wait_advance_timing			; Wait advance timing and start zero cross wait
 ;		calc_new_wait_times
 ;		wait_before_zc_scan			; Wait zero cross wait and start zero cross timeout
@@ -3951,7 +3952,7 @@ run2:
 	call	set_pwm_limit				; Set pwm power limit for low or high rpm
 	call	wait_for_comm
 	call	comm2_comm3
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
@@ -3964,7 +3965,7 @@ run3:
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
 	call	comm3_comm4
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
@@ -3977,7 +3978,7 @@ run4:
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
 	call	comm4_comm5
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
@@ -3990,7 +3991,7 @@ run5:
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
 	call	comm5_comm6
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
@@ -4005,7 +4006,7 @@ run6:
 	call	wait_for_comm
 	call	comm6_comm1
 	call	check_temp_and_limit_power
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
