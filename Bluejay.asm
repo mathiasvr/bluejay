@@ -1748,9 +1748,9 @@ ENDIF
 	jz	calc_next_comm_startup_no_X
 
 	; Extended byte is not zero, so commutation time is above 0xFFFF
-	mov	Temp1, #0FFh
-	mov	Temp2, #0FFh
-	sjmp	calc_next_comm_startup_average
+	mov	Comm_Period4x_L, #0FFh
+	mov	Comm_Period4x_H, #0FFh
+	sjmp	calc_new_wait_times_setup
 
 calc_next_comm_startup_no_X:
 	; Extended byte = 0, so commutation time fits within two bytes
@@ -1768,13 +1768,11 @@ calc_next_comm_startup_no_X:
 	subb	A, Temp8
 	mov	Temp2, A
 
-calc_next_comm_startup_average:
 	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
 	mov	Temp4, Comm_Period4x_H
 	mov	Temp7, #2
 	mov	Temp8, #0
 	sjmp	calc_next_comm_avg_period_div
-
 
 calc_next_comm_normal:
 	; Prepare averaging by dividing Comm_Period4x and current commutation period (Temp2/1) according to speed.
