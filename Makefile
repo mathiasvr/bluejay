@@ -106,6 +106,14 @@ $(HEX_DIR)/%.hex : $(OUTPUT_DIR)/%.OMF
 	@echo "OHX  : generating hex file $@"
 	@$(OX51) "$<" "HEXFILE ($@)" > /dev/null 2>&1 || (echo "Error: Could not make hex file"; exit 1)
 
+# Check if most recent commit changes production code (hex output)
+check_commit: $(SINGLE_TARGET_HEX)
+	@mv $(SINGLE_TARGET_HEX) $(SINGLE_TARGET_HEX:.hex=_after.hex)
+	@git checkout HEAD~1
+	@make $(SINGLE_TARGET_HEX)
+	@git checkout -
+	@diff $(SINGLE_TARGET_HEX) $(SINGLE_TARGET_HEX:.hex=_after.hex)
+
 changelog:
 	@npx -q mathiasvr/generate-changelog --exclude build,chore,ci,docs,refactor,style,other
 
@@ -123,5 +131,4 @@ clean:
 efm8load: single_target
 	$(EFM8_LOAD_BIN) -p $(EFM8_LOAD_PORT) -b $(EFM8_LOAD_BAUD) -w $(SINGLE_TARGET_HEX)
 
-
-.PHONY: single_target all changelog help clean efm8load
+.PHONY: single_target all changelog help clean efm8load check_commit
