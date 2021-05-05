@@ -1748,9 +1748,9 @@ ENDIF
 	jz	calc_next_comm_startup_no_X
 
 	; Extended byte is not zero, so commutation time is above 0xFFFF
-	mov	Temp1, #0FFh
-	mov	Temp2, #0FFh
-	sjmp	calc_next_comm_startup_average
+	mov	Comm_Period4x_L, #0FFh
+	mov	Comm_Period4x_H, #0FFh
+	sjmp	calc_new_wait_times_setup
 
 calc_next_comm_startup_no_X:
 	; Extended byte = 0, so commutation time fits within two bytes
