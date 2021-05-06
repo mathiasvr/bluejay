@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13](https://github.com/mathiasvr/bluejay/compare/v0.12...v0.13) (2021-05-06)
+
+### Features
+
+* Send telemetry for each DShot packet when off ([90ae235](https://github.com/mathiasvr/bluejay/commit/90ae235481fca247dcc4291d6199f7e7a7ddc871))
+
+### Bug Fixes
+
+* Check RCP timeout in DShot command loop ([ecb70ea](https://github.com/mathiasvr/bluejay/commit/ecb70ea8840ca888d7bcf9d7f88648827c93b735))
+* Clear DShot command when RCP is zero ([be52fa6](https://github.com/mathiasvr/bluejay/commit/be52fa64692d779a7697a71880abe179e9ac57b5))
+* Switch power off earlier during signal detection ([78de110](https://github.com/mathiasvr/bluejay/commit/78de110ea93fd3c70a01fafe58b3279dc1236e95))
+
+
 ## [0.12](https://github.com/mathiasvr/bluejay/compare/v0.11...v0.12) (2021-04-13)
 
 ### Features
