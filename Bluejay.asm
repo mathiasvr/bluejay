@@ -3785,8 +3785,10 @@ arming_begin:
 	setb	IE_EA
 
 arming_wait:
-	call	wait100ms
-	jnb	Flag_Rcp_Stop, arming_wait	; Wait for rcp stop (zero throttle)
+	clr	C
+	mov	A, Rcp_Stop_Cnt
+	subb	A, #10
+	jc	arming_wait				; Wait until rcp has been zero for ~300ms
 
 	clr	IE_EA
 	call	beep_f2_short				; Beep signal that ESC is armed
