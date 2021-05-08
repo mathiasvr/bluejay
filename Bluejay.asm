@@ -3670,15 +3670,13 @@ IF MCU_48MHZ == 1
 ENDIF
 
 	mov	Temp1, #9					; Check if input signal is high for ~150ms
-input_high_check_1:
 	mov	Temp2, #0
-input_high_check_2:
 	mov	Temp3, #0
-input_high_check_3:
+input_high_check:
 	jnb	RTX_BIT, bootloader_done		; Look for low
-	djnz	Temp3, input_high_check_3
-	djnz	Temp2, input_high_check_2
-	djnz	Temp1, input_high_check_1
+	djnz	Temp3, input_high_check
+	djnz	Temp2, input_high_check
+	djnz	Temp1, input_high_check
 
 	call	beep_enter_bootloader
 
