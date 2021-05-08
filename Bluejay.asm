@@ -742,17 +742,14 @@ t1_int_normal_range:
 	mov	B, A
 	mov	A, Temp5
 	subb	A, #07h
-	clr	Flag_Rcp_Dir_Rev
-	jc	t1_int_bidir_rev_chk		; If result is negative - branch
-
-	mov	Temp4, B					; Else store subtracted value
+	jc	t1_int_bidir_set			; Is result is positive?
+	mov	Temp4, B					; Yes - Use the subtracted value
 	mov	Temp5, A
 
-	setb	Flag_Rcp_Dir_Rev
-
-t1_int_bidir_rev_chk:
-	jb	Flag_Pgm_Dir_Rev, ($+5)
-	cpl	Flag_Rcp_Dir_Rev
+t1_int_bidir_set:
+	jnb	Flag_Pgm_Dir_Rev, ($+4)		; Check programmed direction
+	cpl	C						; Reverse direction
+	mov	Flag_Rcp_Dir_Rev, C			; Set rcp direction
 
 	clr	C						; Multiply throttle value by 2
 	rlca	Temp4
