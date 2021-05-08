@@ -708,30 +708,30 @@ t1_int_decode_checksum:
 	anl	A, #0Fh
 	subb	A, #0
 	mov	Temp5, A
-	jnc	t1_normal_range
+	jnc	t1_int_normal_range
 
 	mov	A, Temp3					; Check for 0 or DShot command
 	mov	Temp5, #0
 	mov	Temp4, #0
-	jz	t1_dshot_set_cmd			; Clear DShot command when RCP is zero
+	jz	t1_int_dshot_set_cmd		; Clear DShot command when RCP is zero
 
 	clr	C						; We are in the special DShot range
 	rrc	A						; Shift tlm bit into carry
-	jnc	t1_dshot_clear_cmd			; Check for tlm bit set (if not telemetry, invalid command)
+	jnc	t1_int_dshot_clear_cmd		; Check for tlm bit set (if not telemetry, invalid command)
 
-	cjne	A, DShot_Cmd, t1_dshot_set_cmd
+	cjne	A, DShot_Cmd, t1_int_dshot_set_cmd
 
 	inc	DShot_Cmd_Cnt
-	sjmp	t1_normal_range
+	sjmp	t1_int_normal_range
 
-t1_dshot_clear_cmd:
+t1_int_dshot_clear_cmd:
 	clr	A
 
-t1_dshot_set_cmd:
+t1_int_dshot_set_cmd:
 	mov	DShot_Cmd, A
 	mov	DShot_Cmd_Cnt, #0
 
-t1_normal_range:
+t1_int_normal_range:
 	; Check for bidirectional operation (0=stop, 96-2095->fwd, 2096-4095->rev)
 	jnb	Flag_Pgm_Bidir, t1_int_not_bidir	; If not bidirectional operation - branch
 
