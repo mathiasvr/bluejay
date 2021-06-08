@@ -222,11 +222,6 @@ Wt_Zc_Tout_Start_H:			DS	1	; Timer 3 start point for zero cross scan timeout (hi
 Wt_Comm_Start_L:			DS	1	; Timer 3 start point from zero cross to commutation (lo byte)
 Wt_Comm_Start_H:			DS	1	; Timer 3 start point from zero cross to commutation (hi byte)
 
-Power_Pwm_Reg_L:			DS	1	; Power pwm register setting (lo byte)
-Power_Pwm_Reg_H:			DS	1	; Power pwm register setting (hi byte)
-Damp_Pwm_Reg_L:			DS	1	; Damping pwm register setting (lo byte)
-Damp_Pwm_Reg_H:			DS	1	; Damping pwm register setting (hi byte)
-
 Pwm_Limit:				DS	1	; Maximum allowed pwm (8-bit)
 Pwm_Limit_By_Rpm:			DS	1	; Maximum allowed pwm for low or high rpm (8-bit)
 Pwm_Limit_Beg:				DS	1	; Initial pwm limit (8-bit)
@@ -960,29 +955,23 @@ ENDIF
 t1_int_set_pwm_damp_set:
 ENDIF
 
-	mov	Power_Pwm_Reg_L, Temp2
-	mov	Power_Pwm_Reg_H, Temp3
-
-IF DEADTIME != 0
-	mov	Damp_Pwm_Reg_L, Temp4
-	mov	Damp_Pwm_Reg_H, Temp5
-ENDIF
-
-; Set power pwm auto-reload registers
+	; Note: Interrupts (of higher priority) are not explicitly disabled because
+	; int0 is already disabled and timer 0 is assumed to be disabled at this point
 IF PWM_BITS_H != 0
-	Set_Power_Pwm_Reg_L Power_Pwm_Reg_L
-	Set_Power_Pwm_Reg_H Power_Pwm_Reg_H
+	; Set power pwm auto-reload registers
+	Set_Power_Pwm_Reg_L	Temp2
+	Set_Power_Pwm_Reg_H	Temp3
 ELSE
-	Set_Power_Pwm_Reg_H Power_Pwm_Reg_L
+	Set_Power_Pwm_Reg_H Temp2
 ENDIF
 
 IF DEADTIME != 0
 	; Set damp pwm auto-reload registers
 	IF PWM_BITS_H != 0
-		Set_Damp_Pwm_Reg_L Damp_Pwm_Reg_L
-		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_H
+		Set_Damp_Pwm_Reg_L	Temp4
+		Set_Damp_Pwm_Reg_H	Temp5
 	ELSE
-		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_L
+		Set_Damp_Pwm_Reg_H	Temp4
 	ENDIF
 ENDIF
 
