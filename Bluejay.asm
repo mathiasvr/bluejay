@@ -167,7 +167,6 @@ Flag_Motor_Running			BIT	Flags1.3
 Flag_Motor_Started			BIT	Flags1.4		; Set when motor is started
 Flag_Dir_Change_Brake		BIT	Flags1.5		; Set when braking before direction change
 Flag_High_Rpm				BIT	Flags1.6		; Set when motor rpm is high (Comm_Period4x_H less than 2)
-Flag_Low_Pwm_Power			BIT	Flags1.7		; Set when pwm duty cycle is below 50%
 
 Flags2:					DS	1			; State flags. NOT reset upon motor_start
 ;						BIT	Flags2.0
@@ -584,7 +583,6 @@ t0_int_dshot_tlm_finish:
 	mov	TL0, #0					; Reset timer 0 count
 	setb	IE_EX0					; Enable int0 interrupts
 	setb	IE_EX1					; Enable int1 interrupts
-	Enable_PCA_Interrupt			; Enable pca interrupts
 
 	clr	Flag_Telemetry_Pending		; Mark that new telemetry packet may be created
 
@@ -970,6 +968,24 @@ IF DEADTIME != 0
 	mov	Damp_Pwm_Reg_H, Temp5
 ENDIF
 
+; Set power pwm auto-reload registers
+IF PWM_BITS_H != 0
+	Set_Power_Pwm_Reg_L Power_Pwm_Reg_L
+	Set_Power_Pwm_Reg_H Power_Pwm_Reg_H
+ELSE
+	Set_Power_Pwm_Reg_H Power_Pwm_Reg_L
+ENDIF
+
+IF DEADTIME != 0
+	; Set damp pwm auto-reload registers
+	IF PWM_BITS_H != 0
+		Set_Damp_Pwm_Reg_L Damp_Pwm_Reg_L
+		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_H
+	ELSE
+		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_L
+	ENDIF
+ENDIF
+
 	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
 
 	; Prepare DShot telemetry
@@ -998,7 +1014,6 @@ t1_int_exit_no_tlm:
 	mov	TL0, #0					; Reset timer 0
 	setb	IE_EX0					; Enable int0 interrupts
 	setb	IE_EX1					; Enable int1 interrupts
-	Enable_PCA_Interrupt			; Enable pca interrupts
 
 t1_int_exit_no_int:
 	pop	B						; Restore preserved registers
@@ -1129,76 +1144,6 @@ reti
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 pca_int:
-	clr	IE_EA					; Disable all interrupts
-	push	ACC
-
-IF DEADTIME != 0					; HI/LO enable style drivers
-	mov	A, PCA0L					; Read low byte first, to transfer high byte to holding register
-	mov	A, PCA0H
-
-	jnb	Flag_Low_Pwm_Power, pca_int_hi_pwm
-
-	; Power below 50%, update pca in the 0x00-0x0F range
-	jb	ACC.PWM_BITS_H, pca_int_exit	; PWM edge selection bit (continue if up edge)
-
-	sjmp	pca_int_set_pwm
-
-pca_int_hi_pwm:
-	; Power above 50%, update pca in the 0x20-0x2F range
-	jnb	ACC.PWM_BITS_H, pca_int_exit	; PWM edge selection bit (continue if down edge)
-
-pca_int_set_pwm:
-	IF PWM_BITS_H != 0
-		jb	ACC.(PWM_BITS_H-1), pca_int_exit
-	ELSE
-		mov	A, PCA0L
-		jb	ACC.7, pca_int_exit
-	ENDIF
-ENDIF
-
-; Set power pwm auto-reload registers
-IF PWM_BITS_H != 0
-	Set_Power_Pwm_Reg_L Power_Pwm_Reg_L
-	Set_Power_Pwm_Reg_H Power_Pwm_Reg_H
-ELSE
-	Set_Power_Pwm_Reg_H Power_Pwm_Reg_L
-ENDIF
-
-IF DEADTIME != 0
-	; Set damp pwm auto-reload registers
-	IF PWM_BITS_H != 0
-		Set_Damp_Pwm_Reg_L Damp_Pwm_Reg_L
-		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_H
-	ELSE
-		Set_Damp_Pwm_Reg_H Damp_Pwm_Reg_L
-	ENDIF
-ENDIF
-
-	setb	Flag_Low_Pwm_Power
-IF PWM_BITS_H != 0
-	mov	A, Power_Pwm_Reg_H
-	jb	ACC.(PWM_BITS_H - 1), ($+5)
-ELSE
-	mov	A, Power_Pwm_Reg_L
-	jb	ACC.7, ($+5)
-ENDIF
-	clr	Flag_Low_Pwm_Power
-
-	Disable_COVF_Interrupt
-IF DEADTIME == 0					; EN/PWM style drivers
-	Disable_CCF_Interrupt
-ENDIF
-
-	anl	EIE1, #0EFh				; Pwm updated, disable pca interrupts
-
-pca_int_exit:
-	Clear_COVF_Interrupt
-IF DEADTIME == 0
-	Clear_CCF_Interrupt
-ENDIF
-
-	pop	ACC						; Restore preserved registers
-	setb	IE_EA					; Enable all interrupts
 	reti
 
 
@@ -3719,7 +3664,7 @@ setup_dshot:
 	; Setup interrupts for DShot
 	clr	Flag_Telemetry_Pending		; Clear DShot telemetry flag
 	mov	IE, #2Dh					; Enable timer 1/2 interrupts and INT0/1 interrupts
-	mov	EIE1, #90h				; Enable timer 3 and PCA0 interrupts
+	mov	EIE1, #80h				; Enable timer 3 interrupts
 	mov	IP, #03h					; High priority to timer 0 and INT0 interrupts
 
 	setb	IE_EA					; Enable all interrupts
