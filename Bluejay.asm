@@ -135,6 +135,7 @@ DEFAULT_PGM_STARTUP_BEEP			EQU	1	; 0=Short beep, 1=Melody
 DEFAULT_PGM_DITHERING			EQU	1	; 0=Disabled, 1=Enabled
 
 DEFAULT_PGM_STARTUP_POWER_MAX		EQU	25	; 0..255 => (1000..2000 Throttle): Maximum startup power
+DEFAULT_PGM_BRAKING_STRENGTH		EQU	0	; 0=Disabled	1+=Enabled
 
 ;**** **** **** **** ****
 ; Temporary register definitions
@@ -183,6 +184,7 @@ Flags3:					DS	1			; State flags. NOT reset upon motor_start
 Flag_Telemetry_Pending		BIT	Flags3.0		; DShot telemetry data packet is ready to be sent
 Flag_Dithering				BIT	Flags3.1		; PWM dithering enabled
 Flag_Had_Signal			BIT	Flags3.2		; Used to detect reset after having had a valid signal
+Flag_Damping				BIT	Flags3.3		; Damping (complementary pwm) enabled
 
 Tlm_Data_L:				DS	1			; DShot telemetry data (lo byte)
 Tlm_Data_H:				DS	1			; DShot telemetry data (hi byte)
@@ -277,7 +279,7 @@ _Pgm_Input_Pol:			DS	1	; Input PWM polarity
 Initialized_L_Dummy:		DS	1	; Place holder
 Initialized_H_Dummy:		DS	1	; Place holder
 _Pgm_Enable_TX_Program:		DS	1	; Enable/disable value for TX programming
-_Pgm_Main_Rearm_Start:		DS	1	; Enable/disable re-arming main every start
+Pgm_Braking_Strength:		DS	1	; Set braking strength (complementary pwm)
 _Pgm_Gov_Setup_Target:		DS	1	; Main governor setup target
 _Pgm_Startup_Rpm:			DS	1	; Startup RPM
 _Pgm_Startup_Accel:			DS	1	; Startup acceleration
@@ -337,7 +339,7 @@ _Eep__Pgm_Input_Pol:		DB	0FFh
 Eep_Initialized_L:			DB	055h						; EEPROM initialized signature (lo byte)
 Eep_Initialized_H:			DB	0AAh						; EEPROM initialized signature (hi byte)
 _Eep_Enable_TX_Program:		DB	0FFh						; EEPROM TX programming enable
-_Eep_Main_Rearm_Start:		DB	0FFh
+Eep_Pgm_Braking_Strength:	DB	DEFAULT_PGM_BRAKING_STRENGTH
 _Eep_Pgm_Gov_Setup_Target:	DB	0FFh
 _Eep_Pgm_Startup_Rpm:		DB	0FFh
 _Eep_Pgm_Startup_Accel:		DB	0FFh
@@ -943,6 +945,9 @@ t1_int_set_pwm:
 IF DEADTIME != 0
 	; Subtract dead time from normal pwm and store as damping pwm
 	; Damping pwm duty cycle will be higher because numbers are inverted
+
+	jnb	Flag_Damping, t1_int_no_damp
+
 	clr	C
 	mov	A, Temp2					; Skew damping fet timing
 IF MCU_48MHZ == 0
@@ -956,6 +961,7 @@ ENDIF
 	mov	Temp5, A
 	jnc	t1_int_set_pwm_damp_set
 
+t1_int_no_damp:
 	clr	A						; Set to minimum value
 	mov	Temp4, A
 	mov	Temp5, A
@@ -3412,7 +3418,7 @@ set_default_parameters:
 	inc	Temp1							; Skip Initialized_H_Dummy
 
 	imov	Temp1, #0FFh						; _Pgm_Enable_TX_Program
-	imov	Temp1, #0FFh						; _Pgm_Main_Rearm_Start
+	imov	Temp1, #DEFAULT_PGM_BRAKING_STRENGTH	; Pgm_Braking_Strength
 	imov	Temp1, #0FFh						; _Pgm_Gov_Setup_Target
 	imov	Temp1, #0FFh						; _Pgm_Startup_Rpm
 	imov	Temp1, #0FFh						; _Pgm_Startup_Accel
@@ -3504,6 +3510,11 @@ decode_temp_done:
 
 	mov	Temp1, #Pgm_Beep_Strength	; Read programmed beep strength setting
 	mov	Beep_Strength, @Temp1		; Set beep strength
+
+	mov	Temp1, #Pgm_Braking_Strength	; Read programmed braking strength setting
+	mov	A, @Temp1
+	add	A, #0FFh					; Carry set if A is not zero
+	mov	Flag_Damping, C			; Set damping enabled
 
 	mov	Temp1, #Pgm_Dithering		; Read programmed dithering setting
 	mov	A, @Temp1
