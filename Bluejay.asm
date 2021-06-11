@@ -525,6 +525,87 @@ imov MACRO reg, val					;; Increment pointer register and move
 	mov	@reg, val					;; Write value to memory address pointed to by register
 ENDM
 
+;**** **** **** **** ****
+; Division
+;
+; ih, il: input (hi byte, lo byte)
+; oh, ol: output (hi byte, lo byte)
+;
+Divide_By_16 MACRO ih, il, oh, ol
+	mov	A, ih
+	swap	A
+	mov	ol, A
+	anl	A, #00Fh
+	mov	oh, A
+	mov	A, ol
+	anl	A, #0F0h
+	mov	ol, A
+	mov	A, il
+	swap	A
+	anl	A, #00Fh
+	orl	A, ol
+	mov	ol, A
+ENDM
+
+Divide_12Bit_By_16 MACRO ih, il, ol	;; Only if ih < 16
+	mov	A, ih
+	swap	A
+	mov	ol, A
+	mov	A, il
+	swap	A
+	anl	A, #00Fh
+	orl	A, ol
+	mov	ol, A
+ENDM
+
+Divide_By_8 MACRO ih, il, oh, ol
+	mov	A, ih
+	swap	A
+	rl	A
+	mov	ol, A
+	anl	A, #01Fh
+	mov	oh, A
+	mov	A, ol
+	anl	A, #0E0h
+	mov	ol, A
+	mov	A, il
+	swap	A
+	rl	A
+	anl	A, #01Fh
+	orl	A, ol
+	mov	ol, A
+ENDM
+
+Divide_11Bit_By_8 MACRO ih, il, ol		;; Only if ih < 8
+	mov	A, ih
+	swap	A
+	rl	A
+	mov	ol, A
+	mov	A, il
+	swap	A
+	rl	A
+	anl	A, #01Fh
+	orl	A, ol
+	mov	ol, A
+ENDM
+
+Divide_By_4 MACRO ih, il, oh, ol
+	clr	C
+	mov	A, ih
+	rrc	A
+	mov	oh, A
+	mov	A, il
+	rrc	A
+	mov	ol, A
+
+	clr	C
+	mov	A, oh
+	rrc	A
+	mov	oh, A
+	mov	A, ol
+	rrc	A
+	mov	ol, A
+ENDM
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1750,7 +1831,7 @@ ENDIF
 	; Extended byte is not zero, so commutation time is above 0xFFFF
 	mov	Comm_Period4x_L, #0FFh
 	mov	Comm_Period4x_H, #0FFh
-	sjmp	calc_next_comm_done
+	ajmp	calc_next_comm_done
 
 calc_next_comm_startup_no_X:
 	; Extended byte = 0, so commutation time fits within two bytes
@@ -1770,63 +1851,81 @@ calc_next_comm_startup_no_X:
 
 	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
 	mov	Temp4, Comm_Period4x_H
-	mov	Temp7, #2
-	mov	Temp8, #0
-	sjmp	calc_next_comm_avg_period_div
+
+	sjmp	calc_next_comm_div_4_1
 
 calc_next_comm_normal:
 	; Prepare averaging by dividing Comm_Period4x and current commutation period (Temp2/1) according to speed.
 	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
 	mov	Temp4, Comm_Period4x_H
-	mov	Temp5, Comm_Period4x_L		; Copy variables
-	mov	Temp6, Comm_Period4x_H
-	mov	Temp7, #4					; Divide Comm_Period4x 4 times as default
-	mov	Temp8, #2					; Divide new commutation time 2 times as default
 
 	clr	C
-	mov	A, Temp4
-	subb	A, #04h
-	jc	calc_next_comm_avg_period_div
+	mov	A, Temp4					; Is Comm_Period4x_H below 4?
+	subb	A, #4
+	jc	calc_next_comm_div_16_4		; Yes - Use averaging for high speeds
 
-	dec	Temp7					; Reduce averaging time constant for low speeds
-	dec	Temp8
+	subb	A, #4					; Is Comm_Period4x_H below 8?
+	jc	calc_next_comm_div_8_2		; Yes - Use averaging for low speeds
 
-	clr	C
-	mov	A, Temp4
-	subb	A, #08h
-	jc	calc_next_comm_avg_period_div
+	; No - Use averaging for even lower speeds
 
-	jb	Flag_Initial_Run_Phase, calc_next_comm_avg_period_div	; Do not average very fast during initial run
+	; Do not average very fast during initial run
+	jb	Flag_Initial_Run_Phase, calc_next_comm_div_8_2_slow
 
-	dec	Temp7					; Reduce averaging time constant more for even lower speeds
-	dec	Temp8
+calc_next_comm_div_4_1:
+	; Update Comm_Period4x from 1 new commutation period
 
-calc_next_comm_avg_period_div:
-	clr	C
-	rrca	Temp6					; Divide by 2
-	rrca	Temp5
-	djnz	Temp7, calc_next_comm_avg_period_div
+	; Divide by 4 and store in Temp6/Temp5
+	Divide_By_4	Temp4, Temp3, Temp6, Temp5
 
-	mov	A, Temp8					; Divide new time
-	jz	calc_next_comm_new_period_div_done
+	sjmp	calc_next_comm_average_and_update
 
-calc_next_comm_new_period_div:
-	clr	C
-	rrca	Temp2					; Divide by 2
+calc_next_comm_div_8_2:
+	; Update Comm_Period4x from 1/2 new commutation period
+
+	; Divide by 8 and store in Temp5
+	Divide_11Bit_By_8	Temp4, Temp3, Temp5
+	mov	Temp6, #0
+
+	clr	C						; Divide by 2
+	rrca	Temp2
 	rrca	Temp1
-	djnz	Temp8, calc_next_comm_new_period_div
 
-calc_next_comm_new_period_div_done:
-	clr	C
-	mov	A, Temp3
-	subb	A, Temp5					; Subtract a fraction
+	sjmp	calc_next_comm_average_and_update
+
+calc_next_comm_div_8_2_slow:
+	; Update Comm_Period4x from 1/2 new commutation period
+
+	; Divide by 8 and store in Temp6/Temp5
+	Divide_By_8	Temp4, Temp3, Temp6, Temp5
+
+	clr	C						; Divide by 2
+	rrca	Temp2
+	rrca	Temp1
+
+	sjmp	calc_next_comm_average_and_update
+
+calc_next_comm_div_16_4:
+	; Update Comm_Period4x from 1/4 new commutation period
+
+	; Divide by 16 and store in Temp5
+	Divide_12Bit_By_16	Temp4, Temp3, Temp5
+	mov	Temp6, #0
+
+	; Divide by 4 and store in Temp2/Temp1
+	Divide_By_4	Temp2, Temp1, Temp2, Temp1
+
+calc_next_comm_average_and_update:
+	clr	C						; Subtract a fraction
+	mov	A, Temp3					; Comm_Period4x_L
+	subb	A, Temp5
 	mov	Temp3, A
-	mov	A, Temp4
+	mov	A, Temp4					; Comm_Period4x_H
 	subb	A, Temp6
 	mov	Temp4, A
 
-	mov	A, Temp3
-	add	A, Temp1					; Add the divided new time
+	mov	A, Temp3					; Add the divided new time
+	add	A, Temp1
 	mov	Comm_Period4x_L, A
 	mov	A, Temp4
 	addc	A, Temp2
@@ -1882,19 +1981,7 @@ calc_next_comm_15deg:
 
 	; Load current commutation timing and compute 15 deg timing
 	; Divide Comm_Period4x by 16 (Comm_Period1x divided by 4) and store in Temp4/3
-	mov	A, Comm_Period4x_H			; Divide by 16
-	swap	A
-	mov	Temp7, A
-	anl	A, #00Fh
-	mov	Temp4, A
-	mov	A, Temp7
-	anl	A, #0F0h
-	mov	Temp3, A
-	mov	A, Comm_Period4x_L
-	swap	A
-	anl	A, #00Fh
-	add	A, Temp3
-	mov	Temp3, A
+	Divide_By_16	Comm_Period4x_H, Comm_Period4x_L, Temp4, Temp3
 
 	; Subtract timing reduction
 	clr	C
@@ -1923,14 +2010,9 @@ calc_next_comm_period_fast:
 	; Calculate new commutation time
 	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
 	mov	Temp4, Comm_Period4x_H
-	mov	A, Temp4					; Divide by 16 and store in Temp5
-	swap	A
-	mov	Temp7, A
-	mov	A, Temp3
-	swap	A
-	anl	A, #0Fh
-	orl	A, Temp7
-	mov	Temp5, A
+
+	; Divide by 16 and store in Temp5
+	Divide_12Bit_By_16	Temp4, Temp3, Temp5
 
 	clr	C
 	mov	A, Temp3					; Subtract a fraction
