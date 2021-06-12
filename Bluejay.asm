@@ -1619,9 +1619,9 @@ set_pwm_limit_high_rpm:
 	clr	C
 	mov	A, Comm_Period4x_L
 IF MCU_48MHZ == 1
-	subb	A, #0A0h					; Limit Comm_Period to 160, which is 500k erpm
+	subb	A, #0A0h					; Limit Comm_Period4x to 160, which is ~510k erpm
 ELSE
-	subb	A, #0E4h					; Limit Comm_Period to 228, which is 350k erpm
+	subb	A, #0E4h					; Limit Comm_Period4x to 228, which is ~358k erpm
 ENDIF
 	mov	A, Comm_Period4x_H
 	subb	A, #00h
@@ -1860,11 +1860,11 @@ calc_next_comm_normal:
 	mov	Temp4, Comm_Period4x_H
 
 	clr	C
-	mov	A, Temp4					; Is Comm_Period4x_H below 4?
+	mov	A, Temp4					; Is Comm_Period4x_H below 4? (above ~80k erpm)
 	subb	A, #4
 	jc	calc_next_comm_div_16_4		; Yes - Use averaging for high speeds
 
-	subb	A, #4					; Is Comm_Period4x_H below 8?
+	subb	A, #4					; Is Comm_Period4x_H below 8? (above ~40k erpm)
 	jc	calc_next_comm_div_8_2		; Yes - Use averaging for low speeds
 
 	; No - Use averaging for even lower speeds
@@ -1936,10 +1936,9 @@ calc_next_comm_average_and_update:
 	mov	Comm_Period4x_H, #0FFh
 
 calc_next_comm_done:
-	; Set high rpm flag (if above 156k erpm)
 	clr	C
 	mov	A, Comm_Period4x_H
-	subb	A, #2					; Is Comm_Period4x_H below 2?
+	subb	A, #2					; Is Comm_Period4x_H below 2? (above ~160k erpm)
 	jnc	($+4)
 	setb	Flag_High_Rpm				; Yes - Set high rpm flag
 
@@ -2038,9 +2037,9 @@ calc_next_comm_period_fast:
 	mov	Comm_Period4x_H, Temp4
 
 	clr	C
-	subb	A, #2					; If erpm below 156k - go to normal case
+	subb	A, #2					; Is Comm_Period4x_H 2 or more? (below ~160k erpm)
 	jc	($+4)
-	clr	Flag_High_Rpm				; Clear high rpm bit
+	clr	Flag_High_Rpm				; Yes - Clear high rpm bit
 
 	mov	A, Temp4					; Divide Comm_Period4x by 16 and store in Temp4/3
 	swap	A
@@ -4178,15 +4177,15 @@ run6_check_dir_change:
 	jmp	run4						; Go back to run 4, thereby changing force direction
 
 run6_check_speed:
-	mov	Temp1, #0F0h				; Default minimum speed
+	mov	Temp1, #0F0h				; Default minimum speed (~1330 erpm)
 	jnb	Flag_Dir_Change_Brake, run6_brake_done; Is it a direction change?
 
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking to initial power limit
-	mov	Temp1, #20h				; Bidirectional braking termination speed
+	mov	Temp1, #20h				; Bidirectional braking termination speed  (~9970 erpm)
 
 run6_brake_done:
 	clr	C
-	mov	A, Comm_Period4x_H			; Is Comm_Period4x more than 32ms (~1220 eRPM)?
+	mov	A, Comm_Period4x_H			; Is Comm_Period4x below minimum speed??
 	subb	A, Temp1
 	ljc	run1						; No - go back to run 1
 
