@@ -1875,7 +1875,7 @@ calc_next_comm_normal:
 calc_next_comm_div_4_1:
 	; Update Comm_Period4x from 1 new commutation period
 
-	; Divide by 4 and store in Temp6/Temp5
+	; Divide Temp4/3 by 4 and store in Temp6/5
 	Divide_By_4	Temp4, Temp3, Temp6, Temp5
 
 	sjmp	calc_next_comm_average_and_update
@@ -1883,7 +1883,7 @@ calc_next_comm_div_4_1:
 calc_next_comm_div_8_2:
 	; Update Comm_Period4x from 1/2 new commutation period
 
-	; Divide by 8 and store in Temp5
+	; Divide Temp4/3 by 8 and store in Temp5
 	Divide_11Bit_By_8	Temp4, Temp3, Temp5
 	mov	Temp6, #0
 
@@ -1896,7 +1896,7 @@ calc_next_comm_div_8_2:
 calc_next_comm_div_8_2_slow:
 	; Update Comm_Period4x from 1/2 new commutation period
 
-	; Divide by 8 and store in Temp6/Temp5
+	; Divide Temp4/3 by 8 and store in Temp6/5
 	Divide_By_8	Temp4, Temp3, Temp6, Temp5
 
 	clr	C						; Divide by 2
@@ -1908,14 +1908,17 @@ calc_next_comm_div_8_2_slow:
 calc_next_comm_div_16_4:
 	; Update Comm_Period4x from 1/4 new commutation period
 
-	; Divide by 16 and store in Temp5
+	; Divide Temp4/3 by 16 and store in Temp5
 	Divide_12Bit_By_16	Temp4, Temp3, Temp5
 	mov	Temp6, #0
 
-	; Divide by 4 and store in Temp2/Temp1
+	; Divide Temp2/1 by 4 and store in Temp2/1
 	Divide_By_4	Temp2, Temp1, Temp2, Temp1
 
 calc_next_comm_average_and_update:
+ 	; Comm_Period4x = Comm_Period4x - (Comm_Period4x / (16, 8 or 4)) + (Comm_Period / (4, 2 or 1))
+
+	; Temp6/5: Comm_Period4x divided by (16, 8 or 4)
 	clr	C						; Subtract a fraction
 	mov	A, Temp3					; Comm_Period4x_L
 	subb	A, Temp5
@@ -1924,6 +1927,7 @@ calc_next_comm_average_and_update:
 	subb	A, Temp6
 	mov	Temp4, A
 
+	; Temp2/1: This commutation period divided by (4, 2 or 1)
 	mov	A, Temp3					; Add the divided new time
 	add	A, Temp1
 	mov	Comm_Period4x_L, A
@@ -1975,7 +1979,7 @@ load_comm_timing_setting:
 	mov	Temp8, #5					; Set timing to max (if timing 6 or above)
 
 calc_next_comm_15deg:
-	; Commutation period: 60 deg / 6 runs = 60 deg
+	; Commutation period: 360 deg / 6 runs = 60 deg
 	; 60 deg / 4 = 15 deg
 
 	; Load current commutation timing and compute 15 deg timing
