@@ -1946,38 +1946,6 @@ calc_next_comm_done:
 	jnc	($+4)
 	setb	Flag_High_Rpm				; Yes - Set high rpm flag
 
-	; Load programmed commutation timing
-	jnb	Flag_Startup_Phase, load_comm_timing_setting
-
-	mov	Temp8, #3					; Set dedicated timing during startup
-	sjmp	calc_next_comm_15deg
-
-load_comm_timing_setting:
-	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
-	mov	A, @Temp1
-	mov	Temp8, A					; Store in Temp8
-
-	clr	C
-	mov	A, Demag_Detected_Metric		; Check demag metric
-	subb	A, #130
-	jc	calc_next_comm_15deg
-
-	inc	Temp8					; Increase timing (if metric 130 or above)
-
-	clr	C
-	mov	A, Demag_Detected_Metric
-	subb	A, #160
-	jc	($+3)
-
-	inc	Temp8					; Increase timing again (if metric 160 or above)
-
-	clr	C
-	mov	A, Temp8					; Limit timing to max
-	subb	A, #6
-	jc	($+4)
-
-	mov	Temp8, #5					; Set timing to max (if timing 6 or above)
-
 calc_next_comm_15deg:
 	; Commutation period: 360 deg / 6 runs = 60 deg
 	; 60 deg / 4 = 15 deg
@@ -2057,15 +2025,10 @@ calc_next_comm_period_fast:
 	subb	A, #2					; Timing reduction
 	mov	Temp3, A
 	jc	calc_next_comm_fast_set_min	; Check that result is still positive
-	jnz	calc_next_comm_fast_done		; Check that result is still above minimum
+	jnz	calc_next_comm_period_exit	; Check that result is still above minimum
 
 calc_next_comm_fast_set_min:
 	mov	Temp3, #1					; Set minimum waiting time (Timers cannot wait for a delay of 0)
-
-calc_next_comm_fast_done:
-	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
-	mov	A, @Temp1
-	mov	Temp8, A					; Store in Temp8
 
 calc_next_comm_period_exit:
 
@@ -2101,6 +2064,10 @@ wait_advance_timing:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 calc_new_wait_times:
+	mov	Temp1, #Pgm_Comm_Timing		; Load commutation timing setting
+	mov	A, @Temp1
+	mov	Temp8, A					; Store in Temp8
+
 	clr	C
 	clr	A
 	subb	A, Temp3					; Negate
@@ -2118,6 +2085,36 @@ ENDIF
 
 	jb	Flag_High_Rpm, calc_new_wait_times_fast	; Branch if high rpm
 
+	; Load programmed commutation timing
+	jnb	Flag_Startup_Phase, adjust_comm_timing
+
+	mov	Temp8, #3					; Set dedicated timing during startup
+	sjmp	load_comm_timing_done
+
+adjust_comm_timing:
+	; Adjust commutation timing according to demag metric
+	clr	C
+	mov	A, Demag_Detected_Metric		; Check demag metric
+	subb	A, #130
+	jc	load_comm_timing_done
+
+	inc	Temp8					; Increase timing (if metric 130 or above)
+
+	clr	C
+	mov	A, Demag_Detected_Metric
+	subb	A, #160
+	jc	($+3)
+
+	inc	Temp8					; Increase timing again (if metric 160 or above)
+
+	clr	C
+	mov	A, Temp8					; Limit timing to max
+	subb	A, #6
+	jc	($+4)
+
+	mov	Temp8, #5					; Set timing to max (if timing 6 or above)
+
+load_comm_timing_done:
 	mov	A, Temp1					; Copy values
 	mov	Temp3, A
 	mov	A, Temp2
