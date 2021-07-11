@@ -33,6 +33,9 @@ Bluejay firmware can be flashed to BLHeli_S compatible ESCs and configured using
 
 You can also do it manually by downloading the [release binaries](https://github.com/mathiasvr/bluejay/wiki/Release-binaries).
 
+## Documentation
+See the [wiki](https://github.com/mathiasvr/bluejay/wiki) for documentation.
+
 ## Contribute
 Any help you can provide is greatly appreciated!
 
