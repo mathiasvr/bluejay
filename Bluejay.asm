@@ -525,6 +525,87 @@ imov MACRO reg, val					;; Increment pointer register and move
 	mov	@reg, val					;; Write value to memory address pointed to by register
 ENDM
 
+;**** **** **** **** ****
+; Division
+;
+; ih, il: input (hi byte, lo byte)
+; oh, ol: output (hi byte, lo byte)
+;
+Divide_By_16 MACRO ih, il, oh, ol
+	mov	A, ih
+	swap	A
+	mov	ol, A
+	anl	A, #00Fh
+	mov	oh, A
+	mov	A, ol
+	anl	A, #0F0h
+	mov	ol, A
+	mov	A, il
+	swap	A
+	anl	A, #00Fh
+	orl	A, ol
+	mov	ol, A
+ENDM
+
+Divide_12Bit_By_16 MACRO ih, il, ol	;; Only if ih < 16
+	mov	A, ih
+	swap	A
+	mov	ol, A
+	mov	A, il
+	swap	A
+	anl	A, #00Fh
+	orl	A, ol
+	mov	ol, A
+ENDM
+
+Divide_By_8 MACRO ih, il, oh, ol
+	mov	A, ih
+	swap	A
+	rl	A
+	mov	ol, A
+	anl	A, #01Fh
+	mov	oh, A
+	mov	A, ol
+	anl	A, #0E0h
+	mov	ol, A
+	mov	A, il
+	swap	A
+	rl	A
+	anl	A, #01Fh
+	orl	A, ol
+	mov	ol, A
+ENDM
+
+Divide_11Bit_By_8 MACRO ih, il, ol		;; Only if ih < 8
+	mov	A, ih
+	swap	A
+	rl	A
+	mov	ol, A
+	mov	A, il
+	swap	A
+	rl	A
+	anl	A, #01Fh
+	orl	A, ol
+	mov	ol, A
+ENDM
+
+Divide_By_4 MACRO ih, il, oh, ol
+	clr	C
+	mov	A, ih
+	rrc	A
+	mov	oh, A
+	mov	A, il
+	rrc	A
+	mov	ol, A
+
+	clr	C
+	mov	A, oh
+	rrc	A
+	mov	oh, A
+	mov	A, ol
+	rrc	A
+	mov	ol, A
+ENDM
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -1538,9 +1619,9 @@ set_pwm_limit_high_rpm:
 	clr	C
 	mov	A, Comm_Period4x_L
 IF MCU_48MHZ == 1
-	subb	A, #0A0h					; Limit Comm_Period to 160, which is 500k erpm
+	subb	A, #0A0h					; Limit Comm_Period4x to 160, which is ~510k erpm
 ELSE
-	subb	A, #0E4h					; Limit Comm_Period to 228, which is 350k erpm
+	subb	A, #0E4h					; Limit Comm_Period4x to 228, which is ~358k erpm
 ENDIF
 	mov	A, Comm_Period4x_H
 	subb	A, #00h
@@ -1688,7 +1769,7 @@ initialize_timing:
 ; Called immediately after each commutation
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-calc_next_comm_timing:
+calc_next_comm_period:
 	; Read commutation time
 	clr	IE_EA
 	clr	TMR2CN0_TR2				; Timer 2 disabled
@@ -1707,43 +1788,50 @@ IF MCU_48MHZ == 1
 	rrca	Temp1
 ENDIF
 
+	jb	Flag_Startup_Phase, calc_next_comm_startup
+
+	; Calculate this commutation time
+	clr	C
+	mov	A, Temp1
+	subb	A, Prev_Comm_L				; Calculate the new commutation time
+	mov	Prev_Comm_L, Temp1			; Save timestamp as previous commutation
+	mov	Temp1, A					; Store commutation period in Temp1 (lo byte)
+	mov	A, Temp2
+	subb	A, Prev_Comm_H
+	mov	Prev_Comm_H, Temp2			; Save timestamp as previous commutation
+IF MCU_48MHZ == 1
+	anl	A, #7Fh
+ENDIF
+	mov	Temp2, A					; Store commutation period in Temp2 (hi byte)
+
+	jnb	Flag_High_Rpm, calc_next_comm_normal	; Branch normal rpm
+	ajmp	calc_next_comm_period_fast			; Branch high rpm
+
+calc_next_comm_startup:
 	; Calculate this commutation time
 	mov	Temp4, Prev_Comm_L
 	mov	Temp5, Prev_Comm_H
+	mov	Temp6, Prev_Comm_X
 	mov	Prev_Comm_L, Temp1			; Store timestamp as previous commutation
 	mov	Prev_Comm_H, Temp2
+	mov	Prev_Comm_X, Temp3			; Store extended timestamp as previous commutation
 
 	clr	C
 	mov	A, Temp1
 	subb	A, Temp4					; Calculate the new commutation time
-	mov	Temp1, A
 	mov	A, Temp2
 	subb	A, Temp5
-	jb	Flag_Startup_Phase, calc_next_comm_startup
-IF MCU_48MHZ == 1
-	anl	A, #7Fh
-ENDIF
-	mov	Temp2, A
-
-	jnb	Flag_High_Rpm, calc_next_comm_normal	; Branch normal rpm
-	ajmp	calc_next_comm_timing_fast			; Branch high rpm
-
-calc_next_comm_startup:
-	mov	Temp6, Prev_Comm_X
-	mov	Prev_Comm_X, Temp3			; Store extended timestamp as previous commutation
-	mov	Temp2, A
 	mov	A, Temp3
 	subb	A, Temp6					; Calculate the new extended commutation time
 IF MCU_48MHZ == 1
 	anl	A, #7Fh
 ENDIF
-	mov	Temp3, A
 	jz	calc_next_comm_startup_no_X
 
 	; Extended byte is not zero, so commutation time is above 0xFFFF
-	mov	Temp1, #0FFh
-	mov	Temp2, #0FFh
-	sjmp	calc_next_comm_startup_average
+	mov	Comm_Period4x_L, #0FFh
+	mov	Comm_Period4x_H, #0FFh
+	ajmp	calc_next_comm_done
 
 calc_next_comm_startup_no_X:
 	; Extended byte = 0, so commutation time fits within two bytes
@@ -1751,8 +1839,6 @@ calc_next_comm_startup_no_X:
 	mov	Temp8, Prev_Prev_Comm_H
 	mov	Prev_Prev_Comm_L, Temp4
 	mov	Prev_Prev_Comm_H, Temp5
-	mov	Temp1, Prev_Comm_L			; Reload this commutation timestamp
-	mov	Temp2, Prev_Comm_H
 
 	; Calculate the new commutation time based upon the two last commutations (to reduce sensitivity to offset)
 	clr	C
@@ -1763,190 +1849,141 @@ calc_next_comm_startup_no_X:
 	subb	A, Temp8
 	mov	Temp2, A
 
-calc_next_comm_startup_average:
-	clr	C
-	mov	A, Comm_Period4x_H			; Average with previous and save
-	rrc	A
-	mov	Temp4, A
-	mov	A, Comm_Period4x_L
-	rrc	A
-	mov	Temp3, A
-	mov	A, Temp1
-	add	A, Temp3
-	mov	Comm_Period4x_L, A
-	mov	A, Temp2
-	addc	A, Temp4
-	mov	Comm_Period4x_H, A
-	jnc	($+8)
+	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
+	mov	Temp4, Comm_Period4x_H
 
-	mov	Comm_Period4x_L, #0FFh
-	mov	Comm_Period4x_H, #0FFh
-
-	sjmp	calc_new_wait_times_setup
+	sjmp	calc_next_comm_div_4_1
 
 calc_next_comm_normal:
 	; Prepare averaging by dividing Comm_Period4x and current commutation period (Temp2/1) according to speed.
 	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
 	mov	Temp4, Comm_Period4x_H
-	mov	Temp5, Comm_Period4x_L		; Copy variables
-	mov	Temp6, Comm_Period4x_H
-	mov	Temp7, #4					; Divide Comm_Period4x 4 times as default
-	mov	Temp8, #2					; Divide new commutation time 2 times as default
 
 	clr	C
-	mov	A, Temp4
-	subb	A, #04h
-	jc	calc_next_comm_avg_period_div
+	mov	A, Temp4					; Is Comm_Period4x_H below 4? (above ~80k erpm)
+	subb	A, #4
+	jc	calc_next_comm_div_16_4		; Yes - Use averaging for high speeds
 
-	dec	Temp7					; Reduce averaging time constant for low speeds
-	dec	Temp8
+	subb	A, #4					; Is Comm_Period4x_H below 8? (above ~40k erpm)
+	jc	calc_next_comm_div_8_2		; Yes - Use averaging for low speeds
 
-	clr	C
-	mov	A, Temp4
-	subb	A, #08h
-	jc	calc_next_comm_avg_period_div
+	; No - Use averaging for even lower speeds
 
-	jb	Flag_Initial_Run_Phase, calc_next_comm_avg_period_div	; Do not average very fast during initial run
+	; Do not average very fast during initial run
+	jb	Flag_Initial_Run_Phase, calc_next_comm_div_8_2_slow
 
-	dec	Temp7					; Reduce averaging time constant more for even lower speeds
-	dec	Temp8
+calc_next_comm_div_4_1:
+	; Update Comm_Period4x from 1 new commutation period
 
-calc_next_comm_avg_period_div:
-	clr	C
-	rrca	Temp6					; Divide by 2
-	rrca	Temp5
-	djnz	Temp7, calc_next_comm_avg_period_div
+	; Divide Temp4/3 by 4 and store in Temp6/5
+	Divide_By_4	Temp4, Temp3, Temp6, Temp5
 
-	clr	C
-	mov	A, Temp3
-	subb	A, Temp5					; Subtract a fraction
+	sjmp	calc_next_comm_average_and_update
+
+calc_next_comm_div_8_2:
+	; Update Comm_Period4x from 1/2 new commutation period
+
+	; Divide Temp4/3 by 8 and store in Temp5
+	Divide_11Bit_By_8	Temp4, Temp3, Temp5
+	mov	Temp6, #0
+
+	clr	C						; Divide by 2
+	rrca	Temp2
+	rrca	Temp1
+
+	sjmp	calc_next_comm_average_and_update
+
+calc_next_comm_div_8_2_slow:
+	; Update Comm_Period4x from 1/2 new commutation period
+
+	; Divide Temp4/3 by 8 and store in Temp6/5
+	Divide_By_8	Temp4, Temp3, Temp6, Temp5
+
+	clr	C						; Divide by 2
+	rrca	Temp2
+	rrca	Temp1
+
+	sjmp	calc_next_comm_average_and_update
+
+calc_next_comm_div_16_4:
+	; Update Comm_Period4x from 1/4 new commutation period
+
+	; Divide Temp4/3 by 16 and store in Temp5
+	Divide_12Bit_By_16	Temp4, Temp3, Temp5
+	mov	Temp6, #0
+
+	; Divide Temp2/1 by 4 and store in Temp2/1
+	Divide_By_4	Temp2, Temp1, Temp2, Temp1
+
+calc_next_comm_average_and_update:
+ 	; Comm_Period4x = Comm_Period4x - (Comm_Period4x / (16, 8 or 4)) + (Comm_Period / (4, 2 or 1))
+
+	; Temp6/5: Comm_Period4x divided by (16, 8 or 4)
+	clr	C						; Subtract a fraction
+	mov	A, Temp3					; Comm_Period4x_L
+	subb	A, Temp5
 	mov	Temp3, A
-	mov	A, Temp4
+	mov	A, Temp4					; Comm_Period4x_H
 	subb	A, Temp6
 	mov	Temp4, A
 
-	mov	A, Temp8					; Divide new time
-	jz	calc_next_comm_new_period_div_done
-
-calc_next_comm_new_period_div:
-	clr	C
-	rrca	Temp2					; Divide by 2
-	rrca	Temp1
-	djnz	Temp8, calc_next_comm_new_period_div
-
-calc_next_comm_new_period_div_done:
-	mov	A, Temp3
-	add	A, Temp1					; Add the divided new time
-	mov	Temp3, A
+	; Temp2/1: This commutation period divided by (4, 2 or 1)
+	mov	A, Temp3					; Add the divided new time
+	add	A, Temp1
+	mov	Comm_Period4x_L, A
 	mov	A, Temp4
 	addc	A, Temp2
-	mov	Temp4, A
-	mov	Comm_Period4x_L, Temp3		; Store Comm_Period4x_X
-	mov	Comm_Period4x_H, Temp4
-	jnc	calc_new_wait_times_setup	; If period larger than 0xffff - go to slow case
+	mov	Comm_Period4x_H, A
 
-	mov	Temp4, #0FFh
-	mov	Comm_Period4x_L, Temp4		; Set commutation period registers to very slow timing (0xffff)
-	mov	Comm_Period4x_H, Temp4
+	jnc	calc_next_comm_done			; Is period larger than 0xffff?
+	mov	Comm_Period4x_L, #0FFh		; Yes - Set commutation period registers to very slow timing (0xffff)
+	mov	Comm_Period4x_H, #0FFh
 
-calc_new_wait_times_setup:
-	; Set high rpm flag (if above 156k erpm)
+calc_next_comm_done:
 	clr	C
-	mov	A, Temp4
-	subb	A, #2					; Is Comm_Period4x_H below 2?
+	mov	A, Comm_Period4x_H
+	subb	A, #2					; Is Comm_Period4x_H below 2? (above ~160k erpm)
 	jnc	($+4)
 	setb	Flag_High_Rpm				; Yes - Set high rpm flag
 
-	; Load programmed commutation timing
-	jnb	Flag_Startup_Phase, calc_new_wait_per_startup_done	; Set dedicated timing during startup
-
-	mov	Temp8, #3
-	sjmp	calc_new_wait_per_demag_done
-
-calc_new_wait_per_startup_done:
-	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
-	mov	A, @Temp1
-	mov	Temp8, A					; Store in Temp8
-
-	clr	C
-	mov	A, Demag_Detected_Metric		; Check demag metric
-	subb	A, #130
-	jc	calc_new_wait_per_demag_done
-
-	inc	Temp8					; Increase timing (if metric 130 or above)
-
-	clr	C
-	mov	A, Demag_Detected_Metric
-	subb	A, #160
-	jc	($+3)
-
-	inc	Temp8					; Increase timing again (if metric 160 or above)
-
-	clr	C
-	mov	A, Temp8					; Limit timing to max
-	subb	A, #6
-	jc	($+4)
-
-	mov	Temp8, #5					; Set timing to max (if timing 6 or above)
-
-calc_new_wait_per_demag_done:
-	; Set timing reduction
-	mov	Temp7, #2
-
-	; Commutation period: 60 deg / 6 runs = 60 deg
+calc_next_comm_15deg:
+	; Commutation period: 360 deg / 6 runs = 60 deg
 	; 60 deg / 4 = 15 deg
 
 	; Load current commutation timing and compute 15 deg timing
 	; Divide Comm_Period4x by 16 (Comm_Period1x divided by 4) and store in Temp4/3
-	mov	A, Comm_Period4x_H			; Divide by 16
-	swap	A
-	anl	A, #00Fh
-	mov	Temp2, A
-	mov	A, Comm_Period4x_H
-	swap	A
-	anl	A, #0F0h
-	mov	Temp1, A
-	mov	A, Comm_Period4x_L
-	swap	A
-	anl	A, #00Fh
-	add	A, Temp1
-	mov	Temp1, A
+	Divide_By_16	Comm_Period4x_H, Comm_Period4x_L, Temp4, Temp3
 
 	; Subtract timing reduction
 	clr	C
-	mov	A, Temp1
-	subb	A, Temp7
+	mov	A, Temp3
+	subb	A, #2				; Set timing reduction
 	mov	Temp3, A
-	mov	A, Temp2
+	mov	A, Temp4
 	subb	A, #0
 	mov	Temp4, A
 
-	jc	load_min_time				; Check that result is still positive
-	jnz	calc_next_comm_timing_exit	; Check that result is still above minimum
+	jc	calc_next_comm_15deg_set_min	; Check that result is still positive
+	jnz	calc_next_comm_period_exit	; Check that result is still above minimum
 	mov	A, Temp3
-	jnz	calc_next_comm_timing_exit
+	jnz	calc_next_comm_period_exit
 
-load_min_time:
+calc_next_comm_15deg_set_min:
 	mov	Temp3, #1					; Set minimum waiting time (Timers cannot wait for a delay of 0)
 	mov	Temp4, #0
 
-	sjmp	calc_next_comm_timing_exit
+	sjmp	calc_next_comm_period_exit
 
 ;**** **** **** **** ****
 ; Calculate next commutation timing fast routine
 ; Fast calculation (Comm_Period4x_H less than 2)
-calc_next_comm_timing_fast:
+calc_next_comm_period_fast:
 	; Calculate new commutation time
 	mov	Temp3, Comm_Period4x_L		; Comm_Period4x holds the time of 4 commutations
 	mov	Temp4, Comm_Period4x_H
-	mov	A, Temp4					; Divide by 16 and store in Temp5
-	swap	A
-	mov	Temp7, A
-	mov	A, Temp3
-	swap	A
-	anl	A, #0Fh
-	orl	A, Temp7
-	mov	Temp5, A
+
+	; Divide by 16 and store in Temp5
+	Divide_12Bit_By_16	Temp4, Temp3, Temp5
 
 	clr	C
 	mov	A, Temp3					; Subtract a fraction
@@ -1957,14 +1994,12 @@ calc_next_comm_timing_fast:
 	mov	Temp4, A
 
 	; Note: Temp2 is assumed to be zero (approx. Comm_Period4x_H / 4)
-	clr	C
-	mov	A, Temp1
-	rrc	A						; Divide by 4
-	clr	C
-	rrc	A
-	mov	Temp1, A
-	mov	A, Temp3					; Add the divided new time
-	add	A, Temp1
+	mov	A, Temp1					; Divide by 4
+	rr	A
+	rr	A
+	anl	A, #03Fh
+
+	add	A, Temp3					; Add the divided new time
 	mov	Temp3, A
 	mov	A, Temp4
 	addc	A, #0
@@ -1974,12 +2009,10 @@ calc_next_comm_timing_fast:
 	mov	Comm_Period4x_H, Temp4
 
 	clr	C
-	subb	A, #2					; If erpm below 156k - go to normal case
+	subb	A, #2					; Is Comm_Period4x_H 2 or more? (below ~160k erpm)
 	jc	($+4)
-	clr	Flag_High_Rpm				; Clear high rpm bit
+	clr	Flag_High_Rpm				; Yes - Clear high rpm bit
 
-	; Set timing reduction
-	mov	Temp1, #2
 	mov	A, Temp4					; Divide Comm_Period4x by 16 and store in Temp4/3
 	swap	A
 	mov	Temp7, A
@@ -1988,22 +2021,16 @@ calc_next_comm_timing_fast:
 	swap	A
 	anl	A, #0Fh
 	orl	A, Temp7
-	mov	Temp3, A
 	clr	C
-	subb	A, Temp1
+	subb	A, #2					; Timing reduction
 	mov	Temp3, A
-	jc	load_min_time_fast			; Check that result is still positive
-	jnz	calc_new_wait_times_fast_done	; Check that result is still above minimum
+	jc	calc_next_comm_fast_set_min	; Check that result is still positive
+	jnz	calc_next_comm_period_exit	; Check that result is still above minimum
 
-load_min_time_fast:
+calc_next_comm_fast_set_min:
 	mov	Temp3, #1					; Set minimum waiting time (Timers cannot wait for a delay of 0)
 
-calc_new_wait_times_fast_done:
-	mov	Temp1, #Pgm_Comm_Timing		; Load timing setting
-	mov	A, @Temp1
-	mov	Temp8, A					; Store in Temp8
-
-calc_next_comm_timing_exit:
+calc_next_comm_period_exit:
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -2037,6 +2064,10 @@ wait_advance_timing:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 calc_new_wait_times:
+	mov	Temp1, #Pgm_Comm_Timing		; Load commutation timing setting
+	mov	A, @Temp1
+	mov	Temp8, A					; Store in Temp8
+
 	clr	C
 	clr	A
 	subb	A, Temp3					; Negate
@@ -2054,6 +2085,34 @@ ENDIF
 
 	jb	Flag_High_Rpm, calc_new_wait_times_fast	; Branch if high rpm
 
+	; Load programmed commutation timing
+	jnb	Flag_Startup_Phase, adjust_comm_timing
+
+	mov	Temp8, #3					; Set dedicated timing during startup
+	sjmp	load_comm_timing_done
+
+adjust_comm_timing:
+	; Adjust commutation timing according to demag metric
+	clr	C
+	mov	A, Demag_Detected_Metric		; Check demag metric
+	subb	A, #130
+	jc	load_comm_timing_done
+
+	inc	Temp8					; Increase timing (if metric 130 or above)
+
+	subb	A, #30
+	jc	($+3)
+
+	inc	Temp8					; Increase timing again (if metric 160 or above)
+
+	clr	C
+	mov	A, Temp8					; Limit timing to max
+	subb	A, #6
+	jc	($+4)
+
+	mov	Temp8, #5					; Set timing to max (if timing 6 or above)
+
+load_comm_timing_done:
 	mov	A, Temp1					; Copy values
 	mov	Temp3, A
 	mov	A, Temp2
@@ -2067,6 +2126,8 @@ ENDIF
 	rrc	A
 	mov	Temp5, A
 
+	mov	Wt_Zc_Scan_Start_L, Temp5	; Set 7.5deg time for zero cross scan delay
+	mov	Wt_Zc_Scan_Start_H, Temp6
 	mov	Wt_Zc_Tout_Start_L, Temp1	; Set 15deg time for zero cross scan timeout
 	mov	Wt_Zc_Tout_Start_H, Temp2
 
@@ -2117,8 +2178,6 @@ store_times_increase:
 	mov	Wt_Comm_Start_H, Temp4
 	mov	Wt_Adv_Start_L, Temp1		; New commutation advance time (~15deg nominal)
 	mov	Wt_Adv_Start_H, Temp2
-	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
-	mov	Wt_Zc_Scan_Start_H, Temp6
 	sjmp	calc_new_wait_times_exit
 
 store_times_decrease:
@@ -2126,8 +2185,6 @@ store_times_decrease:
 	mov	Wt_Comm_Start_H, Temp2
 	mov	Wt_Adv_Start_L, Temp3		; New commutation advance time (~15deg nominal)
 	mov	Wt_Adv_Start_H, Temp4
-	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
-	mov	Wt_Zc_Scan_Start_H, Temp6
 
 	; Set very short delays for all but advance time during startup, in order to widen zero cross capture range
 	jnb	Flag_Startup_Phase, calc_new_wait_times_exit
@@ -2149,6 +2206,7 @@ calc_new_wait_times_fast:
 	rrc	A						; Divide by 2
 	mov	Temp5, A
 
+	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 	mov	Wt_Zc_Tout_Start_L, Temp1	; Set 15deg time for zero cross scan timeout
 
 	clr	C
@@ -2182,13 +2240,11 @@ store_times_up_or_down_fast:
 store_times_increase_fast:
 	mov	Wt_Comm_Start_L, Temp3		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
 	mov	Wt_Adv_Start_L, Temp1		; New commutation advance time (~15deg nominal)
-	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 	sjmp	calc_new_wait_times_exit
 
 store_times_decrease_fast:
 	mov	Wt_Comm_Start_L, Temp1		; Now commutation time (~60deg) divided by 4 (~15deg nominal)
 	mov	Wt_Adv_Start_L, Temp3		; New commutation advance time (~15deg nominal)
-	mov	Wt_Zc_Scan_Start_L, Temp5	; Use this value for zero cross scan delay (7.5deg)
 
 calc_new_wait_times_exit:
 
@@ -3941,9 +3997,9 @@ motor_start_bidir_done:
 	call	comm5_comm6				; Initialize commutation
 	call	comm6_comm1
 	call	initialize_timing			; Initialize timing
-	call	calc_next_comm_timing		; Set virtual commutation point
+	call	calc_next_comm_period		; Set virtual commutation point
 	call	initialize_timing			; Initialize timing
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 	call	initialize_timing			; Initialize timing
 
 
@@ -3962,7 +4018,7 @@ run1:
 ;		evaluate_comparator_integrity	; Check whether comparator reading has been normal
 	call	wait_for_comm				; Wait from zero cross to commutation
 	call	comm1_comm2				; Commutate
-	call	calc_next_comm_timing		; Calculate next timing and wait advance timing wait
+	call	calc_next_comm_period		; Calculate next timing and wait advance timing wait
 ;		wait_advance_timing			; Wait advance timing and start zero cross wait
 ;		calc_new_wait_times
 ;		wait_before_zc_scan			; Wait zero cross wait and start zero cross timeout
@@ -3976,7 +4032,7 @@ run2:
 	call	set_pwm_limit				; Set pwm power limit for low or high rpm
 	call	wait_for_comm
 	call	comm2_comm3
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
@@ -3989,7 +4045,7 @@ run3:
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
 	call	comm3_comm4
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
@@ -4002,7 +4058,7 @@ run4:
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
 	call	comm4_comm5
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
@@ -4015,7 +4071,7 @@ run5:
 ;		evaluate_comparator_integrity
 	call	wait_for_comm
 	call	comm5_comm6
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
@@ -4030,7 +4086,7 @@ run6:
 	call	wait_for_comm
 	call	comm6_comm1
 	call	check_temp_and_limit_power
-	call	calc_next_comm_timing
+	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
@@ -4120,15 +4176,15 @@ run6_check_dir_change:
 	jmp	run4						; Go back to run 4, thereby changing force direction
 
 run6_check_speed:
-	mov	Temp1, #0F0h				; Default minimum speed
+	mov	Temp1, #0F0h				; Default minimum speed (~1330 erpm)
 	jnb	Flag_Dir_Change_Brake, run6_brake_done; Is it a direction change?
 
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking to initial power limit
-	mov	Temp1, #20h				; Bidirectional braking termination speed
+	mov	Temp1, #20h				; Bidirectional braking termination speed  (~9970 erpm)
 
 run6_brake_done:
 	clr	C
-	mov	A, Comm_Period4x_H			; Is Comm_Period4x more than 32ms (~1220 eRPM)?
+	mov	A, Comm_Period4x_H			; Is Comm_Period4x below minimum speed??
 	subb	A, Temp1
 	ljc	run1						; No - go back to run 1
 
