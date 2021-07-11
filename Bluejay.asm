@@ -2100,9 +2100,7 @@ adjust_comm_timing:
 
 	inc	Temp8					; Increase timing (if metric 130 or above)
 
-	clr	C
-	mov	A, Demag_Detected_Metric
-	subb	A, #160
+	subb	A, #30
 	jc	($+3)
 
 	inc	Temp8					; Increase timing again (if metric 160 or above)
