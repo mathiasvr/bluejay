@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-* Disable DShot 600 support on BB1 (L) ESCs ([109973b](https://github.com/mathiasvr/bluejay/commit/109973bd6d5da5d19d15bb960b88936e9c46a268))
+* Disable DShot 600 support on BB1 (L) ESCs ([a5cc565](https://github.com/mathiasvr/bluejay/commit/a5cc565c02c8f65809a7424e5f879ef0ff33a980))
 * Discrepancy when calculating wait times during startup ([fd9864a](https://github.com/mathiasvr/bluejay/commit/fd9864a06845255cf5e85b043d39add9018d6649))
 * Wrong averaging of commutation period during startup phase ([10f0f9b](https://github.com/mathiasvr/bluejay/commit/10f0f9b26c29e33a447dd514c8fbded5b0b6c432))
 
