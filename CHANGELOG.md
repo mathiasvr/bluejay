@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14](https://github.com/mathiasvr/bluejay/compare/v0.13...v0.14) (2021-07-11)
+
+### Features
+
+* Improve arming safety check ([907c472](https://github.com/mathiasvr/bluejay/commit/907c4726b71ac5d5df377c1fb21b4eda90bc37ed))
+
+### Bug Fixes
+
+* Disable DShot 600 support on BB1 (L) ESCs ([109973b](https://github.com/mathiasvr/bluejay/commit/109973bd6d5da5d19d15bb960b88936e9c46a268))
+* Discrepancy when calculating wait times during startup ([fd9864a](https://github.com/mathiasvr/bluejay/commit/fd9864a06845255cf5e85b043d39add9018d6649))
+* Wrong averaging of commutation period during startup phase ([10f0f9b](https://github.com/mathiasvr/bluejay/commit/10f0f9b26c29e33a447dd514c8fbded5b0b6c432))
+
+### Performance Improvements
+
+* Optimize commutation calculations for startup phase ([a668872](https://github.com/mathiasvr/bluejay/commit/a668872e905a6c678a719617e36b35b4ebe1780a))
+* Optimize commutation period averaging ([df1fe00](https://github.com/mathiasvr/bluejay/commit/df1fe00ebf89900fbfe1f56b7b1af2a9d0f822bd))
+* Optimize commutation period calculations ([f237ec7](https://github.com/mathiasvr/bluejay/commit/f237ec732e5a78254ac75b921704371e7f7e0af3))
+* Remove PCA interrupt ([788338e](https://github.com/mathiasvr/bluejay/commit/788338e8d957ffe5e41adbddc68c9bf3d4723856))
+* Remove pwm power RAM variables ([17a7a22](https://github.com/mathiasvr/bluejay/commit/17a7a22f64a4a9f8295d6f68ad1f89875f194de6))
+* Set max commutation period directly for startup phase ([f4c918f](https://github.com/mathiasvr/bluejay/commit/f4c918fae5d4e36368363512016b1b22bcffc431))
+
+
 ## [0.13](https://github.com/mathiasvr/bluejay/compare/v0.12...v0.13) (2021-05-06)
 
 ### Features
