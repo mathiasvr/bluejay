@@ -18,6 +18,9 @@ Bluejay aims to be an open source successor to BLHeli_S adding several improveme
 - Selectable PWM frequency: 24, 48 and 96 kHz
 - PWM dithering: 11-bit effective throttle resolution
 - Power configuration: Startup power and RPM protection
+- High performance: Low commutation interference
+- Smoother throttle to pwm conversion
+- User configurable startup tunes :musical_note:
 - Numerous optimizations and bug fixes
 
 See the project [changelog](CHANGELOG.md) for a list of changes.
