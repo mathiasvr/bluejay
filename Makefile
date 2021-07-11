@@ -5,7 +5,7 @@ VERSION		?= $(TAG)
 # Target parameters
 LAYOUTS		= A B C D E F G H I J K L M N O P Q R S T U V W Z
 MCUS		= H L
-DEADTIMES	= 0 5 10 15 20 25 30 40 50 70 90
+DEADTIMES	= 0 5 10 15 20 25 30 40 50 70 90 120
 PWM_FREQS	= 24 48 96
 
 # Example single target
