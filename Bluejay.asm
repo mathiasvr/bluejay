@@ -3744,7 +3744,8 @@ ENDIF
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 	jz	arming_begin
 
-	; Setup variables for DShot600
+	; Setup variables for DShot600 (Only on 48MHz for performance reasons)
+IF MCU_48MHZ == 1
 	mov	DShot_Timer_Preset, #-64		; Load DShot sync timer preset (for DShot600)
 	mov	DShot_Pwm_Thr, #8			; Load DShot pwm threshold (for DShot600)
 	mov	DShot_Frame_Length_Thr, #40	; Load DShot frame length criteria
@@ -3756,6 +3757,7 @@ ENDIF
 	call	wait100ms					; Wait for new RC pulse
 	mov	A, Rcp_Outside_Range_Cnt		; Check if pulses were accepted
 	jz	arming_begin
+ENDIF
 
 	ljmp	init_no_signal
 
