@@ -437,14 +437,14 @@ ENDM
 
 Early_Return_Packet_Stage_ MACRO num next
 IF num > 0
-	inc	Temp5								;; Increment current packet stage
+	inc	Temp7								;; Increment current packet stage
 	jb	Flag_Timer3_Pending, dshot_packet_stage_&num	;; Return early if timer 3 has wrapped
 	pop	PSW
 	ret
 dshot_packet_stage_&num:
 ENDIF
 IF num < 5
-	cjne	Temp5, #(num), dshot_packet_stage_&next		;; If this is not current stage, skip to next
+	cjne	Temp7, #(num), dshot_packet_stage_&next		;; If this is not current stage, skip to next
 ENDIF
 ENDM
 
@@ -619,7 +619,7 @@ ENDM
 ;
 ; Requirements:
 ; - Must NOT be called while Flag_Telemetry_Pending is cleared
-; - Must NOT write to Temp5, Temp8
+; - Must NOT write to Temp7, Temp8
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t0_int:
@@ -2834,7 +2834,9 @@ beacon_beep_exit:
 ; The routine is divided into 6 sections that can return early
 ; in order to reduce commutation interference
 ;
-; Requirements: Must NOT be called while Flag_Telemetry_Pending is set
+; Requirements:
+; - Must NOT be called while Flag_Telemetry_Pending is set
+; - Must NOT write to Temp7, Temp8
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 dshot_tlm_create_packet:
@@ -2913,7 +2915,7 @@ dshot_tlm_12bit_encoded:
 	call	dshot_gcr_encode
 
 	inc	Temp1
-	mov	Temp5, #0					; Reset current packet stage
+	mov	Temp7, #0					; Reset current packet stage
 
 	pop	PSW
 	setb	Flag_Telemetry_Pending		; Mark that packet is ready to be sent
