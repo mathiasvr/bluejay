@@ -165,49 +165,6 @@ ELSE
 ENDIF
 ENDM
 
-Clear_COVF_Interrupt MACRO
-	anl	PCA0PWM, #0DFh				;; Clear PCA cycle overflow flag
-ENDM
-
-Enable_COVF_Interrupt MACRO
-	orl	PCA0PWM, #40h				;; Enable PCA interrupt on cycle overflow
-ENDM
-
-Disable_COVF_Interrupt MACRO
-	anl	PCA0PWM, #0BFh				;; Disable PCA interrupt on cycle overflow
-ENDM
-
-IF DEADTIME == 0					; CCF interrupt is only used for DEADTIME == 0
-Clear_CCF_Interrupt MACRO
-	anl	PCA0CN0, #0FEh				;; Clear PCA capture/compare flag
-ENDM
-
-Enable_CCF_Interrupt MACRO
-	orl	PCA0CPM0, #01h				;; Enable PCA interrupt on capture/compare
-ENDM
-
-Disable_CCF_Interrupt MACRO
-	anl	PCA0CPM0, #0FEh			;; Disable PCA interrupt on capture/compare
-ENDM
-ENDIF
-
-Enable_PCA_Interrupt MACRO
-LOCAL pca_enabled set_pca_int_hi_pwm
-IF DEADTIME != 0
-	Enable_COVF_Interrupt
-ELSE
-	jnb	Flag_Low_Pwm_Power, set_pca_int_hi_pwm
-
-	Enable_COVF_Interrupt
-	sjmp	pca_enabled
-
-set_pca_int_hi_pwm:
-	Enable_CCF_Interrupt
-pca_enabled:
-ENDIF
-	orl	EIE1, #10h				;; Enable pca interrupts
-ENDM
-
 Set_MCU_Clk_24MHz MACRO
 	mov	CLKSEL, #13h				;; Set clock to 24MHz (Oscillator 1 divided by 2)
 
