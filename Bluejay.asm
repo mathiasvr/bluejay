@@ -1233,28 +1233,39 @@ pca_int:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait1ms:
-	mov	Temp2, #1
-	sjmp	wait_ms_o
+	mov	Temp3, #0					; Milliseconds (hi byte)
+	mov	Temp2, #1					; Milliseconds (lo byte)
+	sjmp	wait_ms
 
 wait5ms:
+	mov	Temp3, #0
 	mov	Temp2, #5
-	sjmp	wait_ms_o
+	sjmp	wait_ms
 
 wait10ms:
+	mov	Temp3, #0
 	mov	Temp2, #10
-	sjmp	wait_ms_o
+	sjmp	wait_ms
 
 wait100ms:
+	mov	Temp3, #0
 	mov	Temp2, #100
-	sjmp	wait_ms_o
+	sjmp	wait_ms
 
 wait200ms:
+	mov	Temp3, #0
 	mov	Temp2, #200
-	sjmp	wait_ms_o
+	sjmp	wait_ms
 
 wait250ms:
+	mov	Temp3, #0
 	mov	Temp2, #250
-	sjmp	wait_ms_o
+	sjmp	wait_ms
+
+wait_ms:
+	inc	Temp2					; Increment for use with djnz
+	inc	Temp3
+	sjmp	wait_ms_start
 
 wait_ms_o:						; Outer loop
 	mov	Temp1, #23
@@ -1263,7 +1274,10 @@ wait_ms_m:						; Middle loop
 	clr	A
 	djnz	ACC, $					; Inner loop (41.8us - 1024 cycles)
 	djnz	Temp1, wait_ms_m
+
+wait_ms_start:
 	djnz	Temp2, wait_ms_o
+	djnz	Temp3, wait_ms_o
 	ret
 
 
@@ -1420,7 +1434,8 @@ startup_melody_loop:
 startup_melody_item_wait_ms:
 	mov	A, Temp4
 	mov	Temp2, A
-	call	wait_ms_o
+	mov	Temp3, #0
+	call	wait_ms
 
 startup_melody_loop_next_item:
 	inc	DPTR
