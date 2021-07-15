@@ -1268,11 +1268,11 @@ wait_ms:
 	sjmp	wait_ms_start
 
 wait_ms_o:						; Outer loop
-	mov	Temp1, #23
+	mov	Temp1, #24
 
 wait_ms_m:						; Middle loop
-	clr	A
-	djnz	ACC, $					; Inner loop (41.8us - 1024 cycles)
+	mov	A, #255
+	djnz	ACC, $					; Inner loop (41.6us - 1020 cycles)
 	djnz	Temp1, wait_ms_m
 
 wait_ms_start:
