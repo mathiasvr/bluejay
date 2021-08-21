@@ -3583,7 +3583,19 @@ decode_temp_done:
 
 	mov	Temp1, #Pgm_Braking_Strength	; Read programmed braking strength setting
 	mov	A, @Temp1
-IF PWM_BITS_H == 2					; Scale braking strength to pwm resolution
+IF PWM_BITS_H == 3					; Scale braking strength to pwm resolution
+	; Note: Added for completeness
+	; Currently 11-bit pwm is only used on targets with built-in dead time insertion
+	rl	A
+	rl	A
+	rl	A
+	mov	Temp2, A
+	anl	A, #07h
+	mov	Pwm_Braking_H, A
+	mov	A, Temp2
+	anl	A, #0F8h
+	mov	Pwm_Braking_L, A
+ELSEIF PWM_BITS_H == 2
 	rl	A
 	rl	A
 	mov	Temp2, A
