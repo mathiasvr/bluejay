@@ -117,17 +117,19 @@ CMP_MD		EQU	CMP1MD
 CMP_MX		EQU	CMP1MX
 ENDIF
 
-$if NOT CUSTOM_COMPARATOR_SETUP
-
 Initialize_Comparator MACRO
 	mov	CMP_CN0, #80h				;; Comparator enabled, no hysteresis
 	mov	CMP_MD, #00h				;; Comparator response time 100ns
+IF COMPARATOR_INVERT == 1 AND MCU_48MHZ == 1
+	mov	CMP_MD, #40h				;; Output polarity inverted (Only supported on BB2)
+ENDIF
 ENDM
-
-$endif
 
 Read_Comparator_Output MACRO
 	mov	A, CMP_CN0				;; Read comparator output
+IF COMPARATOR_INVERT == 1 AND MCU_48MHZ == 0
+	cpl	A						;; Invert output polarity manually on BB1
+ENDIF
 ENDM
 
 ; Set comparator multiplexer to phase A

@@ -31,6 +31,7 @@ PWM_ACTIVE_HIGH	EQU	0		; Pwm inverted
 COM_ACTIVE_HIGH	EQU	1		; Damping inverted
 
 COMPARATOR_PORT	EQU	0		; All comparator (mux) pins must be on the same port
+COMPARATOR_INVERT	EQU	0		; Comparator output non-inverted
 
 IF DEADTIME == 0
 	PCA0CPM_POWER	EQU	PCA0CPM0
