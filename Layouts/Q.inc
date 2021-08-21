@@ -50,6 +50,7 @@ ELSE
 	PCA0CPH_DAMP	EQU	PCA0CPH1
 ENDIF
 
+
 ;*********************
 ; PORT 0 definitions *
 ;*********************
