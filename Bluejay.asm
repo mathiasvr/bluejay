@@ -3590,7 +3590,7 @@ IF PWM_BITS_H == 2					; Scale braking strength to pwm resolution
 	anl	A, #03h
 	mov	Pwm_Braking_H, A
 	mov	A, Temp2
-	orl	A, #03h
+	anl	A, #0FCh
 	mov	Pwm_Braking_L, A
 ELSEIF PWM_BITS_H == 1
 	rl	A
@@ -3598,13 +3598,16 @@ ELSEIF PWM_BITS_H == 1
 	anl	A, #01h
 	mov	Pwm_Braking_H, A
 	mov	A, Temp2
-	orl	A, #01h
+	anl	A, #0FEh
 	mov	Pwm_Braking_L, A
 ELSEIF PWM_BITS_H == 0
 	mov	Pwm_Braking_H, #0
 	mov	Pwm_Braking_L, A
 ENDIF
+	cjne	@Temp1, #0FFh, decode_pwm_dithering
+	mov	Pwm_Braking_L, #0FFh		; Apply full braking if setting is max
 
+decode_pwm_dithering:
 	mov	Temp1, #Pgm_Dithering		; Read programmed dithering setting
 	mov	A, @Temp1
 	add	A, #0FFh					; Carry set if A is not zero
