@@ -364,7 +364,7 @@ Eep_Pgm_LED_Control:		DB	DEFAULT_PGM_LED_CONTROL		; EEPROM copy of programmed LE
 Eep_Dummy:				DB	0FFh						; EEPROM address for safety reason
 
 CSEG AT 1A60h
-Eep_Name:					DB	"Bluejay         "			; Name tag (16 Bytes)
+Eep_Name:					DB	"Bluejay (TEST)  "			; Name tag (16 Bytes)
 
 CSEG AT 1A70h
 Eep_Pgm_Startup_Tune:		DB	2,58,4,32,52,66,13,0,69,45,13,0,52,66,13,0,78,39,211,0,69,45,208,25,52,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
