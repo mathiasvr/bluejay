@@ -2860,13 +2860,13 @@ dshot_tlm_create_packet:
 
 	Early_Return_Packet_Stage 0
 
-	; Read commutation period
 	clr	IE_EA
-	mov	Tlm_Data_L, Comm_Period4x_L
+	mov	Tlm_Data_L, Comm_Period4x_L	; Read commutation period
 	mov	Tlm_Data_H, Comm_Period4x_H
 	setb	IE_EA
 
-	; Multiply period by 3/4 (1/2 + 1/4)
+	; Calculate e-period (6 commutations) in microseconds
+	; Comm_Period * 6 * 0.5 = Comm_Period4x * 3/4 (1/2 + 1/4)
 	mov	A, Tlm_Data_L
 	mov	C, Tlm_Data_H.0
 	rrc	A
@@ -2874,7 +2874,7 @@ dshot_tlm_create_packet:
 	mov	C, Tlm_Data_H.1
 	rrc	A
 	add	A, Temp2
-	mov	Tlm_Data_L, A
+	mov	Temp3, A					; Comm_Period3x_L
 
 	mov	A, Tlm_Data_H
 	rr	A
@@ -2883,6 +2883,25 @@ dshot_tlm_create_packet:
 	rr	A
 	clr	ACC.7
 	addc	A, Temp2
+	mov	Temp4, A					; Comm_Period3x_H
+
+	; Timer2 ticks are ~489ns (not 500ns), so use approximation for better accuracy:
+	; E-period = Comm_Period3x - 4 * Comm_Period4x_H
+
+	; Note: For better performance assume Comm_Period4x_H < 64 (6-bit, above ~5k erpm)
+	; At lower speed result will be less precise
+	mov	A, Tlm_Data_H				; Comm_Period4x_H
+	rl	A						; Multiply by 4
+	rl	A
+	anl	A, #0FCh
+	mov	Temp5, A
+
+	clr C
+	mov	A, Temp3					; Comm_Period3x_L
+	subb	A, Temp5
+	mov	Tlm_Data_L, A
+	mov	A, Temp4					; Comm_Period3x_H
+	subb	A, #0
 	mov	Tlm_Data_H, A
 
 	Early_Return_Packet_Stage 1
