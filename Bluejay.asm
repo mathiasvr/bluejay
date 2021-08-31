@@ -2861,13 +2861,13 @@ dshot_tlm_create_packet:
 	Early_Return_Packet_Stage 0
 
 	clr	IE_EA
-	mov	Tlm_Data_L, Comm_Period4x_L	; Read commutation period
+	mov	A, Comm_Period4x_L			; Read commutation period
 	mov	Tlm_Data_H, Comm_Period4x_H
 	setb	IE_EA
 
 	; Calculate e-period (6 commutations) in microseconds
 	; Comm_Period * 6 * 0.5 = Comm_Period4x * 3/4 (1/2 + 1/4)
-	mov	A, Tlm_Data_L
+	;mov	A, Tlm_Data_L
 	mov	C, Tlm_Data_H.0
 	rrc	A
 	mov	Temp2, A
