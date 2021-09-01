@@ -4094,19 +4094,18 @@ initial_run_phase_done:
 	; Exit run loop after a given time
 	jb	Flag_Pgm_Bidir, run6_check_timeout	; Check if bidirectional operation
 
-	mov	Temp1, #250
-	mov	Temp2, #Pgm_Brake_On_Stop
+	mov	Temp2, #Pgm_Brake_On_Stop	; Check if using brake on stop
 	mov	A, @Temp2
-	jz	($+4)
+	jz	run6_check_timeout
 
-	mov	Temp1, #3					; About 100ms before stopping when brake is set
-
+	; Exit run loop after 100ms when using brake on stop
 	clr	C
-	mov	A, Rcp_Stop_Cnt			; Load stop RC pulse counter low byte value
-	subb	A, Temp1					; Is number of stop RC pulses above limit?
+	mov	A, Rcp_Stop_Cnt			; Load stop RC pulse counter value
+	subb	A, #3					; Is number of stop RC pulses above limit?
 	jnc	run_to_wait_for_start		; Yes, go back to wait for power on
 
 run6_check_timeout:
+	; Exit run loop immediately if timeout
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	jz	run_to_wait_for_start		; If it is zero - go back to wait for power on
 
