@@ -4109,10 +4109,21 @@ run6_check_timeout:
 	jz	run_to_wait_for_start		; If it is zero - go back to wait for power on
 
 run6_check_dir:
-	jnb	Flag_Pgm_Bidir, run6_check_speed		; Check if bidirectional operation
+	jb	Flag_Pgm_Bidir, run6_bidir	; Check if bidirectional operation
 
-	jb	Flag_Motor_Dir_Rev, run6_check_dir_rev	; Check if actual rotation direction
-	jb	Flag_Rcp_Dir_Rev, run6_check_dir_change	; Matches force direction
+run6_check_speed:
+	clr	C
+	mov	A, Comm_Period4x_H			; Is Comm_Period4x below minimum speed?
+	subb	A, #0F0h					; Default minimum speed (~1330 erpm)
+	ljc	run1						; No - go back to run 1
+	jmp run_to_wait_for_start		; Yes - exit run loop
+
+run6_bidir:
+	jb	Flag_Dir_Change_Brake, run6_handle_dir_change_brake
+
+	; Check if actual rotation direction matches force direction
+	jb	Flag_Motor_Dir_Rev, run6_check_dir_rev
+	jb	Flag_Rcp_Dir_Rev, run6_check_dir_change
 	sjmp	run6_check_speed
 
 run6_check_dir_rev:
@@ -4120,28 +4131,18 @@ run6_check_dir_rev:
 	sjmp	run6_check_speed
 
 run6_check_dir_change:
-	jb	Flag_Dir_Change_Brake, run6_check_speed
-
 	setb	Flag_Dir_Change_Brake		; Set brake flag
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking
 	jmp	run4						; Go back to run 4, thereby changing force direction
 
-run6_check_speed:
-	mov	Temp1, #0F0h				; Default minimum speed (~1330 erpm)
-	jnb	Flag_Dir_Change_Brake, run6_brake_done; Is it a direction change?
-
+run6_handle_dir_change_brake:
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking to initial power limit
-	mov	Temp1, #20h				; Bidirectional braking termination speed  (~9970 erpm)
 
-run6_brake_done:
 	clr	C
-	mov	A, Comm_Period4x_H			; Is Comm_Period4x below minimum speed??
-	subb	A, Temp1
+	mov	A, Comm_Period4x_H			; Is Comm_Period4x below minimum speed?
+	subb	A, #20h					; Bidirectional braking termination speed (~9970 erpm)
 	ljc	run1						; No - go back to run 1
 
-	jnb	Flag_Dir_Change_Brake, run_to_wait_for_start	; If it is not a direction change - stop
-
-	; Turn spinning direction
 	clr	Flag_Dir_Change_Brake		; Clear brake
 	mov	C, Flag_Rcp_Dir_Rev			; Read force direction
 	mov	Flag_Motor_Dir_Rev, C		; Set spinning direction
