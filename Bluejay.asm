@@ -4044,9 +4044,11 @@ run6:
 ;		calc_new_wait_times
 ;		wait_before_zc_scan
 
-	; Check if it is direct startup
-	jnb	Flag_Startup_Phase, normal_run_checks
+	; Check if it is startup phases
+	jnb	Flag_Initial_Run_Phase, normal_run_checks
+	jnb	Flag_Startup_Phase, initial_run_phase
 
+	; Startup phase
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
 	clr	C
 	mov	A, Startup_Cnt				; Load startup counter
@@ -4054,39 +4056,36 @@ run6:
 	jnc	startup_phase_done
 
 	jnb	Flag_Rcp_Stop, run1			; If pulse is above stop value - Continue to run
-	ajmp	run_to_wait_for_start
+	sjmp	run_to_wait_for_start
 
 startup_phase_done:
 	clr	Flag_Startup_Phase			; Clear startup phase flag
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
 
-normal_run_checks:
-	; Check if it is initial run phase
-	jnb	Flag_Initial_Run_Phase, initial_run_phase_done	; If not initial run phase - branch
-	jb	Flag_Dir_Change_Brake, initial_run_phase_done	; If a direction change - branch
+initial_run_phase:
+	; If it is a direction change - branch
+	jb	Flag_Dir_Change_Brake, normal_run_checks
 
 	; Decrement startup rotation count
 	mov	A, Initial_Run_Rot_Cntd
 	dec	A
 	; Check number of initial rotations
-	jnz	initial_run_check_startup_rot	; Branch if counter is not zero
+	jz	initial_run_phase_done		; Branch if counter is zero
 
+	mov	Initial_Run_Rot_Cntd, A		; Not zero - store counter
+
+	jnb	Flag_Rcp_Stop, run1			; Check if pulse is below stop value
+	jb	Flag_Pgm_Bidir, run1		; Check if bidirectional operation
+
+	sjmp	run_to_wait_for_start
+
+initial_run_phase_done:
 	clr	Flag_Initial_Run_Phase		; Clear initial run phase flag
 	setb	Flag_Motor_Started			; Set motor started
 	jmp	run1						; Continue with normal run
 
-initial_run_check_startup_rot:
-	mov	Initial_Run_Rot_Cntd, A		; Not zero - store counter
-
-	jb	Flag_Pgm_Bidir, initial_run_continue_run	; Check if bidirectional operation
-
-	jb	Flag_Rcp_Stop, run_to_wait_for_start	; Check if pulse is below stop value
-
-initial_run_continue_run:
-	jmp	run1						; Continue to run
-
-initial_run_phase_done:
+normal_run_checks:
 	; Reset stall count
 	mov	Startup_Stall_Cnt, #0
 	setb	Flag_Motor_Running
