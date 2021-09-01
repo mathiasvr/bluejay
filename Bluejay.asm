@@ -4091,7 +4091,7 @@ initial_run_phase_done:
 	mov	Startup_Stall_Cnt, #0
 	setb	Flag_Motor_Running
 
-	; Exit run loop after a given time
+	jnb	Flag_Rcp_Stop, run6_check_dir	; Check if stop
 	jb	Flag_Pgm_Bidir, run6_check_timeout	; Check if bidirectional operation
 
 	mov	Temp2, #Pgm_Brake_On_Stop	; Check if using brake on stop
