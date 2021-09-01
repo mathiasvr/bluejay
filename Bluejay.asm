@@ -4115,8 +4115,8 @@ run6_check_speed:
 	clr	C
 	mov	A, Comm_Period4x_H			; Is Comm_Period4x below minimum speed?
 	subb	A, #0F0h					; Default minimum speed (~1330 erpm)
-	ljc	run1						; No - go back to run 1
-	jmp run_to_wait_for_start		; Yes - exit run loop
+	jnc	run_to_wait_for_start		; Yes - exit run loop
+	jmp	run1						; No - go back to run 1
 
 run6_bidir:
 	jb	Flag_Dir_Change_Brake, run6_handle_dir_change_brake
@@ -4141,7 +4141,7 @@ run6_handle_dir_change_brake:
 	clr	C
 	mov	A, Comm_Period4x_H			; Is Comm_Period4x below minimum speed?
 	subb	A, #20h					; Bidirectional braking termination speed (~9970 erpm)
-	ljc	run1						; No - go back to run 1
+	jc	run6_bidir_continue			; No - continue braking
 
 	clr	Flag_Dir_Change_Brake		; Clear brake
 	mov	C, Flag_Rcp_Dir_Rev			; Read force direction
@@ -4149,6 +4149,8 @@ run6_handle_dir_change_brake:
 	setb	Flag_Initial_Run_Phase
 	mov	Initial_Run_Rot_Cntd, #18
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set initial max power
+
+run6_bidir_continue:
 	jmp	run1						; Go back to run 1
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
