@@ -4090,7 +4090,7 @@ normal_run_checks:
 	mov	Startup_Stall_Cnt, #0
 	setb	Flag_Motor_Running
 
-	jnb	Flag_Rcp_Stop, run6_check_dir	; Check if stop
+	jnb	Flag_Rcp_Stop, run6_check_bidir	; Check if stop
 	jb	Flag_Pgm_Bidir, run6_check_timeout	; Check if bidirectional operation
 
 	mov	Temp2, #Pgm_Brake_On_Stop	; Check if using brake on stop
@@ -4108,7 +4108,7 @@ run6_check_timeout:
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
 	jz	run_to_wait_for_start		; If it is zero - go back to wait for power on
 
-run6_check_dir:
+run6_check_bidir:
 	jb	Flag_Pgm_Bidir, run6_bidir	; Check if bidirectional operation
 
 run6_check_speed:
@@ -4119,23 +4119,23 @@ run6_check_speed:
 	jmp	run1						; No - go back to run 1
 
 run6_bidir:
-	jb	Flag_Dir_Change_Brake, run6_handle_dir_change_brake
+	jb	Flag_Dir_Change_Brake, run6_bidir_braking
 
 	; Check if actual rotation direction matches force direction
-	jb	Flag_Motor_Dir_Rev, run6_check_dir_rev
-	jb	Flag_Rcp_Dir_Rev, run6_check_dir_change
+	jb	Flag_Motor_Dir_Rev, run6_bidir_check_reversal
+	jb	Flag_Rcp_Dir_Rev, run6_bidir_reversal
 	sjmp	run6_check_speed
 
-run6_check_dir_rev:
-	jnb	Flag_Rcp_Dir_Rev, run6_check_dir_change
+run6_bidir_check_reversal:
+	jnb	Flag_Rcp_Dir_Rev, run6_bidir_reversal
 	sjmp	run6_check_speed
 
-run6_check_dir_change:
+run6_bidir_reversal:
 	setb	Flag_Dir_Change_Brake		; Set brake flag
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking
 	jmp	run4						; Go back to run 4, thereby changing force direction
 
-run6_handle_dir_change_brake:
+run6_bidir_braking:
 	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking to initial power limit
 
 	clr	C
