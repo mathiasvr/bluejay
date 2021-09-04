@@ -4056,7 +4056,7 @@ run6:
 	jnc	startup_phase_done
 
 	jnb	Flag_Rcp_Stop, run1			; If pulse is above stop value - Continue to run
-	sjmp	run_to_wait_for_start
+	sjmp	exit_run_mode
 
 startup_phase_done:
 	clr	Flag_Startup_Phase			; Clear startup phase flag
@@ -4078,7 +4078,7 @@ initial_run_phase:
 	jnb	Flag_Rcp_Stop, run1			; Check if pulse is below stop value
 	jb	Flag_Pgm_Bidir, run1		; Check if bidirectional operation
 
-	sjmp	run_to_wait_for_start
+	sjmp	exit_run_mode
 
 initial_run_phase_done:
 	clr	Flag_Initial_Run_Phase		; Clear initial run phase flag
@@ -4097,16 +4097,16 @@ normal_run_checks:
 	mov	A, @Temp2
 	jz	run6_check_timeout
 
-	; Exit run loop after 100ms when using brake on stop
+	; Exit run mode after 100ms when using brake on stop
 	clr	C
 	mov	A, Rcp_Stop_Cnt			; Load stop RC pulse counter value
 	subb	A, #3					; Is number of stop RC pulses above limit?
-	jnc	run_to_wait_for_start		; Yes, go back to wait for power on
+	jnc	exit_run_mode				; Yes - exit run mode
 
 run6_check_timeout:
-	; Exit run loop immediately if timeout
+	; Exit run mode immediately if timeout
 	mov	A, Rcp_Timeout_Cntd			; Load RC pulse timeout counter value
-	jz	run_to_wait_for_start		; If it is zero - go back to wait for power on
+	jz	exit_run_mode				; If it is zero - go back to wait for power on
 
 run6_check_bidir:
 	jb	Flag_Pgm_Bidir, run6_bidir	; Check if bidirectional operation
@@ -4115,7 +4115,7 @@ run6_check_speed:
 	clr	C
 	mov	A, Comm_Period4x_H			; Is Comm_Period4x below minimum speed?
 	subb	A, #0F0h					; Default minimum speed (~1330 erpm)
-	jnc	run_to_wait_for_start		; Yes - exit run loop
+	jnc	exit_run_mode				; Yes - exit run mode
 	jmp	run1						; No - go back to run 1
 
 run6_bidir:
@@ -4160,10 +4160,10 @@ run6_bidir_continue:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 exit_run_mode_on_timeout:
-	jb	Flag_Motor_Running, run_to_wait_for_start
+	jb	Flag_Motor_Running, exit_run_mode
 	inc	Startup_Stall_Cnt			; Increment stall count if motors did not properly start
 
-run_to_wait_for_start:
+exit_run_mode:
 	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off
 	mov	Flags0, #0				; Clear run time flags (in case they are used in interrupts)
@@ -4195,7 +4195,7 @@ ENDIF
 	call	switch_power_off
 
 	; Check if RCP is zero, then it is a normal stop or signal timeout
-	jb	Flag_Rcp_Stop, run_to_wait_for_start_no_stall
+	jb	Flag_Rcp_Stop, exit_run_mode_no_stall
 
 	clr	C						; Otherwise - it's a stall
 	mov	A, Startup_Stall_Cnt
@@ -4209,18 +4209,18 @@ ENDIF
 
 	ljmp	arming_begin				; Go back and wait for arming
 
-run_to_wait_for_start_no_stall:
+exit_run_mode_no_stall:
 	mov	Startup_Stall_Cnt, #0
 
 	mov	Temp1, #Pgm_Brake_On_Stop	; Check if using brake on stop
 	mov	A, @Temp1
-	jz	run_to_wait_for_start_brake_done
+	jz	exit_run_mode_brake_done
 
 	A_Com_Fet_On					; Brake on stop
 	B_Com_Fet_On
 	C_Com_Fet_On
 
-run_to_wait_for_start_brake_done:
+exit_run_mode_brake_done:
 	ljmp	wait_for_start				; Go back to wait for power on
 
 
