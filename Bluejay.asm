@@ -3908,7 +3908,6 @@ motor_start:
 	mov	Pwm_Limit_Beg, @Temp2		; Set initial pwm limit
 	mov	Pwm_Limit, Pwm_Limit_Beg
 	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
-	setb	IE_EA					; Enable interrupts
 
 	; Begin startup sequence
 IF MCU_48MHZ == 1
@@ -3931,6 +3930,7 @@ IF MCU_48MHZ == 1
 
 	mov	DShot_GCR_Start_Delay, #DSHOT_TLM_START_DELAY_48
 ENDIF
+	setb	IE_EA					; Enable interrupts
 
 	mov	C, Flag_Pgm_Dir_Rev			; Read spin direction setting
 	mov	Flag_Motor_Dir_Rev, C
