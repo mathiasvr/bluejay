@@ -1285,6 +1285,8 @@ wait_ms_start:
 ;
 ; Beeper routines (Multiple entry points)
 ;
+; Requirements: Interrupts must be disabled and FETs turned off
+;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 beep_f1:
 	mov	Temp3, #66				; Off wait loop length (Tone)
@@ -2700,8 +2702,11 @@ dshot_cmd_check:
 	subb	A, #6					; Beacon beeps for command 1-5
 	jnc	dshot_cmd_direction_normal
 
+	clr	IE_EA					; Disable all interrupts
+	call	switch_power_off			; Switch power off in case braking is set
 	call	beacon_beep
 	call	wait200ms
+	setb	IE_EA					; Enable all interrupts
 
 	sjmp	dshot_cmd_exit
 
@@ -2803,12 +2808,10 @@ dshot_cmd_exit_no_clear:
 ; Beep with beacon strength
 ; Beep type 1-5 in Temp1
 ;
-; Note: This routine switches off power
+; Requirements: Interrupts must be disabled and FETs turned off
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 beacon_beep:
-	clr	IE_EA					; Disable all interrupts
-	call	switch_power_off			; Switch power off in case braking is set
 	mov	Temp2, #Pgm_Beacon_Strength	; Set beacon beep strength
 	mov	Beep_Strength, @Temp2
 
@@ -2837,7 +2840,6 @@ beacon_beep5:
 beacon_beep_exit:
 	mov	Temp2, #Pgm_Beep_Strength	; Set normal beep strength
 	mov	Beep_Strength, @Temp2
-	setb	IE_EA					; Enable all interrupts
 	ret
 
 
@@ -3848,7 +3850,10 @@ beep_delay_set:
 	dec	Beacon_Delay_Cnt			; Decrement counter for continued beeping
 
 	mov	Temp1, #4					; Beep tone 4
+	clr	IE_EA					; Disable all interrupts
+	call	switch_power_off			; Switch power off in case braking is set
 	call	beacon_beep
+	setb	IE_EA					; Enable all interrupts
 
 wait_for_start_no_beep:
 	jb	Flag_Telemetry_Pending, wait_for_start_check_rcp
