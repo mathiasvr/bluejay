@@ -1395,6 +1395,49 @@ beep_motor_stalled:
 	call	beep_f1
 	ret
 
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Beacon beep
+;
+; Beep with beacon strength
+; Beep tone 1-5 in Temp1
+;
+; Requirements: Interrupts must be disabled and FETs turned off
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+beacon_beep:
+	mov	Temp2, #Pgm_Beacon_Strength	; Set beacon beep strength
+	mov	Beep_Strength, @Temp2
+
+	cjne	Temp1, #1, beacon_beep2
+	call	beep_f1
+	sjmp	beacon_beep_exit
+
+beacon_beep2:
+	cjne	Temp1, #2, beacon_beep3
+	call	beep_f2
+	sjmp	beacon_beep_exit
+
+beacon_beep3:
+	cjne	Temp1, #3, beacon_beep4
+	call	beep_f3
+	sjmp	beacon_beep_exit
+
+beacon_beep4:
+	cjne	Temp1, #4, beacon_beep5
+	call	beep_f4
+	sjmp	beacon_beep_exit
+
+beacon_beep5:
+	call	beep_f5
+
+beacon_beep_exit:
+	mov	Temp2, #Pgm_Beep_Strength	; Set normal beep strength
+	mov	Beep_Strength, @Temp2
+	ret
+
+
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Beep melody
@@ -2799,47 +2842,6 @@ dshot_cmd_exit:
 	mov	DShot_Cmd_Cnt, #0
 
 dshot_cmd_exit_no_clear:
-	ret
-
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-;
-; DShot beacon beep
-;
-; Beep with beacon strength
-; Beep type 1-5 in Temp1
-;
-; Requirements: Interrupts must be disabled and FETs turned off
-;
-;**** **** **** **** **** **** **** **** **** **** **** **** ****
-beacon_beep:
-	mov	Temp2, #Pgm_Beacon_Strength	; Set beacon beep strength
-	mov	Beep_Strength, @Temp2
-
-	cjne	Temp1, #1, beacon_beep2
-	call	beep_f1
-	sjmp	beacon_beep_exit
-
-beacon_beep2:
-	cjne	Temp1, #2, beacon_beep3
-	call	beep_f2
-	sjmp	beacon_beep_exit
-
-beacon_beep3:
-	cjne	Temp1, #3, beacon_beep4
-	call	beep_f3
-	sjmp	beacon_beep_exit
-
-beacon_beep4:
-	cjne	Temp1, #4, beacon_beep5
-	call	beep_f4
-	sjmp	beacon_beep_exit
-
-beacon_beep5:
-	call	beep_f5
-
-beacon_beep_exit:
-	mov	Temp2, #Pgm_Beep_Strength	; Set normal beep strength
-	mov	Beep_Strength, @Temp2
 	ret
 
 
