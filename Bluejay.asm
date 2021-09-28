@@ -165,7 +165,7 @@ Flag_Demag_Detected			BIT	Flags1.1		; Set when excessive demag time is detected
 Flag_Comp_Timed_Out			BIT	Flags1.2		; Set when comparator reading timed out
 Flag_Motor_Running			BIT	Flags1.3
 Flag_Motor_Started			BIT	Flags1.4		; Set when motor is started
-Flag_Dir_Change_Brake		BIT	Flags1.5		; Set when braking before direction change
+Flag_Dir_Change_Brake		BIT	Flags1.5		; Set when braking before direction change in case of bidirectional operation
 Flag_High_Rpm				BIT	Flags1.6		; Set when motor rpm is high (Comm_Period4x_H less than 2)
 
 Flags2:					DS	1			; State flags. NOT reset upon motor_start
@@ -1748,7 +1748,8 @@ temp_increase_pwm_limit:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 initialize_timing:
-	mov	Comm_Period4x_L, #00h		; Set commutation period registers
+	; Initialize commutation period to 7.5ms (~1330 erpm)
+	mov	Comm_Period4x_L, #00h
 	mov	Comm_Period4x_H, #0F0h
 	ret
 
@@ -4126,6 +4127,7 @@ run6_check_speed:
 	jmp	run1						; No - go back to run 1
 
 run6_bidir:
+	; Check if direction change braking is in progress
 	jb	Flag_Dir_Change_Brake, run6_bidir_braking
 
 	; Check if actual rotation direction matches force direction
@@ -4138,8 +4140,9 @@ run6_bidir_check_reversal:
 	sjmp	run6_check_speed
 
 run6_bidir_reversal:
+	; Initiate direction and start braking
 	setb	Flag_Dir_Change_Brake		; Set brake flag
-	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking
+	mov	Pwm_Limit, Pwm_Limit_Beg		; Set max power while braking to initial power limit
 	jmp	run4						; Go back to run 4, thereby changing force direction
 
 run6_bidir_braking:
@@ -4150,7 +4153,8 @@ run6_bidir_braking:
 	subb	A, #20h					; Bidirectional braking termination speed (~9970 erpm)
 	jc	run6_bidir_continue			; No - continue braking
 
-	clr	Flag_Dir_Change_Brake		; Clear brake
+	; Braking done, set new spinning direction
+	clr	Flag_Dir_Change_Brake		; Clear braking flag
 	mov	C, Flag_Rcp_Dir_Rev			; Read force direction
 	mov	Flag_Motor_Dir_Rev, C		; Set spinning direction
 	setb	Flag_Initial_Run_Phase
