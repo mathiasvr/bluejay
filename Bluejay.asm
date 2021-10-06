@@ -383,7 +383,7 @@ CSEG AT 80h						; Code segment after interrupt vectors
 
 DSHOT_TLM_CLOCK		EQU	24500000				; 24.5MHz
 DSHOT_TLM_START_DELAY	EQU	-(5 * 25 / 4)			; Start telemetry after 5 us (~30 us after receiving DShot cmd)
-DSHOT_TLM_PREDELAY		EQU	7					; 7 timer 0 ticks inherent delay
+DSHOT_TLM_PREDELAY		EQU	9					; 9 timer 0 ticks inherent delay
 
 IF MCU_48MHZ == 1
 	DSHOT_TLM_CLOCK_48		EQU	49000000			; 49MHz
