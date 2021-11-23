@@ -831,24 +831,31 @@ t1_int_bidir_set:
 
 t1_int_not_bidir:
 	; From here Temp5/Temp4 should be at most 3999 (4095-96)
-	mov	A, Temp4					; Divide by 16 (12 to 8-bit)
-	anl	A, #0F0h
-	orl	A, Temp5					; Note: Assumes Temp5 to be 4-bit
-	swap	A
-	mov	B, #5					; Divide by 5 (80 in total)
-	div	AB
-	mov	Temp3, A
-	; Align to 11 bits
-	;clr	C						; Note: Cleared by div
+	; mov	A, Temp4					; Divide by 16 (12 to 8-bit)
+	; anl	A, #0F0h
+	; orl	A, Temp5					; Note: Assumes Temp5 to be 4-bit
+	; swap	A
+	; mov	B, #5					; Divide by 5 (80 in total)
+	; div	AB
+	; mov	Temp3, A
+	; ; Align to 11 bits
+	; ;clr	C						; Note: Cleared by div
+	; rrca	Temp5
+	; mov	A, Temp4
+	; rrc	A
+	; ; Scale from 2000 to 2048
+	; add	A, Temp3
+	; mov	Temp4, A
+	; mov	A, Temp5
+	; addc	A, #0
+	; mov	Temp5, A
+
+	; Linearly scale from 12-bit to 11-bit (range will be 0-1999 [~0-97%])
+	clr	C
 	rrca	Temp5
-	mov	A, Temp4
-	rrc	A
-	; Scale from 2000 to 2048
-	add	A, Temp3
-	mov	Temp4, A
+	rrca	Temp4
+
 	mov	A, Temp5
-	addc	A, #0
-	mov	Temp5, A
 	jnb	ACC.3, ($+7)				; Limit to 11-bit maximum
 	mov	Temp4, #0FFh
 	mov	Temp5, #07h
