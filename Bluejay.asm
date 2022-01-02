@@ -4256,8 +4256,6 @@ IF MCU_48MHZ == 1
 ENDIF
 
 	setb	IE_EA					; Enable all interrupts
-	call	wait100ms					; Wait for pwm to be stopped
-	call	switch_power_off
 
 	; Check if RCP is zero, then it is a normal stop or signal timeout
 	jb	Flag_Rcp_Stop, exit_run_mode_no_stall
@@ -4265,8 +4263,12 @@ ENDIF
 	clr	C						; Otherwise - it's a stall
 	mov	A, Startup_Stall_Cnt
 	subb	A, #4					; Maximum consecutive stalls
-	ljc	motor_start				; Go back and try starting motors again
+	jnc	exit_run_mode_stall_done
 
+	call	wait100ms					; Wait for a bit between stall restarts
+	ljmp	motor_start				; Go back and try starting motors again
+
+exit_run_mode_stall_done:
 	; Stalled too many times
 	clr	IE_EA
 	call	beep_motor_stalled
