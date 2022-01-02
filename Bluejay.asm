@@ -135,6 +135,7 @@ DEFAULT_PGM_STARTUP_BEEP			EQU	1	; 0=Short beep, 1=Melody
 DEFAULT_PGM_DITHERING			EQU	1	; 0=Disabled, 1=Enabled
 
 DEFAULT_PGM_STARTUP_POWER_MAX		EQU	25	; 0..255 => (1000..2000 Throttle): Maximum startup power
+DEFAULT_PGM_BRAKING_STRENGTH		EQU	255	; 0..255 => 0..100 % Braking
 
 ;**** **** **** **** ****
 ; Temporary register definitions
@@ -226,6 +227,9 @@ Pwm_Limit:				DS	1	; Maximum allowed pwm (8-bit)
 Pwm_Limit_By_Rpm:			DS	1	; Maximum allowed pwm for low or high rpm (8-bit)
 Pwm_Limit_Beg:				DS	1	; Initial pwm limit (8-bit)
 
+Pwm_Braking_L:				DS	1	; Max Braking pwm (lo byte)
+Pwm_Braking_H:				DS	1	; Max Braking pwm (hi byte)
+
 Adc_Conversion_Cnt:			DS	1	; Adc conversion counter
 Current_Average_Temp:		DS	1	; Current average temperature (lo byte ADC reading, assuming hi byte is 1)
 Temp_Prot_Limit:			DS	1	; Temperature protection limit
@@ -271,7 +275,7 @@ _Pgm_Input_Pol:			DS	1	; Input PWM polarity
 Initialized_L_Dummy:		DS	1	; Place holder
 Initialized_H_Dummy:		DS	1	; Place holder
 _Pgm_Enable_TX_Program:		DS	1	; Enable/disable value for TX programming
-_Pgm_Main_Rearm_Start:		DS	1	; Enable/disable re-arming main every start
+Pgm_Braking_Strength:		DS	1	; Set maximum braking strength (complementary pwm)
 _Pgm_Gov_Setup_Target:		DS	1	; Main governor setup target
 _Pgm_Startup_Rpm:			DS	1	; Startup RPM
 _Pgm_Startup_Accel:			DS	1	; Startup acceleration
@@ -312,7 +316,7 @@ Temp_Storage:				DS	48	; Temporary storage
 CSEG AT 1A00h
 EEPROM_FW_MAIN_REVISION		EQU	0	; Main revision of the firmware
 EEPROM_FW_SUB_REVISION		EQU	14	; Sub revision of the firmware
-EEPROM_LAYOUT_REVISION		EQU	203	; Revision of the EEPROM layout
+EEPROM_LAYOUT_REVISION		EQU	204	; Revision of the EEPROM layout
 
 Eep_FW_Main_Revision:		DB	EEPROM_FW_MAIN_REVISION		; EEPROM firmware main revision number
 Eep_FW_Sub_Revision:		DB	EEPROM_FW_SUB_REVISION		; EEPROM firmware sub revision number
@@ -331,7 +335,7 @@ _Eep__Pgm_Input_Pol:		DB	0FFh
 Eep_Initialized_L:			DB	055h						; EEPROM initialized signature (lo byte)
 Eep_Initialized_H:			DB	0AAh						; EEPROM initialized signature (hi byte)
 _Eep_Enable_TX_Program:		DB	0FFh						; EEPROM TX programming enable
-_Eep_Main_Rearm_Start:		DB	0FFh
+Eep_Pgm_Braking_Strength:	DB	DEFAULT_PGM_BRAKING_STRENGTH
 _Eep_Pgm_Gov_Setup_Target:	DB	0FFh
 _Eep_Pgm_Startup_Rpm:		DB	0FFh
 _Eep_Pgm_Startup_Accel:		DB	0FFh
@@ -1027,13 +1031,24 @@ ENDIF
 	mov	A, Temp3
 	subb	A, #0
 	mov	Temp5, A
-	jnc	t1_int_set_pwm_damp_set
+	jnc	t1_int_max_braking_set
 
 	clr	A						; Set to minimum value
 	mov	Temp4, A
 	mov	Temp5, A
+	sjmp	t1_int_pwm_braking_set		; Max braking is already zero - branch
 
-t1_int_set_pwm_damp_set:
+t1_int_max_braking_set:
+	clr	C
+	mov	A, Temp4
+	subb	A, Pwm_Braking_L
+	mov	A, Temp5
+	subb	A, Pwm_Braking_H			; Is braking pwm more than maximum allowed braking?
+	jc	t1_int_pwm_braking_set		; Yes - branch
+	mov	Temp4, Pwm_Braking_L		; No - set desired braking instead
+	mov	Temp5, Pwm_Braking_H
+
+t1_int_pwm_braking_set:
 ENDIF
 
 	; Note: Interrupts (of higher priority) are not explicitly disabled because
@@ -3478,7 +3493,7 @@ set_default_parameters:
 	inc	Temp1							; Skip Initialized_H_Dummy
 
 	imov	Temp1, #0FFh						; _Pgm_Enable_TX_Program
-	imov	Temp1, #0FFh						; _Pgm_Main_Rearm_Start
+	imov	Temp1, #DEFAULT_PGM_BRAKING_STRENGTH	; Pgm_Braking_Strength
 	imov	Temp1, #0FFh						; _Pgm_Gov_Setup_Target
 	imov	Temp1, #0FFh						; _Pgm_Startup_Rpm
 	imov	Temp1, #0FFh						; _Pgm_Startup_Accel
@@ -3571,6 +3586,45 @@ decode_temp_done:
 	mov	Temp1, #Pgm_Beep_Strength	; Read programmed beep strength setting
 	mov	Beep_Strength, @Temp1		; Set beep strength
 
+	mov	Temp1, #Pgm_Braking_Strength	; Read programmed braking strength setting
+	mov	A, @Temp1
+IF PWM_BITS_H == 3					; Scale braking strength to pwm resolution
+	; Note: Added for completeness
+	; Currently 11-bit pwm is only used on targets with built-in dead time insertion
+	rl	A
+	rl	A
+	rl	A
+	mov	Temp2, A
+	anl	A, #07h
+	mov	Pwm_Braking_H, A
+	mov	A, Temp2
+	anl	A, #0F8h
+	mov	Pwm_Braking_L, A
+ELSEIF PWM_BITS_H == 2
+	rl	A
+	rl	A
+	mov	Temp2, A
+	anl	A, #03h
+	mov	Pwm_Braking_H, A
+	mov	A, Temp2
+	anl	A, #0FCh
+	mov	Pwm_Braking_L, A
+ELSEIF PWM_BITS_H == 1
+	rl	A
+	mov	Temp2, A
+	anl	A, #01h
+	mov	Pwm_Braking_H, A
+	mov	A, Temp2
+	anl	A, #0FEh
+	mov	Pwm_Braking_L, A
+ELSEIF PWM_BITS_H == 0
+	mov	Pwm_Braking_H, #0
+	mov	Pwm_Braking_L, A
+ENDIF
+	cjne	@Temp1, #0FFh, decode_pwm_dithering
+	mov	Pwm_Braking_L, #0FFh		; Apply full braking if setting is max
+
+decode_pwm_dithering:
 	mov	Temp1, #Pgm_Dithering		; Read programmed dithering setting
 	mov	A, @Temp1
 	add	A, #0FFh					; Carry set if A is not zero
