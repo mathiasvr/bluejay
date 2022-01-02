@@ -606,6 +606,7 @@ Divide_By_4 MACRO ih, il, oh, ol
 ENDM
 
 
+
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
@@ -1926,7 +1927,7 @@ calc_next_comm_div_16_4:
 	Divide_By_4	Temp2, Temp1, Temp2, Temp1
 
 calc_next_comm_average_and_update:
- 	; Comm_Period4x = Comm_Period4x - (Comm_Period4x / (16, 8 or 4)) + (Comm_Period / (4, 2 or 1))
+	; Comm_Period4x = Comm_Period4x - (Comm_Period4x / (16, 8 or 4)) + (Comm_Period / (4, 2 or 1))
 
 	; Temp6/5: Comm_Period4x divided by (16, 8 or 4)
 	clr	C						; Subtract a fraction
@@ -1967,7 +1968,7 @@ calc_next_comm_15deg:
 	; Subtract timing reduction
 	clr	C
 	mov	A, Temp3
-	subb	A, #2				; Set timing reduction
+	subb	A, #2					; Set timing reduction
 	mov	Temp3, A
 	mov	A, Temp4
 	subb	A, #0
@@ -2015,7 +2016,7 @@ calc_next_comm_period_fast:
 	addc	A, #0
 	mov	Temp4, A
 
-	mov	Comm_Period4x_L, Temp3		; Store Comm_Period4x_X
+	mov	Comm_Period4x_L, Temp3		; Store Comm_Period4x
 	mov	Comm_Period4x_H, Temp4
 
 	clr	C
@@ -3720,6 +3721,7 @@ ENDIF
 
 	call	wait100ms					; Wait for flight controller to get ready
 
+
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; No signal entry point
@@ -4018,7 +4020,6 @@ motor_start_bidir_done:
 	call	initialize_timing			; Initialize timing
 
 
-
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Run entry point
@@ -4217,6 +4218,7 @@ run6_bidir_braking:
 
 run6_bidir_continue:
 	jmp	run1						; Go back to run 1
+
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
