@@ -315,7 +315,7 @@ Temp_Storage:				DS	48	; Temporary storage
 ; A segment of the flash is used as "EEPROM", which is not available in SiLabs MCUs
 CSEG AT 1A00h
 EEPROM_FW_MAIN_REVISION		EQU	0	; Main revision of the firmware
-EEPROM_FW_SUB_REVISION		EQU	14	; Sub revision of the firmware
+EEPROM_FW_SUB_REVISION		EQU	15	; Sub revision of the firmware
 EEPROM_LAYOUT_REVISION		EQU	204	; Revision of the EEPROM layout
 
 Eep_FW_Main_Revision:		DB	EEPROM_FW_MAIN_REVISION		; EEPROM firmware main revision number
@@ -364,7 +364,7 @@ Eep_Pgm_LED_Control:		DB	DEFAULT_PGM_LED_CONTROL		; EEPROM copy of programmed LE
 Eep_Dummy:				DB	0FFh						; EEPROM address for safety reason
 
 CSEG AT 1A60h
-Eep_Name:					DB	"Bluejay (BETA)  "			; Name tag (16 Bytes)
+Eep_Name:					DB	"Bluejay         "			; Name tag (16 Bytes)
 
 CSEG AT 1A70h
 Eep_Pgm_Startup_Tune:		DB	2,58,4,32,52,66,13,0,69,45,13,0,52,66,13,0,78,39,211,0,69,45,208,25,52,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
