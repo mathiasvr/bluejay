@@ -4191,8 +4191,7 @@ run6_bidir:
 	sjmp	run6_check_speed
 
 run6_bidir_check_reversal:
-	jnb	Flag_Rcp_Dir_Rev, run6_bidir_reversal
-	sjmp	run6_check_speed
+	jb	Flag_Rcp_Dir_Rev, run6_check_speed
 
 run6_bidir_reversal:
 	; Initiate direction and start braking
