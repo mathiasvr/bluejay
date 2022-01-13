@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15](https://github.com/mathiasvr/bluejay/compare/v0.14...v0.15) (2022-01-13)
+
+### Features
+
+* Add braking strength setting ([#15](https://github.com/mathiasvr/bluejay/pull/15)) ([44a163a](https://github.com/mathiasvr/bluejay/commit/44a163a9f6ced4c3fd42c44c4cbf651cf4449bcb))
+* Faster brake on stop ([6bfeddc](https://github.com/mathiasvr/bluejay/commit/6bfeddc3d3463d731cbe9d3867b6e83fe1b07225))
+
+### Bug Fixes
+
+* Add missing definition in Q layout ([77f0178](https://github.com/mathiasvr/bluejay/commit/77f0178e9d549b9d7f6c7b00ba88bf451a124b86))
+* Adjust telemetry timing on L ESCs ([1670ce2](https://github.com/mathiasvr/bluejay/commit/1670ce2b1089c18e8502224be733e52c1276a81d))
+* Disable interrupts when changing clock speed ([c9ed003](https://github.com/mathiasvr/bluejay/commit/c9ed003b4bccf8a3f8e03d38293d63d5ed94e111))
+* Improve wait ms accuracy ([0f54d76](https://github.com/mathiasvr/bluejay/commit/0f54d765bd34806aaa20c25d2d94c628798de8b4))
+* Make inverted comparator output work on BB1 ([3ffc6b4](https://github.com/mathiasvr/bluejay/commit/3ffc6b4ba9fe4620a13d8673ac0ca5c1db9d8dec))
+
+### Performance Improvements
+
+* Only check brake on stop and RCP timeout when needed ([4961444](https://github.com/mathiasvr/bluejay/commit/49614444e7fa7e592d3e3006658175f932247cc7))
+
+
 ## [0.14](https://github.com/mathiasvr/bluejay/compare/v0.13...v0.14) (2021-07-11)
 
 ### Features
