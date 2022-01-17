@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16](https://github.com/mathiasvr/bluejay/compare/v0.15...v0.16) (2022-01-17)
+
+### Bug Fixes
+
+* Revert telemetry timings for BB2 24MHz mode ([c971602](https://github.com/mathiasvr/bluejay/commit/c97160257460f0dbf6fbcbe105f65faef2bdfd11))
+
+
 ## [0.15](https://github.com/mathiasvr/bluejay/compare/v0.14...v0.15) (2022-01-13)
 
 ### Features
