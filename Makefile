@@ -47,7 +47,7 @@ DUMMYVAR	:= $(foreach exec, $(EXECUTABLES), \
 # Set up efm8load
 EFM8_LOAD_BIN	?= tools/efm8load.py
 EFM8_LOAD_PORT	?= /dev/ttyUSB0
-EFM8_LOAD_BAUD	?= 57600
+EFM8_LOAD_BAUD	?= 115200
 
 # Delete object files on error and warnings
 .DELETE_ON_ERROR:
