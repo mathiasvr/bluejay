@@ -367,8 +367,7 @@ CSEG AT 1A60h
 Eep_Name:					DB	"Bluejay         "			; Name tag (16 Bytes)
 
 CSEG AT 1A70h
-Eep_Pgm_Startup_Tune:		DB	2,58,4,32,52,66,13,0,69,45,13,0,52,66,13,0,78,39,211,0,69,45,208,25,52,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-Eep_Dummy2:				DB	0FFh						; EEPROM address for safety reason
+Eep_Pgm_Beep_Melody:		DB	2, 58, 4, 32, 52, 66, 13, 0, 69, 45, 13, 0, 52, 66, 13, 0, 78, 39, 211, 0, 69, 45, 208, 25, 52, 25, 0
 
 ;**** **** **** **** ****
 Interrupt_Table_Definition			; SiLabs interrupts
@@ -1460,54 +1459,53 @@ beacon_beep_exit:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Beep melody
+; Play beep melody
 ;
 ; Plays a beep melody from eeprom storage
 ;
-; Startup tune has 64 pairs of (item1, item2) - a total of 128 items.
+; A melody has 64 pairs of (item1, item2) - a total of 128 items.
 ; the first 4 values of the 128 items are metadata
 ; item2 - is the duration of each pulse of the musical note, lower the value, higher the pitch
 ; item1 - if item2 is zero, it is the number of milliseconds of wait time, else it is the number of pulses of item2
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
-startup_beep_melody:
-	mov	DPTR, #(Eep_Pgm_Startup_Tune)
+play_beep_melody:
+	mov	DPTR, #(Eep_Pgm_Beep_Melody)
 	clr	A
 	movc	A, @A+DPTR
 	cpl	A
-	jz	startup_beep_done			; If first byte is 255, skip startup melody (settings may be invalid)
+	jz	play_beep_melody_exit			; If first byte is 255, skip startup melody (settings may be invalid)
 
 	mov	Temp5, #62
-	mov	DPTR, #(Eep_Pgm_Startup_Tune + 04h)
+	mov	DPTR, #(Eep_Pgm_Beep_Melody + 04h)
 
-startup_melody_loop:
-	; Read current location at Eep_Pgm_Startup_Tune to Temp4 and increment DPTR. If the value is 0, no point trying to play this note
+play_beep_melody_loop:
+	; Read current location at Eep_Pgm_Beep_Melody to Temp4 and increment DPTR. If the value is 0, no point trying to play this note
 	clr	A
 	movc	A, @A+DPTR
 	inc	DPTR
 	mov	Temp4, A
-	jz	startup_beep_done
+	jz	play_beep_melody_exit
 
-	; Read current location at Eep_Pgm_Startup_Tune to Temp3. If the value zero, that means this is a silent note
+	; Read current location at Eep_Pgm_Beep_Melody to Temp3. If the value zero, that means this is a silent note
 	clr	A
 	movc	A, @A+DPTR
 	mov	Temp3, A
-	jz	startup_melody_item_wait_ms
+	jz	play_beep_melody_item_wait_ms
 	call	beep
-	sjmp	startup_melody_loop_next_item
+	sjmp	play_beep_melody_loop_next_item
 
-startup_melody_item_wait_ms:
+play_beep_melody_item_wait_ms:
 	mov	A, Temp4
 	mov	Temp2, A
 	mov	Temp3, #0
 	call	wait_ms
 
-startup_melody_loop_next_item:
+play_beep_melody_loop_next_item:
 	inc	DPTR
-	djnz	Temp5, startup_melody_loop
+	djnz	Temp5, play_beep_melody_loop
 
-startup_beep_done:
-	mov	DPTR, #Eep_Dummy2
+play_beep_melody_exit:
 	ret
 
 
@@ -3435,7 +3433,7 @@ read_melody:
 	mov	Temp3, #140				; Number of bytes
 	mov	Temp2, #0					; Set XRAM address
 	mov	Temp1, #Bit_Access
-	mov	DPTR, #Eep_Pgm_Startup_Tune	; Set flash address
+	mov	DPTR, #Eep_Pgm_Beep_Melody	; Set flash address
 read_melody_byte:
 	call	read_eeprom_byte
 	mov	A, Bit_Access
@@ -3454,7 +3452,7 @@ read_melody_byte:
 write_melody:
 	mov	Temp3, #140				; Number of bytes
 	mov	Temp2, #0					; Set XRAM address
-	mov	DPTR, #Eep_Pgm_Startup_Tune	; Set flash address
+	mov	DPTR, #Eep_Pgm_Beep_Melody	; Set flash address
 write_melody_byte:
 	movx	A, @Temp2					; Read from XRAM
 	call	write_eeprom_byte_from_acc
@@ -3720,7 +3718,7 @@ ENDIF
 	; Initializing beeps
 	clr	IE_EA					; Disable interrupts explicitly
 	call	wait100ms					; Wait a bit to avoid audible resets if not properly powered
-	call	startup_beep_melody			; Play startup beep melody
+	call	play_beep_melody			; Play startup beep melody
 	call	led_control				; Set LEDs to programmed values
 
 	call	wait100ms					; Wait for flight controller to get ready
