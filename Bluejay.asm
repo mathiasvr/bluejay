@@ -369,6 +369,9 @@ Eep_Name:					DB	"Bluejay         "			; Name tag (16 Bytes)
 CSEG AT 1A70h
 Eep_Pgm_Beep_Melody:		DB	2, 58, 4, 32, 52, 66, 13, 0, 69, 45, 13, 0, 52, 66, 13, 0, 78, 39, 211, 0, 69, 45, 208, 25, 52, 25, 0
 
+CSEG AT 1AF0h
+Eep_Pgm_Melody_End_Wait:	DB	0, 0						; Time [ms] to wait after playing melody (hi/lo byte)
+
 ;**** **** **** **** ****
 Interrupt_Table_Definition			; SiLabs interrupts
 CSEG AT 80h						; Code segment after interrupt vectors
@@ -1499,7 +1502,7 @@ play_beep_melody_loop:
 	movc	A, @A+DPTR
 	inc	DPTR
 	mov	Temp4, A
-	jz	play_beep_melody_exit
+	jz	play_beep_melody_wait
 
 	; Read current location at Eep_Pgm_Beep_Melody to Temp3. If the value zero, that means this is a silent note
 	clr	A
@@ -1518,6 +1521,25 @@ play_beep_melody_item_wait_ms:
 play_beep_melody_loop_next_item:
 	inc	DPTR
 	djnz	Temp5, play_beep_melody_loop
+
+play_beep_melody_wait:
+	; Read the melody wait setting and wait a number of ms before exiting
+	; This is used to make playback on multiple ESCs at the same time.
+	mov	DPTR, #Eep_Pgm_Melody_End_Wait
+	clr	A
+	movc	A, @A+DPTR
+	mov	Temp3, A					; wait_ms (hi byte)
+
+	inc	DPTR
+	clr	A
+	movc	A, @A+DPTR
+	mov	Temp2, A					; wait_ms (lo byte)
+
+	; Exit if long wait time (60+ seconds), to safeguard against uninitialized flash
+	cpl	A
+	jz	play_beep_melody_exit		; Exit if Temp3 is 255
+
+	call	wait_ms
 
 play_beep_melody_exit:
 	ret
@@ -3444,7 +3466,7 @@ write_tag:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 read_melody:
-	mov	Temp3, #140				; Number of bytes
+	mov	Temp3, #142				; Number of bytes
 	mov	Temp2, #0					; Set XRAM address
 	mov	Temp1, #Bit_Access
 	mov	DPTR, #Eep_Pgm_Beep_Melody	; Set flash address
@@ -3464,7 +3486,7 @@ read_melody_byte:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 write_melody:
-	mov	Temp3, #140				; Number of bytes
+	mov	Temp3, #142				; Number of bytes
 	mov	Temp2, #0					; Set XRAM address
 	mov	DPTR, #Eep_Pgm_Beep_Melody	; Set flash address
 write_melody_byte:
