@@ -131,7 +131,7 @@ DEFAULT_PGM_BRAKE_ON_STOP		EQU	0	; 1=Enabled	0=Disabled
 DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2bits per LED, 0=Off, 1=On
 
 DEFAULT_PGM_STARTUP_POWER_MIN		EQU	51	; 0..255 => (1000..1125 Throttle): value * (1000 / 2047) + 1000
-DEFAULT_PGM_STARTUP_BEEP			EQU	1	; 0=Short beep, 1=Melody
+DEFAULT_PGM_STARTUP_BEEP			EQU	1	; 0=Off, 1=Normal, 2=Custom
 DEFAULT_PGM_DITHERING			EQU	1	; 0=Disabled, 1=Enabled
 
 DEFAULT_PGM_STARTUP_POWER_MAX		EQU	25	; 0..255 => (1000..2000 Throttle): Maximum startup power
@@ -1397,6 +1397,20 @@ beep_off:							; Fets off loop
 	ret
 
 ; Beep sequences
+beep_startup:
+	call	beep_f1
+	call	wait5ms
+	call	beep_f2
+	call	wait5ms
+	call	beep_f1
+	call	wait5ms
+	call	beep_f3
+	call	wait200ms
+	call	beep_f2
+	call	beep_f4
+	call	beep_f4
+	ret
+
 beep_signal_lost:
 	call	beep_f1
 	call	beep_f2
@@ -3718,10 +3732,22 @@ ENDIF
 	; Initializing beeps
 	clr	IE_EA					; Disable interrupts explicitly
 	call	wait100ms					; Wait a bit to avoid audible resets if not properly powered
-	call	play_beep_melody			; Play startup beep melody
+
+	mov	Temp1, #Pgm_Startup_Beep		; Read programmed startup beep setting
+	mov	A, @Temp1
+	jz	init_leds					; No startup beeps
+	cjne	A, #2, beep_normal
+
+	call	play_beep_melody			; Play custom user beep melody
+	sjmp	init_leds
+
+beep_normal:
+	call	beep_startup				; Play normal beep melody
+
+init_leds:
 	call	led_control				; Set LEDs to programmed values
 
-	call	wait100ms					; Wait for flight controller to get ready
+	call	wait200ms					; Wait for flight controller to get ready
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
