@@ -109,11 +109,6 @@ Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __		yes	no	high	-	Pino
 
 PWM_CENTERED	EQU	DEADTIME > 0			; Use center aligned pwm on ESCs with dead time
 
-IF MCU_48MHZ < 2 AND PWM_FREQ	< 3
-	; Number of bits in pwm high byte
-	PWM_BITS_H	EQU	(2 + MCU_48MHZ - PWM_CENTERED - PWM_FREQ)
-ENDIF
-
 $include (Common.inc)					; Include common source code for EFM8BBx based ESCs
 
 ;**** **** **** **** ****
@@ -136,6 +131,7 @@ DEFAULT_PGM_DITHERING			EQU	1	; 0=Disabled, 1=Enabled
 
 DEFAULT_PGM_STARTUP_POWER_MAX		EQU	25	; 0..255 => (1000..2000 Throttle): Maximum startup power
 DEFAULT_PGM_BRAKING_STRENGTH		EQU	255	; 0..255 => 0..100 % Braking
+DEFAULT_PGM_PWM_FREQUENCY		EQU	24	; 24, 48, 96 [kHz]
 
 ;**** **** **** **** ****
 ; Temporary register definitions
@@ -259,6 +255,10 @@ DShot_GCR_Pulse_Time_3_Tmp:	DS	1
 
 DShot_GCR_Start_Delay:		DS	1
 
+Pwm_Bits_H:				DS	1
+Pwm_H_Mask:				DS	1
+Dithering_Mask:			DS	1
+
 ;**** **** **** **** ****
 ; Indirect addressing data segments
 ISEG AT 080h						; The variables below must be in this sequence
@@ -269,7 +269,7 @@ Pgm_Dithering:				DS	1	; Enable PWM dithering
 Pgm_Startup_Power_Max:		DS	1	; Maximum power (limit) during startup (and starting initial run phase)
 _Pgm_Rampup_Slope:			DS	1	;
 Pgm_Rpm_Power_Slope:		DS	1	; Low RPM power protection slope (factor)
-Pgm_Pwm_Freq:				DS	1	; PWM frequency (temporary method for display)
+Pgm_Pwm_Frequency:			DS	1	; PWM frequency [kHz]
 Pgm_Direction:				DS	1	; Rotation direction
 _Pgm_Input_Pol:			DS	1	; Input PWM polarity
 Initialized_L_Dummy:		DS	1	; Place holder
@@ -329,7 +329,7 @@ Eep_Pgm_Dithering:			DB	DEFAULT_PGM_DITHERING
 Eep_Pgm_Startup_Power_Max:	DB	DEFAULT_PGM_STARTUP_POWER_MAX
 _Eep_Pgm_Rampup_Slope:		DB	0FFh
 Eep_Pgm_Rpm_Power_Slope:		DB	DEFAULT_PGM_RPM_POWER_SLOPE	; EEPROM copy of programmed rpm power slope (formerly startup power)
-Eep_Pgm_Pwm_Freq:			DB	(24 SHL PWM_FREQ)			; Temporary method for display
+Eep_Pgm_Pwm_Frequency:		DB	DEFAULT_PGM_PWM_FREQUENCY
 Eep_Pgm_Direction:			DB	DEFAULT_PGM_DIRECTION		; EEPROM copy of programmed rotation direction
 _Eep__Pgm_Input_Pol:		DB	0FFh
 Eep_Initialized_L:			DB	055h						; EEPROM initialized signature (lo byte)
@@ -936,22 +936,29 @@ t1_int_zero_rcp_checked:
 	clr	C
 	mov	A, Temp6
 	subb	A, Temp2					; 8-bit rc pulse
-	jnc	t1_int_scale_pwm_resolution
+	jnc	t1_int_pwm_scale_resolution
 
-IF PWM_BITS_H == 0					; 8-bit pwm
+	mov	A, Pwm_Bits_H
+	jnz	t1_int_pwm_limit_not_8bit
+;IF PWM_BITS_H == 0					; 8-bit pwm
 	mov	A, Temp6
 	mov	Temp2, A
-ELSE
+	sjmp	t1_int_pwm_scale_resolution
+;ELSE
+t1_int_pwm_limit_not_8bit:
 	mov	A, Temp6					; Multiply limit by 8 for 11-bit pwm
 	mov	B, #8
 	mul	AB
 	mov	Temp4, A
 	mov	Temp5, B
-ENDIF
+;ENDIF
 
-t1_int_scale_pwm_resolution:
+t1_int_pwm_scale_resolution:
 ; Scale pwm resolution and invert (duty cycle is defined inversely)
-IF PWM_BITS_H == 3					; 11-bit pwm
+
+	mov	A, Pwm_Bits_H
+	cjne	A, #3, t1_int_pwm_scale_10_bit
+;IF PWM_BITS_H == 3					; 11-bit pwm
 	mov	A, Temp5
 	cpl	A
 	anl	A, #7
@@ -959,7 +966,10 @@ IF PWM_BITS_H == 3					; 11-bit pwm
 	mov	A, Temp4
 	cpl	A
 	mov	Temp2, A
-ELSEIF PWM_BITS_H == 2				; 10-bit pwm
+	sjmp	t1_int_set_pwm				; No dithering for 11-bit pwm
+;ELSEIF PWM_BITS_H == 2				; 10-bit pwm
+t1_int_pwm_scale_10_bit:
+	cjne	A, #2, t1_int_pwm_scale_9_bit
 	clr	C
 	mov	A, Temp5
 	rrc	A
@@ -970,7 +980,10 @@ ELSEIF PWM_BITS_H == 2				; 10-bit pwm
 	rrc	A
 	cpl	A
 	mov	Temp2, A
-ELSEIF PWM_BITS_H == 1				; 9-bit pwm
+	sjmp	t1_int_pwm_dithering
+;ELSEIF PWM_BITS_H == 1				; 9-bit pwm
+t1_int_pwm_scale_9_bit:
+	cjne	A, #1, t1_int_pwm_scale_8_bit
 	mov	B, Temp5
 	mov	A, Temp4
 	mov	C, B.0
@@ -985,21 +998,22 @@ ELSEIF PWM_BITS_H == 1				; 9-bit pwm
 	cpl	A
 	anl	A, #1
 	mov	Temp3, A
-ELSEIF PWM_BITS_H == 0				; 8-bit pwm
+	sjmp	t1_int_pwm_dithering
+;ELSEIF PWM_BITS_H == 0				; 8-bit pwm
+t1_int_pwm_scale_8_bit:
 	mov	A, Temp2					; Temp2 already 8-bit
 	cpl	A
 	mov	Temp2, A
 	mov	Temp3, #0
-ENDIF
+;ENDIF
 
+t1_int_pwm_dithering:
 ; 11-bit effective dithering of 8/9/10-bit pwm
-IF PWM_BITS_H < 3
 	jnb	Flag_Dithering, t1_int_set_pwm
 
 	mov	A, Temp4					; 11-bit low byte
 	cpl	A
-	anl	A, #((1 SHL (3 - PWM_BITS_H)) - 1); Get index into dithering pattern table
-
+	anl	A, Dithering_Mask			; Get index into dithering pattern table
 	add	A, #Dithering_Patterns
 	mov	Temp1, A					; Reuse DShot pwm pointer since it is not currently in use.
 	mov	A, @Temp1					; Retrieve pattern
@@ -1008,19 +1022,17 @@ IF PWM_BITS_H < 3
 
 	jnb	ACC.0, t1_int_set_pwm		; Increment if bit is set
 
+	inc	Temp2
 	mov	A, Temp2
-	add	A, #1
-	mov	Temp2, A
 	jnz	t1_int_set_pwm
-IF PWM_BITS_H != 0
+;IF PWM_BITS_H != 0 				; TODO: 8-bit optimization not applied
+	inc	Temp3
 	mov	A, Temp3
-	addc	A, #0
-	mov	Temp3, A
-	jnb	ACC.PWM_BITS_H, t1_int_set_pwm
+	anl	A, Pwm_H_Mask
+	jnz	t1_int_set_pwm
 	dec	Temp3					; Reset on overflow
-ENDIF
+;ENDIF
 	dec	Temp2
-ENDIF
 
 t1_int_set_pwm:
 ; Set pwm registers
@@ -1060,24 +1072,28 @@ ENDIF
 
 	; Note: Interrupts (of higher priority) are not explicitly disabled because
 	; int0 is already disabled and timer 0 is assumed to be disabled at this point
-IF PWM_BITS_H != 0
+;IF PWM_BITS_H != 0
+	mov	A, Pwm_Bits_H
+	jz	t1_int_set_pwm_8_bit
+
 	; Set power pwm auto-reload registers
 	Set_Power_Pwm_Reg_L	Temp2
 	Set_Power_Pwm_Reg_H	Temp3
-ELSE
-	Set_Power_Pwm_Reg_H Temp2
-ENDIF
-
 IF DEADTIME != 0
 	; Set damp pwm auto-reload registers
-	IF PWM_BITS_H != 0
-		Set_Damp_Pwm_Reg_L	Temp4
-		Set_Damp_Pwm_Reg_H	Temp5
-	ELSE
-		Set_Damp_Pwm_Reg_H	Temp4
-	ENDIF
+	Set_Damp_Pwm_Reg_L	Temp4
+	Set_Damp_Pwm_Reg_H	Temp5
 ENDIF
+	sjmp	t1_int_set_pwm_done
+;ELSE
+t1_int_set_pwm_8_bit:
+	Set_Power_Pwm_Reg_H Temp2
+IF DEADTIME != 0
+	Set_Damp_Pwm_Reg_H	Temp4
+ENDIF
+;ENDIF
 
+t1_int_set_pwm_done:
 	mov	Rcp_Timeout_Cntd, #10		; Set timeout count
 
 	; Prepare DShot telemetry
@@ -3524,7 +3540,7 @@ set_default_parameters:
 	imov	Temp1, #DEFAULT_PGM_STARTUP_POWER_MAX	; Pgm_Startup_Power_Max
 	imov	Temp1, #0FFh						; _Pgm_Rampup_Slope
 	imov	Temp1, #DEFAULT_PGM_RPM_POWER_SLOPE	; Pgm_Rpm_Power_Slope
-	imov	Temp1, #(24 SHL PWM_FREQ)			; Pgm_Pwm_Freq
+	imov	Temp1, #DEFAULT_PGM_PWM_FREQUENCY		; Pgm_Pwm_Frequency
 	imov	Temp1, #DEFAULT_PGM_DIRECTION			; Pgm_Direction
 	imov	Temp1, #0FFh						; _Pgm_Input_Pol
 
@@ -3625,21 +3641,45 @@ decode_temp_done:
 	mov	Temp1, #Pgm_Beep_Strength	; Read programmed beep strength setting
 	mov	Beep_Strength, @Temp1		; Set beep strength
 
-	mov	Temp1, #Pgm_Braking_Strength	; Read programmed braking strength setting
+	; Decode pwm frequency setting
+	mov	Temp1, #Pgm_Pwm_Frequency	; Read programmed pwm frequency setting
 	mov	A, @Temp1
-IF PWM_BITS_H == 3					; Scale braking strength to pwm resolution
-	; Note: Added for completeness
+	mov	Temp2, #0					; 24 kHz by default
+	cjne	A, #48, ($+5)
+	mov	Temp2, #1					; 48 kHz
+	cjne	A, #96, ($+5)
+	mov	Temp2, #2					; 96 kHz
+
+	; TODO: Simplify?
+	clr	C
+	mov	A, #(2 + MCU_48MHZ - PWM_CENTERED)
+	subb	A, Temp2
+	mov	Pwm_Bits_H, A				; Number of bits in pwm high byte
+
+	; Decode pwm dithering and braking strength settings
+	mov	Temp1, #Pgm_Dithering		; Read programmed dithering setting
+	mov	A, @Temp1
+	add	A, #0FFh					; Carry set if A is not zero
+	mov	Flag_Dithering, C			; Set dithering enabled
+
+	mov	A, Pwm_Bits_H
+	cjne	A, #3, decode_pwm_h_2
 	; Currently 11-bit pwm is only used on targets with built-in dead time insertion
-	rl	A
-	rl	A
-	rl	A
-	mov	Temp2, A
-	anl	A, #07h
-	mov	Pwm_Braking_H, A
-	mov	A, Temp2
-	anl	A, #0F8h
-	mov	Pwm_Braking_L, A
-ELSEIF PWM_BITS_H == 2
+	; Not initializing pwm dithering or braking strength
+	sjmp	decode_pwm_h_done
+
+decode_pwm_h_2:
+;IF PWM_BITS_H == 2					; Initialize pwm dithering bit patterns
+	cjne	A, #2, decode_pwm_h_1
+	mov	Pwm_H_Mask, #03h
+	mov	Dithering_Mask, #01h
+
+	mov	Temp1, #Dithering_Patterns	; 1-bit dithering (10-bit to 11-bit)
+	mov	@Temp1, #00h				; 00000000
+	imov	Temp1, #55h				; 01010101
+
+	mov	Temp1, #Pgm_Braking_Strength	; Scale 10-bit braking pwm
+	mov	A, @Temp1
 	rl	A
 	rl	A
 	mov	Temp2, A
@@ -3648,7 +3688,22 @@ ELSEIF PWM_BITS_H == 2
 	mov	A, Temp2
 	anl	A, #0FCh
 	mov	Pwm_Braking_L, A
-ELSEIF PWM_BITS_H == 1
+
+	sjmp	decode_pwm_h_done
+;ELSEIF PWM_BITS_H == 1
+decode_pwm_h_1:
+	cjne	A, #1, decode_pwm_h_0
+	mov	Pwm_H_Mask, #01h
+	mov	Dithering_Mask, #03h
+
+	mov	Temp1, #Dithering_Patterns	; 2-bit dithering (9-bit to 11-bit)
+	mov	@Temp1, #00h				; 00000000
+	imov	Temp1, #11h				; 00010001
+	imov	Temp1, #55h				; 01010101
+	imov	Temp1, #77h				; 01110111
+
+	mov	Temp1, #Pgm_Braking_Strength	; Scale 9-bit braking pwm
+	mov	A, @Temp1
 	rl	A
 	mov	Temp2, A
 	anl	A, #01h
@@ -3656,30 +3711,14 @@ ELSEIF PWM_BITS_H == 1
 	mov	A, Temp2
 	anl	A, #0FEh
 	mov	Pwm_Braking_L, A
-ELSEIF PWM_BITS_H == 0
-	mov	Pwm_Braking_H, #0
-	mov	Pwm_Braking_L, A
-ENDIF
-	cjne	@Temp1, #0FFh, decode_pwm_dithering
-	mov	Pwm_Braking_L, #0FFh		; Apply full braking if setting is max
 
-decode_pwm_dithering:
-	mov	Temp1, #Pgm_Dithering		; Read programmed dithering setting
-	mov	A, @Temp1
-	add	A, #0FFh					; Carry set if A is not zero
-	mov	Flag_Dithering, C			; Set dithering enabled
+	sjmp	decode_pwm_h_done
+;ELSEIF PWM_BITS_H == 0
+decode_pwm_h_0:
+	cjne	A, #0, decode_pwm_h_done
+	mov	Pwm_H_Mask, #00h
+	mov	Dithering_Mask, #07h
 
-IF PWM_BITS_H == 2					; Initialize pwm dithering bit patterns
-	mov	Temp1, #Dithering_Patterns	; 1-bit dithering (10-bit to 11-bit)
-	mov	@Temp1, #00h				; 00000000
-	imov	Temp1, #55h				; 01010101
-ELSEIF PWM_BITS_H == 1
-	mov	Temp1, #Dithering_Patterns	; 2-bit dithering (9-bit to 11-bit)
-	mov	@Temp1, #00h				; 00000000
-	imov	Temp1, #11h				; 00010001
-	imov	Temp1, #55h				; 01010101
-	imov	Temp1, #77h				; 01110111
-ELSEIF PWM_BITS_H == 0
 	mov	Temp1, #Dithering_Patterns	; 3-bit dithering (8-bit to 11-bit)
 	mov	@Temp1, #00h				; 00000000
 	imov	Temp1, #01h				; 00000001
@@ -3689,7 +3728,18 @@ ELSEIF PWM_BITS_H == 0
 	imov	Temp1, #5Bh				; 01011011
 	imov	Temp1, #77h				; 01110111
 	imov	Temp1, #7fh				; 01111111
-ENDIF
+
+	mov	Temp1, #Pgm_Braking_Strength	; Scale 8-bit braking pwm
+	mov	A, @Temp1
+	mov	Pwm_Braking_H, #0
+	mov	Pwm_Braking_L, A
+;ENDIF
+
+decode_pwm_h_done:
+	cjne	@Temp1, #0FFh, decode_exit
+	mov	Pwm_Braking_L, #0FFh		; Apply full braking if setting is max
+
+decode_exit:
 	ret
 
 
