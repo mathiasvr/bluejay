@@ -718,7 +718,7 @@ t1_int:
 	jnc	t1_int_frame_fail			; Frame too long
 
 	; Check that correct number of pulses is received
-	cjne	Temp1, #16, t1_int_frame_fail	; Read current pointer
+	; cjne	Temp1, #16, t1_int_frame_fail	; Read current pointer
 
 	; Decode transmitted data
 	mov	Temp1, #0					; Set pointer
