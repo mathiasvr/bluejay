@@ -1,0 +1,70 @@
+name: Bug Report
+description: File a bug report to help solve an issue
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the issue
+      description: Also tell us, what did you expect to happen?
+      placeholder: A description of the issue.
+    validations:
+      required: true
+  - type: input
+    id: bluejay_version
+    attributes:
+      label: Bluejay version
+      placeholder: '0.16'
+    validations:
+      required: true
+  - type: input
+    id: esc_variant
+    attributes:
+      label: ESC variant
+      placeholder: A_H_5
+    validations:
+      required: true
+  - type: dropdown
+    id: pwm_frequency
+    attributes:
+      label: PWM frequency
+      options: ['24', '48', '96', Any]
+    validations:
+      required: true
+  - type: dropdown
+    id: dshot_bitrate
+    attributes:
+      label: DShot bitrate
+      options: ['150', '300', '600', Any]
+    validations:
+      required: true
+  - type: dropdown
+    id: bidir_dshot
+    attributes:
+      label: Bidirectional DShot
+      options: ['Off', 'On', Any]
+    validations:
+      required: true
+  - type: input
+    id: fc_firmware
+    attributes:
+      label: FC firmware
+      description: Flight controller firmware and version
+      placeholder: Betaflight 4.2.9
+    validations:
+      required: true
+  - type: input
+    id: motor_size
+    attributes:
+      label: Motor size
+      placeholder: '0802'
+    validations:
+      required: false
+  - type: textarea
+    id: debug_log
+    attributes:
+      label: Configurator debug log
+      description: If your issue is related to *flashing*, please press `Save Debug Log` in the configurator and post the log here.
+      placeholder: Drag and drop the debug log file here.
