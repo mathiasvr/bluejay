@@ -1,4 +1,7 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-npx --no-install commitlint --config .husky/commitlint.config.js --from origin/main
+# Install hooks: npx husky install
+# Install commitlint: npm -g install commitlint @commitlint/config-conventional
+
+commitlint --config .husky/commitlint.config.js --extends $(npm root -g)/@commitlint/config-conventional --from origin/main
