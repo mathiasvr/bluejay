@@ -31,14 +31,14 @@
 ;**** **** **** **** ****
 ; Master clock is internal 24MHz oscillator (or 48MHz, for which the times below are halved)
 ; Although 24/48 are used in the code, the exact clock frequencies are 24.5MHz or 49.0 MHz
-; Timer 0 (41.67ns counts) always counts up and is used for
+; Timer0 (41.67ns counts) always counts up and is used for
 ; - RC pulse measurement
 ; - DShot telemetry pulse timing
-; Timer 1 (41.67ns counts) always counts up and is used for
+; Timer1 (41.67ns counts) always counts up and is used for
 ; - DShot frame sync detection
-; Timer 2 (500ns counts) always counts up and is used for
+; Timer2 (500ns counts) always counts up and is used for
 ; - RC pulse timeout counts and commutation times
-; Timer 3 (500ns counts) always counts up and is used for
+; Timer3 (500ns counts) always counts up and is used for
 ; - Commutation timeouts
 ; PCA0 (41.67ns counts) always counts up and is used for
 ; - Hardware PWM generation
@@ -69,7 +69,7 @@ C_	EQU	3		; RX __ Vn Am Bm Cm Ap Ac	Bp Bc Cp Cc __ __ __ __		no	no	high	_
 D_	EQU	4		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __		no	yes	high	_
 E_	EQU	5		; Vn Am Bm Cm __ RX L0 L1	Ap Ac Bp Bc Cp Cc L2 __		no	no	high	3	Pinout like A, with LEDs
 F_	EQU	6		; Vn Cm Bm Am __ RX __ __	Ap Ac Bp Bc Cp Cc __ __		no	no	high	_
-G_	EQU	7		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __		no	no	high	_	Pinout like D, but non-inverted com fets
+G_	EQU	7		; Bm Cm Am Vn __ RX __ __	Ap Ac Bp Bc Cp Cc __ __		no	no	high	_	Pinout like D, but non-inverted com FETs
 H_	EQU	8		; Cm Vn Bm Am __ __ __ RX	Cc Bc Ac __ Cp Bp Ap __		no	no	high	_
 I_	EQU	9		; Vn Am Bm Cm __ RX __ __	Cp Bp Ap Cc Bc Ac __ __		no	no	high	_
 J_	EQU	10		; Am Cm Bm Vn RX L0 L1 L2	Ap Bp Cp Ac Bc Cc __ __		no	no	high	3
@@ -88,7 +88,7 @@ V_	EQU	22		; Am Bm Vn Cm __ RX __ Cc	Cp Bc __ __ Bp Ac Ap __		no	no	high	_
 W_	EQU	23		; __ __ Am Vn __ Bm Cm RX	__ __ __ __ Cp Bp Ap __		n/a	n/a	high	_	Tristate gate driver
 X_	EQU	24
 Y_	EQU	25
-Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __		yes	no	high	-	Pinout like S, but inverted pwm fets
+Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __		yes	no	high	-	Pinout like S, but inverted pwm FETs
 
 ;**** **** **** **** ****
 ; Select the port mapping to use (or unselect all for use with external batch compile file)
@@ -99,7 +99,7 @@ Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __		yes	no	high	-	Pino
 ;MCU_48MHZ		EQU	0
 
 ;**** **** **** **** ****
-; Select the fet dead time (or unselect for use with external batch compile file)
+; Select the FET dead time (or unselect for use with external batch compile file)
 ;DEADTIME			EQU	15	; 20.4ns per step
 
 ;**** **** **** **** ****
@@ -128,7 +128,7 @@ DEFAULT_PGM_BEACON_DELAY			EQU	4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
 DEFAULT_PGM_ENABLE_TEMP_PROT		EQU	7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
 
 DEFAULT_PGM_BRAKE_ON_STOP		EQU	0	; 1=Enabled	0=Disabled
-DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2bits per LED, 0=Off, 1=On
+DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2 bits per LED, 0=Off, 1=On
 
 DEFAULT_PGM_STARTUP_POWER_MIN		EQU	51	; 0..255 => (1000..1125 Throttle): value * (1000 / 2047) + 1000
 DEFAULT_PGM_STARTUP_BEEP			EQU	1	; 0=Short beep, 1=Melody
@@ -161,7 +161,7 @@ Flag_Initial_Run_Phase		BIT	Flags0.1		; Set when in initial run phase (or startu
 Flag_Motor_Dir_Rev			BIT	Flags0.2		; Set if the current spinning direction is reversed
 
 Flags1:					DS	1			; State flags. Reset upon motor_start
-Flag_Timer3_Pending			BIT	Flags1.0		; Timer 3 pending flag
+Flag_Timer3_Pending			BIT	Flags1.0		; Timer3 pending flag
 Flag_Demag_Detected			BIT	Flags1.1		; Set when excessive demag time is detected
 Flag_Comp_Timed_Out			BIT	Flags1.2		; Set when comparator reading timed out
 Flag_Motor_Running			BIT	Flags1.3
@@ -173,7 +173,7 @@ Flags2:					DS	1			; State flags. NOT reset upon motor_start
 ;						BIT	Flags2.0
 Flag_Pgm_Dir_Rev			BIT	Flags2.1		; Set if the programmed direction is reversed
 Flag_Pgm_Bidir				BIT	Flags2.2		; Set if the programmed control mode is bidirectional operation
-Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when timer 2 interrupt shall be ignored
+Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when Timer2 interrupt shall be ignored
 Flag_Clock_At_48MHz			BIT	Flags2.4		; Set if 48MHz MCUs run at 48MHz
 Flag_Rcp_Stop				BIT	Flags2.5		; Set if the RC pulse value is zero or if timeout occurs
 Flag_Rcp_Dir_Rev			BIT	Flags2.6		; RC pulse direction in bidirectional mode
@@ -204,24 +204,24 @@ Demag_Detected_Metric:		DS	1	; Metric used to gauge demag event frequency
 Demag_Pwr_Off_Thresh:		DS	1	; Metric threshold above which power is cut
 Low_Rpm_Pwr_Slope:			DS	1	; Sets the slope of power increase for low rpm
 
-Timer2_X:					DS	1	; Timer 2 extended byte
-Prev_Comm_L:				DS	1	; Previous commutation timer 2 timestamp (lo byte)
-Prev_Comm_H:				DS	1	; Previous commutation timer 2 timestamp (hi byte)
-Prev_Comm_X:				DS	1	; Previous commutation timer 2 timestamp (ext byte)
-Prev_Prev_Comm_L:			DS	1	; Pre-previous commutation timer 2 timestamp (lo byte)
-Prev_Prev_Comm_H:			DS	1	; Pre-previous commutation timer 2 timestamp (hi byte)
-Comm_Period4x_L:			DS	1	; Timer 2 ticks between the last 4 commutations (lo byte)
-Comm_Period4x_H:			DS	1	; Timer 2 ticks between the last 4 commutations (hi byte)
+Timer2_X:					DS	1	; Timer2 extended byte
+Prev_Comm_L:				DS	1	; Previous commutation Timer2 timestamp (lo byte)
+Prev_Comm_H:				DS	1	; Previous commutation Timer2 timestamp (hi byte)
+Prev_Comm_X:				DS	1	; Previous commutation Timer2 timestamp (ext byte)
+Prev_Prev_Comm_L:			DS	1	; Pre-previous commutation Timer2 timestamp (lo byte)
+Prev_Prev_Comm_H:			DS	1	; Pre-previous commutation Timer2 timestamp (hi byte)
+Comm_Period4x_L:			DS	1	; Timer2 ticks between the last 4 commutations (lo byte)
+Comm_Period4x_H:			DS	1	; Timer2 ticks between the last 4 commutations (hi byte)
 Comparator_Read_Cnt:		DS	1	; Number of comparator reads done
 
-Wt_Adv_Start_L:			DS	1	; Timer 3 start point for commutation advance timing (lo byte)
-Wt_Adv_Start_H:			DS	1	; Timer 3 start point for commutation advance timing (hi byte)
-Wt_Zc_Scan_Start_L:			DS	1	; Timer 3 start point from commutation to zero cross scan (lo byte)
-Wt_Zc_Scan_Start_H:			DS	1	; Timer 3 start point from commutation to zero cross scan (hi byte)
-Wt_Zc_Tout_Start_L:			DS	1	; Timer 3 start point for zero cross scan timeout (lo byte)
-Wt_Zc_Tout_Start_H:			DS	1	; Timer 3 start point for zero cross scan timeout (hi byte)
-Wt_Comm_Start_L:			DS	1	; Timer 3 start point from zero cross to commutation (lo byte)
-Wt_Comm_Start_H:			DS	1	; Timer 3 start point from zero cross to commutation (hi byte)
+Wt_Adv_Start_L:			DS	1	; Timer3 start point for commutation advance timing (lo byte)
+Wt_Adv_Start_H:			DS	1	; Timer3 start point for commutation advance timing (hi byte)
+Wt_Zc_Scan_Start_L:			DS	1	; Timer3 start point from commutation to zero cross scan (lo byte)
+Wt_Zc_Scan_Start_H:			DS	1	; Timer3 start point from commutation to zero cross scan (hi byte)
+Wt_Zc_Tout_Start_L:			DS	1	; Timer3 start point for zero cross scan timeout (lo byte)
+Wt_Zc_Tout_Start_H:			DS	1	; Timer3 start point for zero cross scan timeout (hi byte)
+Wt_Comm_Start_L:			DS	1	; Timer3 start point from zero cross to commutation (lo byte)
+Wt_Comm_Start_H:			DS	1	; Timer3 start point from zero cross to commutation (hi byte)
 
 Pwm_Limit:				DS	1	; Maximum allowed pwm (8-bit)
 Pwm_Limit_By_Rpm:			DS	1	; Maximum allowed pwm for low or high rpm (8-bit)
@@ -239,11 +239,11 @@ Beep_Strength:				DS	1	; Strength of beeps
 Flash_Key_1:				DS	1	; Flash key one
 Flash_Key_2:				DS	1	; Flash key two
 
-DShot_Pwm_Thr:				DS	1	; DShot pulse width threshold value (timer 0 ticks)
-DShot_Timer_Preset:			DS	1	; DShot timer preset for frame sync detection (timer 1 lo byte)
-DShot_Frame_Start_L:		DS	1	; DShot frame start timestamp (timer 2 lo byte)
-DShot_Frame_Start_H:		DS	1	; DShot frame start timestamp (timer 2 hi byte)
-DShot_Frame_Length_Thr:		DS	1	; DShot frame length criteria (timer 2 ticks)
+DShot_Pwm_Thr:				DS	1	; DShot pulse width threshold value (Timer0 ticks)
+DShot_Timer_Preset:			DS	1	; DShot timer preset for frame sync detection (Timer1 lo byte)
+DShot_Frame_Start_L:		DS	1	; DShot frame start timestamp (Timer2 lo byte)
+DShot_Frame_Start_H:		DS	1	; DShot frame start timestamp (Timer2 hi byte)
+DShot_Frame_Length_Thr:		DS	1	; DShot frame length criteria (Timer2 ticks)
 
 DShot_Cmd:				DS	1	; DShot command
 DShot_Cmd_Cnt:				DS	1	; DShot command count
@@ -308,7 +308,7 @@ ISEG AT 0C0h
 Dithering_Patterns:			DS	16	; Bit patterns for pwm dithering
 
 ISEG AT 0D0h
-Temp_Storage:				DS	48	; Temporary storage
+Temp_Storage:				DS	48	; Temporary storage (internal memory)
 
 ;**** **** **** **** ****
 ; EEPROM code segments
@@ -387,15 +387,15 @@ CSEG AT 80h						; Code segment after interrupt vectors
 DSHOT_TLM_CLOCK		EQU	24500000				; 24.5MHz
 DSHOT_TLM_START_DELAY	EQU	-(5 * 25 / 4)			; Start telemetry after 5 us (~30 us after receiving DShot cmd)
 IF MCU_48MHZ == 0
-DSHOT_TLM_PREDELAY		EQU	9					; 9 timer 0 ticks inherent delay
+DSHOT_TLM_PREDELAY		EQU	9					; 9 Timer0 ticks inherent delay
 ELSE
-DSHOT_TLM_PREDELAY		EQU	7					; 7 timer 0 ticks inherent delay
+DSHOT_TLM_PREDELAY		EQU	7					; 7 Timer0 ticks inherent delay
 ENDIF
 
 IF MCU_48MHZ == 1
 	DSHOT_TLM_CLOCK_48		EQU	49000000			; 49MHz
 	DSHOT_TLM_START_DELAY_48	EQU	-(16 * 49 / 4)		; Start telemetry after 16 us (~30 us after receiving DShot cmd)
-	DSHOT_TLM_PREDELAY_48	EQU	11				; 11 timer 0 ticks inherent delay
+	DSHOT_TLM_PREDELAY_48	EQU	11				; 11 Timer0 ticks inherent delay
 ENDIF
 
 Set_DShot_Tlm_Bitrate MACRO rate
@@ -421,7 +421,7 @@ GCR_Add_Time MACRO reg
 	mov	@reg, A
 ENDM
 
-; Prepare telemetry packet while waiting for timer 3 to wrap
+; Prepare telemetry packet while waiting for Timer3 to wrap
 Wait_For_Timer3 MACRO
 LOCAL wait_for_t3 done_waiting
 	jb	Flag_Telemetry_Pending, wait_for_t3
@@ -437,7 +437,7 @@ done_waiting:
 ENDM
 
 ; Used for subdividing the DShot telemetry routine into chunks,
-; that will return if timer 3 has wrapped
+; that will return if Timer3 has wrapped
 Early_Return_Packet_Stage MACRO num
 	Early_Return_Packet_Stage_ num, %(num + 1)
 ENDM
@@ -445,7 +445,7 @@ ENDM
 Early_Return_Packet_Stage_ MACRO num next
 IF num > 0
 	inc	Temp7								;; Increment current packet stage
-	jb	Flag_Timer3_Pending, dshot_packet_stage_&num	;; Return early if timer 3 has wrapped
+	jb	Flag_Timer3_Pending, dshot_packet_stage_&num	;; Return early if Timer3 has wrapped
 	pop	PSW
 	ret
 dshot_packet_stage_&num:
@@ -621,7 +621,7 @@ ENDM
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Timer 0 interrupt routine (High priority)
+; Timer0 interrupt routine (High priority)
 ;
 ; Generate DShot telemetry signal
 ;
@@ -656,17 +656,17 @@ t0_int_dshot_tlm_finish:
 	anl	RTX_MDOUT, #(NOT (1 SHL RTX_PIN))	; Set RTX_PIN output mode to open-drain
 	setb	RTX_BIT					; Float high
 
-	clr	IE_ET0					; Disable timer 0 interrupts
+	clr	IE_ET0					; Disable Timer0 interrupts
 
-	mov	CKCON0, Temp8				; Restore regular DShot timer 0/1 clock settings
-	mov	TMOD, #0AAh				; Timer 0/1 gated by INT0/1
+	mov	CKCON0, Temp8				; Restore regular DShot Timer0/1 clock settings
+	mov	TMOD, #0AAh				; Timer0/1 gated by Int0/1
 
-	clr	TCON_IE0					; Clear int0 pending flag
-	clr	TCON_IE1					; Clear int1 pending flag
+	clr	TCON_IE0					; Clear Int0 pending flag
+	clr	TCON_IE1					; Clear Int1 pending flag
 
-	mov	TL0, #0					; Reset timer 0 count
-	setb	IE_EX0					; Enable int0 interrupts
-	setb	IE_EX1					; Enable int1 interrupts
+	mov	TL0, #0					; Reset Timer0 count
+	setb	IE_EX0					; Enable Int0 interrupts
+	setb	IE_EX1					; Enable Int1 interrupts
 
 	clr	Flag_Telemetry_Pending		; Mark that new telemetry packet may be created
 
@@ -676,7 +676,7 @@ t0_int_dshot_tlm_finish:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Timer 1 interrupt routine
+; Timer1 interrupt routine
 ;
 ; Decode DShot frame
 ; Process new throttle value and update pwm registers
@@ -684,8 +684,8 @@ t0_int_dshot_tlm_finish:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t1_int:
-	clr	IE_EX0					; Disable int0 interrupts
-	clr	TCON_TR1					; Stop timer 1
+	clr	IE_EX0					; Disable Int0 interrupts
+	clr	TCON_TR1					; Stop Timer1
 	mov	TL1, DShot_Timer_Preset		; Reset sync timer
 
 	push	PSW
@@ -693,12 +693,12 @@ t1_int:
 	push	ACC
 	push	B
 
-	; Note: Interrupts are not explicitly disabled because those of higher priority:
-	; int0_int is already disabled and t0_int is assumed to be disabled at this point
-	clr	TMR2CN0_TR2				; Timer 2 disabled
+	; Note: Interrupts are not explicitly disabled
+	; Assume higher priority interrupts (Int0, Timer0) to be disabled at this point
+	clr	TMR2CN0_TR2				; Timer2 disabled
 	mov	Temp2, TMR2L				; Read timer value
 	mov	Temp3, TMR2H
-	setb	TMR2CN0_TR2				; Timer 2 enabled
+	setb	TMR2CN0_TR2				; Timer2 enabled
 
 	; Check frame time length
 	clr	C
@@ -1025,7 +1025,7 @@ IF DEADTIME != 0
 	; Subtract dead time from normal pwm and store as damping pwm
 	; Damping pwm duty cycle will be higher because numbers are inverted
 	clr	C
-	mov	A, Temp2					; Skew damping fet timing
+	mov	A, Temp2					; Skew damping FET timing
 IF MCU_48MHZ == 0
 	subb	A, #((DEADTIME + 1) SHR 1)
 ELSE
@@ -1055,8 +1055,8 @@ t1_int_max_braking_set:
 t1_int_pwm_braking_set:
 ENDIF
 
-	; Note: Interrupts (of higher priority) are not explicitly disabled because
-	; int0 is already disabled and timer 0 is assumed to be disabled at this point
+	; Note: Interrupts are not explicitly disabled
+	; Assume higher priority interrupts (Int0, Timer0) to be disabled at this point
 IF PWM_BITS_H != 0
 	; Set power pwm auto-reload registers
 	Set_Power_Pwm_Reg_L	Temp2
@@ -1081,9 +1081,9 @@ ENDIF
 	jnb	Flag_Rcp_DShot_Inverted, t1_int_exit_no_tlm	; Only send telemetry for inverted DShot
 	jnb	Flag_Telemetry_Pending, t1_int_exit_no_tlm	; Check if telemetry packet is ready
 
-	; Prepare timer 0 for sending telemetry data
-	mov	CKCON0, #01h				; Timer 0 is system clock divided by 4
-	mov	TMOD, #0A2h				; Timer 0 runs free not gated by INT0
+	; Prepare Timer0 for sending telemetry data
+	mov	CKCON0, #01h				; Timer0 is system clock divided by 4
+	mov	TMOD, #0A2h				; Timer0 runs free not gated by Int0
 
 	; Configure RTX_PIN for digital output
 	setb	RTX_BIT					; Default to high level
@@ -1093,16 +1093,16 @@ ENDIF
 
 	; Note: Delay must be large enough to ensure port is ready for output
 	mov	TL0, DShot_GCR_Start_Delay	; Telemetry will begin after this delay
-	clr	TCON_TF0					; Clear timer 0 overflow flag
-	setb	IE_ET0					; Enable timer 0 interrupts
+	clr	TCON_TF0					; Clear Timer0 overflow flag
+	setb	IE_ET0					; Enable Timer0 interrupts
 
 	sjmp	t1_int_exit_no_int
 
 t1_int_exit_no_tlm:
 	mov	Temp1, #0					; Set pointer to start
-	mov	TL0, #0					; Reset timer 0
-	setb	IE_EX0					; Enable int0 interrupts
-	setb	IE_EX1					; Enable int1 interrupts
+	mov	TL0, #0					; Reset Timer0
+	setb	IE_EX0					; Enable Int0 interrupts
+	setb	IE_EX1					; Enable Int1 interrupts
 
 t1_int_exit_no_int:
 	pop	B						; Restore preserved registers
@@ -1113,7 +1113,7 @@ t1_int_exit_no_int:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Timer 2 interrupt routine
+; Timer2 interrupt routine
 ;
 ; Update RC pulse timeout and stop counters
 ; Happens every 32ms
@@ -1157,7 +1157,7 @@ t2_int_exit:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Timer 3 interrupt routine
+; Timer3 interrupt routine
 ;
 ; Used for commutation timing
 ;
@@ -1166,8 +1166,8 @@ t2_int_exit:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 t3_int:
 	clr	IE_EA					; Disable all interrupts
-	anl	EIE1, #7Fh				; Disable timer 3 interrupts
-	anl	TMR3CN0, #07Fh				; Clear timer 3 interrupt flag
+	anl	EIE1, #7Fh				; Disable Timer3 interrupts
+	anl	TMR3CN0, #07Fh				; Clear Timer3 interrupt flag
 	mov	TMR3RLL, #0FAh				; Short delay to avoid re-loading regular delay
 	mov	TMR3RLH, #0FFh
 	clr	Flag_Timer3_Pending			; Flag that timer has wrapped
@@ -1192,7 +1192,7 @@ int0_int:
 	; Temp1 in register bank 1 points to pwm timings
 	push	PSW
 	mov	PSW, #8h
-	movx	@Temp1, A					; Store pwm
+	movx	@Temp1, A					; Store pwm in external memory
 	inc	Temp1
 	pop	PSW
 
@@ -1210,16 +1210,16 @@ int0_int:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 int1_int:
-	clr	IE_EX1					; Disable int1 interrupts
-	setb	TCON_TR1					; Start timer 1
+	clr	IE_EX1					; Disable Int1 interrupts
+	setb	TCON_TR1					; Start Timer1
 
-	; Note: Interrupts are not explicitly disabled because those of higher priority:
-	; int0_int should not yet trigger if dshot signal is valid
-	; t0_int is assumed to be disabled at this point
-	clr	TMR2CN0_TR2				; Timer 2 disabled
+	; Note: Interrupts are not explicitly disabled, assuming higher priority interrupts:
+	; - Timer0 to be disabled at this point
+	; - Int0 to not trigger for valid DShot signal
+	clr	TMR2CN0_TR2				; Timer2 disabled
 	mov	DShot_Frame_Start_L, TMR2L	; Read timer value
 	mov	DShot_Frame_Start_H, TMR2H
-	setb	TMR2CN0_TR2				; Timer 2 enabled
+	setb	TMR2CN0_TR2				; Timer2 enabled
 reti
 
 
@@ -1249,6 +1249,10 @@ pca_int:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Wait a number of milliseconds (Multiple entry points)
+;
+; Requirements:
+; - System clock should be set to 24MHz
+; - Interrupts should be disabled for precision
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 wait1ms:
@@ -1353,15 +1357,15 @@ beep_start:
 beep_on_off:
 	clr	A
 	B_Com_Fet_Off					; B com FET off
-	djnz	ACC, $					; Allow some time after com fet is turned off
+	djnz	ACC, $					; Allow some time after com FET is turned off
 	B_Pwm_Fet_On					; B pwm FET on (in order to charge the driver of the B com FET)
-	djnz	ACC, $					; Let the pwm fet be turned on a while
+	djnz	ACC, $					; Let the pwm FET be turned on a while
 	B_Pwm_Fet_Off					; B pwm FET off again
-	djnz	ACC, $					; Allow some time after pwm fet is turned off
+	djnz	ACC, $					; Allow some time after pwm FET is turned off
 	B_Com_Fet_On					; B com FET on
-	djnz	ACC, $					; Allow some time after com fet is turned on
+	djnz	ACC, $					; Allow some time after com FET is turned on
 
-	mov	A, Temp2					; Turn on pwm fet
+	mov	A, Temp2					; Turn on pwm FET
 	jb	ACC.0, beep_a_pwm_on
 	A_Pwm_Fet_On
 beep_a_pwm_on:
@@ -1372,7 +1376,7 @@ beep_c_pwm_on:
 	mov	A, Beep_Strength			; On time according to beep strength
 	djnz	ACC, $
 
-	mov	A, Temp2					; Turn off pwm fet
+	mov	A, Temp2					; Turn off pwm FET
 	jb	ACC.0, beep_a_pwm_off
 	A_Pwm_Fet_Off
 beep_a_pwm_off:
@@ -1383,7 +1387,7 @@ beep_c_pwm_off:
 	mov	A, #150					; Off for 25 us
 	djnz	ACC, $
 
-	djnz	Temp2, beep_on_off			; Toggle next pwm fet
+	djnz	Temp2, beep_on_off			; Toggle next pwm FET
 
 	mov	A, Temp3
 beep_off:							; Fets off loop
@@ -1467,6 +1471,8 @@ beacon_beep_exit:
 ; the first 4 values of the 128 items are metadata
 ; item2 - is the duration of each pulse of the musical note, lower the value, higher the pitch
 ; item1 - if item2 is zero, it is the number of milliseconds of wait time, else it is the number of pulses of item2
+;
+; Requirements: Interrupts must be disabled and FETs turned off
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 play_beep_melody:
@@ -1562,14 +1568,14 @@ led_3_done:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Switch power off routine
+; Switch power off
 ;
-; Switches all fets off
+; Switches all FETs off
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 switch_power_off:
-	All_Pwm_Fets_Off				; Turn off all pwm fets
-	All_Com_Fets_Off				; Turn off all commutation fets
+	All_Pwm_Fets_Off				; Turn off all pwm FETs
+	All_Com_Fets_Off				; Turn off all commutation FETs
 	Set_All_Pwm_Phases_Off
 	ret
 
@@ -1760,7 +1766,7 @@ temp_increase_pwm_limit:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Initialize timing routine
+; Initialize timing
 ;
 ; Part of initialization before motor start
 ;
@@ -1785,13 +1791,13 @@ initialize_timing:
 calc_next_comm_period:
 	; Read commutation time
 	clr	IE_EA
-	clr	TMR2CN0_TR2				; Timer 2 disabled
-	mov	Temp1, TMR2L				; Load timer 2 value
+	clr	TMR2CN0_TR2				; Timer2 disabled
+	mov	Temp1, TMR2L				; Load Timer2 value
 	mov	Temp2, TMR2H
 	mov	Temp3, Timer2_X
 	jnb	TMR2CN0_TF2H, ($+4)			; Check if interrupt is pending
 	inc	Temp3					; If it is pending, then timer has already wrapped
-	setb	TMR2CN0_TR2				; Timer 2 enabled
+	setb	TMR2CN0_TR2				; Timer2 enabled
 	setb	IE_EA
 
 IF MCU_48MHZ == 1
@@ -1988,7 +1994,7 @@ calc_next_comm_15deg_set_min:
 	sjmp	calc_next_comm_period_exit
 
 ;**** **** **** **** ****
-; Calculate next commutation timing fast routine
+; Calculate next commutation period (fast)
 ; Fast calculation (Comm_Period4x_H less than 2)
 calc_next_comm_period_fast:
 	; Calculate new commutation time
@@ -2048,7 +2054,7 @@ calc_next_comm_period_exit:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Wait advance timing routine
+; Wait advance timing
 ;
 ; Waits for the advance timing to elapse
 ;
@@ -2059,21 +2065,19 @@ wait_advance_timing:
 	; If it has not already, we wait here for the Wt_Adv_Start_ delay to elapse.
 	Wait_For_Timer3
 
-	; At this point timer 3 has (already) wrapped and been reloaded with the Wt_Zc_Scan_Start_ delay.
-	; In case this delay has also elapsed, timer 3 has been reloaded with a short delay any number of times.
+	; At this point Timer3 has (already) wrapped and been reloaded with the Wt_Zc_Scan_Start_ delay.
+	; In case this delay has also elapsed, Timer3 has been reloaded with a short delay any number of times.
 	; - The interrupt flag is set and the pending flag will clear immediately after enabling the interrupt.
 
 	mov	TMR3RLL, Wt_ZC_Tout_Start_L	; Setup next wait time
 	mov	TMR3RLH, Wt_ZC_Tout_Start_H
 	setb	Flag_Timer3_Pending
-	orl	EIE1, #80h				; Enable timer 3 interrupts
+	orl	EIE1, #80h				; Enable Timer3 interrupts
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Calculate new wait times routine
-;
-; Calculates new wait times
+; Calculate new wait times
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 calc_new_wait_times:
@@ -2094,7 +2098,7 @@ IF MCU_48MHZ == 1
 	rlca	Temp2
 ENDIF
 
-	; Temp2/1 = 15deg timer 2 period
+	; Temp2/1 = 15deg Timer2 period
 
 	jb	Flag_High_Rpm, calc_new_wait_times_fast	; Branch if high rpm
 
@@ -2264,7 +2268,7 @@ calc_new_wait_times_exit:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Wait before zero cross scan routine
+; Wait before zero cross scan
 ;
 ; Waits for the zero cross scan wait time to elapse
 ;
@@ -2273,15 +2277,15 @@ wait_before_zc_scan:
 	; If it has not already, we wait here for the Wt_Zc_Scan_Start_ delay to elapse.
 	Wait_For_Timer3
 
-	; At this point timer 3 has (already) wrapped and been reloaded with the Wt_ZC_Tout_Start_ delay.
-	; In case this delay has also elapsed, timer 3 has been reloaded with a short delay any number of times.
+	; At this point Timer3 has (already) wrapped and been reloaded with the Wt_ZC_Tout_Start_ delay.
+	; In case this delay has also elapsed, Timer3 has been reloaded with a short delay any number of times.
 	; - The interrupt flag is set and the pending flag will clear immediately after enabling the interrupt.
 
 	mov	Startup_Zc_Timeout_Cntd, #2
 
 setup_zc_scan_timeout:
 	setb	Flag_Timer3_Pending
-	orl	EIE1, #80h				; Enable timer 3 interrupts
+	orl	EIE1, #80h				; Enable Timer3 interrupts
 
 	jnb	Flag_Initial_Run_Phase, wait_before_zc_scan_exit
 
@@ -2303,8 +2307,8 @@ ENDIF
 
 setup_zc_scan_timeout_startup_done:
 	clr	IE_EA
-	anl	EIE1, #7Fh				; Disable timer 3 interrupts
-	mov	TMR3CN0, #00h				; Timer 3 disabled and interrupt flag cleared
+	anl	EIE1, #7Fh				; Disable Timer3 interrupts
+	mov	TMR3CN0, #00h				; Timer3 disabled and interrupt flag cleared
 	clr	C
 	clr	A
 	subb	A, Temp1					; Set timeout
@@ -2312,9 +2316,9 @@ setup_zc_scan_timeout_startup_done:
 	clr	A
 	subb	A, Temp2
 	mov	TMR3H, A
-	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
+	mov	TMR3CN0, #04h				; Timer3 enabled and interrupt flag cleared
 	setb	Flag_Timer3_Pending
-	orl	EIE1, #80h				; Enable timer 3 interrupts
+	orl	EIE1, #80h				; Enable Timer3 interrupts
 	setb	IE_EA
 
 wait_before_zc_scan_exit:
@@ -2323,7 +2327,7 @@ wait_before_zc_scan_exit:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Wait for comparator to go low/high routines
+; Wait for comparator to go low/high
 ;
 ; Scans for comparator going low/high
 ; Exit if zero cross timeout has elapsed
@@ -2433,17 +2437,17 @@ comp_read_wrong_startup:
 
 comp_read_wrong_extend_timeout:
 	clr	Flag_Demag_Detected			; Clear demag detected flag
-	anl	EIE1, #7Fh				; Disable timer 3 interrupts
-	mov	TMR3CN0, #00h				; Timer 3 disabled and interrupt flag cleared
+	anl	EIE1, #7Fh				; Disable Timer3 interrupts
+	mov	TMR3CN0, #00h				; Timer3 disabled and interrupt flag cleared
 	jnb	Flag_High_Rpm, comp_read_wrong_low_rpm	; Branch if not high rpm
 
 	mov	TMR3L, #0					; Set timeout to ~1ms
 	mov	TMR3H, #-(8 SHL MCU_48MHZ)
 
 comp_read_wrong_timeout_set:
-	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
+	mov	TMR3CN0, #04h				; Timer3 enabled and interrupt flag cleared
 	setb	Flag_Timer3_Pending
-	orl	EIE1, #80h				; Enable timer 3 interrupts
+	orl	EIE1, #80h				; Enable Timer3 interrupts
 	jmp	comp_start				; If comparator output is not correct - go back and restart
 
 comp_read_wrong_low_rpm:
@@ -2479,28 +2483,28 @@ comp_exit:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Setup commutation timing routine
+; Setup commutation timing
 ;
 ; Clear the zero cross timeout and sets up wait from zero cross to commutation
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 setup_comm_wait:
 	clr	IE_EA
-	anl	EIE1, #7Fh				; Disable timer 3 interrupts
+	anl	EIE1, #7Fh				; Disable Timer3 interrupts
 
 	; It is necessary to update the timer reload registers before the timer registers,
 	; to avoid a reload of the previous values in case of a short Wt_Comm_Start delay.
 
-	; Advance wait time will be loaded by timer 3 immediately after the commutation wait elapses
+	; Advance wait time will be loaded by Timer3 immediately after the commutation wait elapses
 	mov	TMR3RLL, Wt_Adv_Start_L		; Setup next wait time
 	mov	TMR3RLH, Wt_Adv_Start_H
-	mov	TMR3CN0, #00h				; Timer 3 disabled and interrupt flag cleared
+	mov	TMR3CN0, #00h				; Timer3 disabled and interrupt flag cleared
 	mov	TMR3L, Wt_Comm_Start_L
 	mov	TMR3H, Wt_Comm_Start_H
-	mov	TMR3CN0, #04h				; Timer 3 enabled and interrupt flag cleared
+	mov	TMR3CN0, #04h				; Timer3 enabled and interrupt flag cleared
 
 	setb	Flag_Timer3_Pending
-	orl	EIE1, #80h				; Enable timer 3 interrupts
+	orl	EIE1, #80h				; Enable Timer3 interrupts
 	setb	IE_EA					; Enable interrupts again
 
 
@@ -2532,7 +2536,7 @@ eval_comp_exit:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Wait for commutation routine
+; Wait for commutation
 ;
 ; Waits from zero cross to commutation
 ;
@@ -2571,14 +2575,14 @@ wait_for_comm_wait:
 	; If it has not already, we wait here for the Wt_Comm_Start_ delay to elapse.
 	Wait_For_Timer3
 
-	; At this point timer 3 has (already) wrapped and been reloaded with the Wt_Adv_Start_ delay.
-	; In case this delay has also elapsed, timer 3 has been reloaded with a short delay any number of times.
+	; At this point Timer3 has (already) wrapped and been reloaded with the Wt_Adv_Start_ delay.
+	; In case this delay has also elapsed, Timer3 has been reloaded with a short delay any number of times.
 	; - The interrupt flag is set and the pending flag will clear immediately after enabling the interrupt.
 
 	mov	TMR3RLL, Wt_Zc_Scan_Start_L	; Setup next wait time
 	mov	TMR3RLH, Wt_Zc_Scan_Start_H
 	setb	Flag_Timer3_Pending
-	orl	EIE1, #80h				; Enable timer 3 interrupts
+	orl	EIE1, #80h				; Enable Timer3 interrupts
 	ret
 
 
@@ -2615,7 +2619,7 @@ comm2_comm3:						; B->A
 	jb	Flag_Motor_Dir_Rev, comm2_comm3_rev
 
 	clr	IE_EA
-	C_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
+	C_Pwm_Fet_Off					; Turn off pwm FET (Necessary for EN/PWM driver)
 	Set_Pwm_Phase_B
 	A_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
@@ -2624,7 +2628,7 @@ comm2_comm3:						; B->A
 
 comm2_comm3_rev:					; B->C
 	clr	IE_EA
-	A_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
+	A_Pwm_Fet_Off					; Turn off pwm FET (Necessary for EN/PWM driver)
 	Set_Pwm_Phase_B
 	C_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
@@ -2657,7 +2661,7 @@ comm4_comm5:						; A->C
 	jb	Flag_Motor_Dir_Rev, comm4_comm5_rev
 
 	clr	IE_EA
-	B_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
+	B_Pwm_Fet_Off					; Turn off pwm FET (Necessary for EN/PWM driver)
 	Set_Pwm_Phase_A
 	C_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
@@ -2666,7 +2670,7 @@ comm4_comm5:						; A->C
 
 comm4_comm5_rev:					; C->A
 	clr	IE_EA
-	B_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
+	B_Pwm_Fet_Off					; Turn off pwm FET (Necessary for EN/PWM driver)
 	Set_Pwm_Phase_C
 	A_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
@@ -2699,7 +2703,7 @@ comm6_comm1:						; C->B
 	jb	Flag_Motor_Dir_Rev, comm6_comm1_rev
 
 	clr	IE_EA
-	A_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
+	A_Pwm_Fet_Off					; Turn off pwm FET (Necessary for EN/PWM driver)
 	Set_Pwm_Phase_C
 	B_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
@@ -2708,7 +2712,7 @@ comm6_comm1:						; C->B
 
 comm6_comm1_rev:					; A->B
 	clr	IE_EA
-	C_Pwm_Fet_Off					; Turn off pwm fet (Necessary for EN/PWM driver)
+	C_Pwm_Fet_Off					; Turn off pwm FET (Necessary for EN/PWM driver)
 	Set_Pwm_Phase_A
 	B_Com_Fet_On					; Reapply power after a demag cut (Necessary for EN/PWM driver)
 	setb	IE_EA
@@ -2767,7 +2771,7 @@ dshot_cmd_check:
 	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off			; Switch power off in case braking is set
 	call	beacon_beep
-	call	wait200ms
+	call	wait200ms					; Wait a bit for next beep
 	setb	IE_EA					; Enable all interrupts
 
 	sjmp	dshot_cmd_exit
@@ -3210,7 +3214,7 @@ dshot_gcr_encode_F_01111:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Read all eeprom parameters routine
+; Read all eeprom parameters
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 read_all_eeprom_parameters:
@@ -3263,7 +3267,7 @@ read_eeprom_exit:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Erase flash and store all parameter value in EEPROM routine
+; Erase flash and store all parameter values in EEPROM
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 erase_and_store_all_in_eeprom:
@@ -3312,7 +3316,7 @@ write_eeprom_block2:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Read eeprom byte routine
+; Read eeprom byte
 ;
 ; Gives data in A and in address given by Temp1
 ; Assumes address in DPTR
@@ -3327,7 +3331,7 @@ read_eeprom_byte:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Write eeprom byte routine
+; Write eeprom byte
 ;
 ; Assumes data in address given by Temp1, or in accumulator
 ; Assumes address in DPTR
@@ -3356,7 +3360,7 @@ write_eeprom_byte_from_acc:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Erase flash routine (erases the flash segment used for "eeprom" variables)
+; Erase flash (erases the flash segment used for "eeprom" variables)
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 erase_flash:
@@ -3372,7 +3376,7 @@ erase_flash:
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
-; Write eeprom signature routine
+; Write eeprom signature
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 write_eeprom_signature:
@@ -3762,14 +3766,14 @@ bootloader_done:
 
 setup_dshot:
 	; Setup timers for DShot
-	mov	TCON, #51h				; Timer 0/1 run and INT0 edge triggered
-	mov	CKCON0, #01h				; Timer 0/1 clock is system clock divided by 4 (for DShot150)
-	mov	TMOD, #0AAh				; Timer 0/1 set to 8bits auto reload and gated by INT0/1
+	mov	TCON, #51h				; Timer0/1 run and Int0 edge triggered
+	mov	CKCON0, #01h				; Timer0/1 clock is system clock divided by 4 (for DShot150)
+	mov	TMOD, #0AAh				; Timer0/1 set to 8-bits auto reload and gated by Int0/1
 	mov	TH0, #0					; Auto reload value zero
 	mov	TH1, #0
 
-	mov	TMR2CN0, #04h				; Timer 2 enabled (system clock divided by 12)
-	mov	TMR3CN0, #04h				; Timer 3 enabled (system clock divided by 12)
+	mov	TMR2CN0, #04h				; Timer2 enabled (system clock divided by 12)
+	mov	TMR3CN0, #04h				; Timer3 enabled (system clock divided by 12)
 
 	Initialize_PCA					; Initialize PCA
 	Set_Pwm_Polarity				; Set pwm polarity
@@ -3782,15 +3786,16 @@ setup_dshot:
 	call	detect_rcp_level			; Detect RCP level (normal or inverted DShot)
 
 	; Route RCP according to detected DShot signal (normal or inverted)
-	mov	IT01CF, #(80h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to INT0/1, with INT1 inverted
+	mov	IT01CF, #(80h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to Int0/1, with Int1 inverted
 	jnb	Flag_Rcp_DShot_Inverted, ($+6)
-	mov	IT01CF, #(08h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to INT0/1, with INT0 inverted
+	mov	IT01CF, #(08h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to Int0/1, with Int0 inverted
 
-	; Setup interrupts for DShot
 	clr	Flag_Telemetry_Pending		; Clear DShot telemetry flag
-	mov	IE, #2Dh					; Enable timer 1/2 interrupts and INT0/1 interrupts
-	mov	EIE1, #80h				; Enable timer 3 interrupts
-	mov	IP, #03h					; High priority to timer 0 and INT0 interrupts
+
+	; Setup interrupts
+	mov	IE, #2Dh					; Enable Timer1/2 interrupts and Int0/1 interrupts
+	mov	EIE1, #80h				; Enable Timer3 interrupts
+	mov	IP, #03h					; High priority to Timer0 and Int0 interrupts
 
 	setb	IE_EA					; Enable all interrupts
 
@@ -3809,7 +3814,7 @@ IF MCU_48MHZ == 0
 	jz	arming_begin
 ENDIF
 
-	mov	CKCON0, #0Ch				; Timer 0/1 clock is system clock (for DShot300/600)
+	mov	CKCON0, #0Ch				; Timer0/1 clock is system clock (for DShot300/600)
 
 	; Setup variables for DShot300
 	mov	DShot_Timer_Preset, #-128	; Load DShot sync timer preset (for DShot300)
@@ -3871,7 +3876,7 @@ wait_for_start:					; Armed and waiting for power on
 	mov	DShot_Cmd, A				; Reset DShot command (only considered in this loop)
 	mov	DShot_Cmd_Cnt, A
 	mov	Beacon_Delay_Cnt, A			; Clear beacon wait counter
-	mov	Timer2_X, A				; Clear timer 2 extended byte
+	mov	Timer2_X, A				; Clear Timer2 extended byte
 
 wait_for_start_loop:
 	clr	C
