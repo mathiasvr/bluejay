@@ -231,8 +231,9 @@ Pwm_Braking_L:				DS	1	; Max Braking pwm (lo byte)
 Pwm_Braking_H:				DS	1	; Max Braking pwm (hi byte)
 
 Adc_Conversion_Cnt:			DS	1	; Adc conversion counter
-Current_Average_Temp:		DS	1	; Current average temperature (lo byte ADC reading, assuming hi byte is 1)
+Temp_Level:					DS	1	; Current average temperature (lo byte ADC reading, assuming hi byte is 1)
 Temp_Prot_Limit:			DS	1	; Temperature protection limit
+Temp_Pwm_Level_Setpoint:	DS	1	; PWM level setpoint
 
 Beep_Strength:				DS	1	; Strength of beeps
 
@@ -1666,91 +1667,114 @@ set_pwm_limit_high_rpm_store:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 check_temp_and_limit_power:
-	inc	Adc_Conversion_Cnt			; Increment conversion counter
-	clr	C
-	mov	A, Adc_Conversion_Cnt		; Is conversion count equal to temp rate?
-	subb	A, #8
-	jc	temp_increase_pwm_limit		; No - increase pwm limit
+	; Check temp protection enabled?
+	mov	Temp2, #Pgm_Enable_Temp_Prot
+	mov	A, @Temp2
+	jz	temp_check_exit				; No -> Exit
 
-	; Wait for ADC conversion to complete
-	jnb	ADC0CN0_ADINT, check_temp_and_limit_power
+check_temp_conversion_counter:
+	; Increment conversion counter and check temp rate is reached
+	dec	Adc_Conversion_Cnt
+	mov  A, Adc_Conversion_Cnt
+	jnz temp_check_exit
+	mov	Adc_Conversion_Cnt, #TEMP_CHECK_RATE		; Reset temp check counter
 
-	mov	Temp3, ADC0L				; Read ADC result
+	; Check ADC conversion is done
+	jnb	ADC0CN0_ADINT, check_temp_conversion_counter	; Avoid infinite loop
+
+	; Read ADC 10 bit result
+	mov	Temp3, ADC0L
 	mov	Temp4, ADC0H
 
+	; Start a new ADC conversion after reading sample,
+	; so we don't have to wait next time
 	Stop_Adc
+	Start_Adc
 
-	mov	Adc_Conversion_Cnt, #0		; Yes - temperature check. Reset counter
+	; Check TEMP_LIMIT in Base.inc and make calculations to understand temperature readings
+	; Is temperature reading below 256? (ADC 10bit value corresponding to about 25ºC)
+	mov	A, Temp4
+	jz temp_level_dec				; Temperature below 25ºC -> Decrease
 
-	mov	Temp2, #Pgm_Enable_Temp_Prot	; Is temp protection enabled?
-	mov	A, @Temp2
-	jz	temp_check_exit			; No - branch
-
-	mov	A, Temp4					; Is temperature reading below 256?
-	jnz	temp_average_inc_dec		; No - proceed
-
-	mov	A, Current_Average_Temp		; Yes - decrement average
-	jz	temp_average_updated		; Already zero - no change
-	sjmp	temp_average_dec			; Decrement
-
-temp_average_inc_dec:
+	; Temp level > Current Temp?
 	clr	C
-	mov	A, Temp3					; Check if current temperature is above or below average
-	subb	A, Current_Average_Temp
-	jz	temp_average_updated_load_acc	; Equal - no change
+	mov	 A, Temp3
+	subb A, Temp_Level
+	jz temp_level_updated			; Equal -> Level Updated
+	jnc temp_level_inc				; No -> Increase temp level
 
-	mov	A, Current_Average_Temp		; Above - increment average
-	jnc	temp_average_inc
+	; Yes -> Decrease
+temp_level_dec:
+	mov	A, Temp_Level
+	jz	temp_level_updated			; Already zero (about 25ºC) - no change
 
-	jz	temp_average_updated		; Below - decrement average if average is not already zero
-temp_average_dec:
-	dec	A						; Decrement average
-	sjmp	temp_average_updated
+	; Decrease
+	dec Temp_Level
+	sjmp temp_level_updated			; Level Updated
 
-temp_average_inc:
-	inc	A						; Increment average
-	jz	temp_average_dec
-	sjmp	temp_average_updated
+temp_level_inc:
+	; Increase
+	inc Temp_Level
+	mov	A, Temp_Level
 
-temp_average_updated_load_acc:
-	mov	A, Current_Average_Temp
-temp_average_updated:
-	mov	Current_Average_Temp, A
+	jnz	temp_level_updated			; Level Updated
+	mov Temp_Level, #255
+
+temp_level_updated:
+	mov	A, Temp_Level
+
+	mov	Temp_Pwm_Level_Setpoint, #255	; Remove setpoint
 
 	clr	C
 	subb	A, Temp_Prot_Limit			; Is temperature below first limit?
-	jc	temp_check_exit			; Yes - exit
+	jc	temp_update_pwm_limit			; Yes - exit
 
-	mov	Pwm_Limit, #192			; No - limit pwm
+	mov	Temp_Pwm_Level_Setpoint, #200	; No - update pwm limit (about 80%)
 
 	clr	C
 	subb	A, #(TEMP_LIMIT_STEP / 2)	; Is temperature below second limit
-	jc	temp_check_exit			; Yes - exit
+	jc	temp_update_pwm_limit			; Yes - exit
 
-	mov	Pwm_Limit, #128			; No - limit pwm
+	mov	Temp_Pwm_Level_Setpoint, #150	; No - update pwm limit (about 60%)
 
 	clr	C
 	subb	A, #(TEMP_LIMIT_STEP / 2)	; Is temperature below third limit
-	jc	temp_check_exit			; Yes - exit
+	jc	temp_update_pwm_limit			; Yes - exit
 
-	mov	Pwm_Limit, #64				; No - limit pwm
+	mov	Temp_Pwm_Level_Setpoint, #100	; No - update pwm limit (about 40% allowing landing)
 
 	clr	C
 	subb	A, #(TEMP_LIMIT_STEP / 2)	; Is temperature below final limit
-	jc	temp_check_exit			; Yes - exit
+	jc	temp_update_pwm_limit			; Yes - exit
 
-	mov	Pwm_Limit, #0				; No - limit pwm
+	mov	Temp_Pwm_Level_Setpoint, #0		; No - update pwm limit
+
+temp_update_pwm_limit:
+	; pwm limit is updated one unit at a time to avoid abrupt pwm changes
+	; resulting in current spikes
+	; Compare pwm limit to setpoint
+	clr C
+	mov	A, Pwm_Limit
+	subb A, Temp_Pwm_Level_Setpoint
+	jz temp_check_exit					; pwm limit == setpoint -> exit
+	jc temp_update_pwm_limit_inc		; pwm limit < setpoint -> increase pwm limit
+
+	; Decrease pwm limit
+	mov A, Pwm_Limit
+	jz temp_check_exit					; pwm limit is 0 -> Exit
+	dec A
+	mov Pwm_Limit, A
+	jmp temp_check_exit
+
+temp_update_pwm_limit_inc:
+	; Increase pwm limit
+	mov A, Pwm_Limit
+	inc A
+	mov Pwm_Limit, A
+	jnz temp_check_exit					; pwm limit not 0 -> Exit
+	mov Pwm_Limit, #255					; else set pwm limit to max & exit
 
 temp_check_exit:
-	ret
-
-temp_increase_pwm_limit:
-	mov	A, Pwm_Limit
-	add	A, #16					; Increase pwm limit
-	jnc	($+4)					; Check if above maximum
-	mov	A, #255					; Set maximum value
-
-	mov	Pwm_Limit, A				; Set new pwm limit
 	ret
 
 
@@ -3964,14 +3988,14 @@ motor_start:
 
 	jnb	ADC0CN0_ADINT, $			; Wait for adc conversion to complete
 
-	mov	Current_Average_Temp, ADC0L	; Read initial temperature
+	mov	Temp_Level, ADC0L	; Read initial temperature
 	mov	A, ADC0H
 	jnz	($+5)					; Is reading below 256?
-	mov	Current_Average_Temp, #0		; Yes - set average temperature value to zero
+	mov	Temp_Level, #0		; Yes - set average temperature value to zero
 
-	mov	Adc_Conversion_Cnt, #8		; Make sure a temp reading is done
+	mov	Adc_Conversion_Cnt, #1		; Make sure a temp reading is done
 	call	check_temp_and_limit_power
-	mov	Adc_Conversion_Cnt, #8		; Make sure a temp reading is done next time
+	mov	Adc_Conversion_Cnt, #1		; Make sure a temp reading is done next time
 
 	; Set up start operating conditions
 	clr	IE_EA					; Disable interrupts
