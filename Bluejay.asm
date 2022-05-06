@@ -1700,27 +1700,28 @@ check_temp_conversion_counter:
 	clr	C
 	mov	 A, Temp3
 	subb A, Temp_Level
-	jz temp_level_updated			; Equal -> Level Updated
-	jnc temp_level_inc				; No -> Increase temp level
+	jz temp_update_pwm_limit		; Equal -> Only update pwm limit
+	jnc temp_level_inc				; No -> Increase temperature level
 
-	; Yes -> Decrease
+	; Yes -> Decrease temperature level
 temp_level_dec:
 	mov	A, Temp_Level
-	jz	temp_level_updated			; Already zero (about 25ºC) - no change
+	jz	temp_update_pwm_limit		; Already zero (about 25ºC) - only update pwm limit
 
 	; Decrease
 	dec Temp_Level
-	sjmp temp_level_updated			; Level Updated
+	sjmp temp_level_update_setpoint	; Level Updated, so setpoint should be updated
 
 temp_level_inc:
 	; Increase
 	inc Temp_Level
 	mov	A, Temp_Level
+	jnz	temp_level_update_setpoint	; Level Updated, so setpoint should be updated
 
-	jnz	temp_level_updated			; Level Updated
-	mov Temp_Level, #255
+	mov Temp_Level, #255			; Already maximum - only update pwm limit
+	jmp temp_update_pwm_limit
 
-temp_level_updated:
+temp_level_update_setpoint:
 	mov	A, Temp_Level
 
 	mov	Temp_Pwm_Level_Setpoint, #255	; Remove setpoint
@@ -1747,7 +1748,9 @@ temp_level_updated:
 	subb	A, #(TEMP_LIMIT_STEP / 2)	; Is temperature below final limit
 	jc	temp_update_pwm_limit			; Yes - exit
 
-	mov	Temp_Pwm_Level_Setpoint, #0		; No - update pwm limit
+	mov	Temp_Pwm_Level_Setpoint, #50	; No - update pwm limit (about 20% forced landing)
+	; Zero pwm cannot be set because of set_pwm_limit algo restrictions
+	; Otherwise hard stuttering is produced
 
 temp_update_pwm_limit:
 	; pwm limit is updated one unit at a time to avoid abrupt pwm changes
