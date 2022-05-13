@@ -185,3 +185,20 @@ Set_MCU_Clk_48MHz MACRO
 	setb	Flag_Clock_At_48MHz
 ENDM
 
+Wdt_Configure MACRO
+	mov LFO0CN, #83h				; Enable Low Frequency Oscillator and set to 80Khz in preparation to later enable WDT
+	mov WDTCN,#0 					; change the current WDT interval to a lower interval with MSB cleared to 0
+	nop 							; insert wait for 1 SYSCLK period
+ENDM
+
+Wdt_Kick_Enable MACRO
+	mov WDTCN,#0A5h					; reset watchdog timer
+	; ensure insert wait for 2 divided LFOSC0 clock periods before kicking again, otherwise wdg reset is canceled
+ENDM
+
+Wdt_Disable MACRO
+	mov WDTCN,#0DEh					; disable software watchdog timer
+	mov WDTCN,#0ADh
+	; insert wait for 3 divided LFOSC0 clock periods before kicking again
+ENDM
+

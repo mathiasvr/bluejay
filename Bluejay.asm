@@ -3733,7 +3733,8 @@ IF MCU_48MHZ == 1
 	mov	SFRPAGE, #00h
 ENDIF
 	Initialize_Crossbar				; Initialize the crossbar and related functionality
-	call	switch_power_off			; Switch power off again, after initializing ports
+	call	switch_power_off		; Switch power off again, after initializing ports
+	Wdt_Configure					; Configure wdt
 
 	; Clear RAM
 	clr	A						; Clear accumulator
@@ -3750,7 +3751,7 @@ ENDIF
 	clr	IE_EA					; Disable interrupts explicitly
 	call	wait100ms					; Wait a bit to avoid audible resets if not properly powered
 	call	play_beep_melody			; Play startup beep melody
-	call	led_control				; Set LEDs to programmed values
+	call	led_control			; Set LEDs to programmed values
 
 	call	wait100ms					; Wait for flight controller to get ready
 
@@ -4053,7 +4054,6 @@ motor_start_bidir_done:
 	call	calc_next_comm_period
 	call	initialize_timing			; Initialize timing
 
-
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Run entry point
@@ -4063,6 +4063,7 @@ motor_start_bidir_done:
 ; Run 1 = B(p-on) + C(n-pwm) - comparator A evaluated
 ; Out_cA changes from low to high
 run1:
+	Wdt_Kick_Enable
 	call	wait_for_comp_out_high		; Wait for high
 ;		setup_comm_wait			; Setup wait time from zero cross to commutation
 ;		evaluate_comparator_integrity	; Check whether comparator reading has been normal
@@ -4076,6 +4077,7 @@ run1:
 ; Run 2 = A(p-on) + C(n-pwm) - comparator B evaluated
 ; Out_cB changes from high to low
 run2:
+	Wdt_Kick_Enable
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -4090,6 +4092,7 @@ run2:
 ; Run 3 = A(p-on) + B(n-pwm) - comparator C evaluated
 ; Out_cC changes from low to high
 run3:
+	Wdt_Kick_Enable
 	call	wait_for_comp_out_high
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -4103,6 +4106,7 @@ run3:
 ; Run 4 = C(p-on) + B(n-pwm) - comparator A evaluated
 ; Out_cA changes from high to low
 run4:
+	Wdt_Kick_Enable
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -4116,6 +4120,7 @@ run4:
 ; Run 5 = C(p-on) + A(n-pwm) - comparator B evaluated
 ; Out_cB changes from low to high
 run5:
+	Wdt_Kick_Enable
 	call	wait_for_comp_out_high
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -4129,6 +4134,7 @@ run5:
 ; Run 6 = B(p-on) + A(n-pwm) - comparator C evaluated
 ; Out_cC changes from high to low
 run6:
+	Wdt_Kick_Enable
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -4171,8 +4177,8 @@ initial_run_phase:
 
 	mov	Initial_Run_Rot_Cntd, A		; Not zero - store counter
 
-	jnb	Flag_Rcp_Stop, run1			; Check if pulse is below stop value
-	jb	Flag_Pgm_Bidir, run1		; Check if bidirectional operation
+	jnb	Flag_Rcp_Stop, run6_bidir_continue	; Check if pulse is below stop value
+	jb	Flag_Pgm_Bidir, run6_bidir_continue	; Check if bidirectional operation
 
 	sjmp	exit_run_mode
 
@@ -4265,6 +4271,11 @@ exit_run_mode_on_timeout:
 exit_run_mode:
 	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off
+
+	; Disable wdt and wait before posibly reenable shortly again
+	Wdt_Disable
+	call wait1ms
+
 	mov	Flags0, #0				; Clear run time flags (in case they are used in interrupts)
 	mov	Flags1, #0
 
