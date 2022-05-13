@@ -13,7 +13,7 @@ while getopts ":l:m:d:p:" o; do
       ;;
     m)
       mcu=${OPTARG}
-      ((mcu == 'H' || mcu == 'L')) || usage
+      ((mcu == "H" || mcu == "L")) || usage
       ;;
     d)
       deadtime=${OPTARG}

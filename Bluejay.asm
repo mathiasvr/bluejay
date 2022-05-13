@@ -2349,6 +2349,7 @@ setup_zc_scan_timeout_startup_done:
 	setb	IE_EA
 
 wait_before_zc_scan_exit:
+	Wdt_Kick_Enable				; Kick wdt
 	ret
 
 
@@ -2475,6 +2476,7 @@ comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer3 enabled and interrupt flag cleared
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable Timer3 interrupts
+	Wdt_Kick_Enable				; Kick wdt
 	jmp	comp_start				; If comparator output is not correct - go back and restart
 
 comp_read_wrong_low_rpm:
@@ -2532,7 +2534,8 @@ setup_comm_wait:
 
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable Timer3 interrupts
-	setb	IE_EA					; Enable interrupts again
+	setb	IE_EA				; Enable interrupts again
+	Wdt_Kick_Enable				; Kick wdt
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -2610,6 +2613,7 @@ wait_for_comm_wait:
 	mov	TMR3RLH, Wt_Zc_Scan_Start_H
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable Timer3 interrupts
+	Wdt_Kick_Enable				; Kick wdt
 	ret
 
 
@@ -3733,7 +3737,8 @@ IF MCU_48MHZ == 1
 	mov	SFRPAGE, #00h
 ENDIF
 	Initialize_Crossbar				; Initialize the crossbar and related functionality
-	call	switch_power_off			; Switch power off again, after initializing ports
+	call	switch_power_off		; Switch power off again, after initializing ports
+	Wdt_Configure					; Configure wdt
 
 	; Clear RAM
 	clr	A						; Clear accumulator
@@ -3750,7 +3755,7 @@ ENDIF
 	clr	IE_EA					; Disable interrupts explicitly
 	call	wait100ms					; Wait a bit to avoid audible resets if not properly powered
 	call	play_beep_melody			; Play startup beep melody
-	call	led_control				; Set LEDs to programmed values
+	call	led_control			; Set LEDs to programmed values
 
 	call	wait100ms					; Wait for flight controller to get ready
 
@@ -3821,7 +3826,7 @@ setup_dshot:
 
 	; Setup interrupts
 	mov	IE, #2Dh					; Enable Timer1/2 interrupts and Int0/1 interrupts
-	mov	EIE1, #80h				; Enable Timer3 interrupts
+	mov	EIE1, #80h					; Enable Timer3 interrupts
 	mov	IP, #03h					; High priority to Timer0 and Int0 interrupts
 
 	setb	IE_EA					; Enable all interrupts
@@ -4053,7 +4058,6 @@ motor_start_bidir_done:
 	call	calc_next_comm_period
 	call	initialize_timing			; Initialize timing
 
-
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Run entry point
@@ -4155,9 +4159,10 @@ run6:
 	sjmp	exit_run_mode
 
 startup_phase_done:
-	clr	Flag_Startup_Phase			; Clear startup phase flag
-	mov	Pwm_Limit, Pwm_Limit_Beg
-	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
+	; Clear startup phase flag & remove pwm limits
+	clr	Flag_Startup_Phase
+	mov	Pwm_Limit, #255
+	mov	Pwm_Limit_By_Rpm, #255
 
 initial_run_phase:
 	; If it is a direction change - branch
@@ -4171,8 +4176,8 @@ initial_run_phase:
 
 	mov	Initial_Run_Rot_Cntd, A		; Not zero - store counter
 
-	jnb	Flag_Rcp_Stop, run1			; Check if pulse is below stop value
-	jb	Flag_Pgm_Bidir, run1		; Check if bidirectional operation
+	jnb	Flag_Rcp_Stop, run6_bidir_continue	; Check if pulse is below stop value
+	jb	Flag_Pgm_Bidir, run6_bidir_continue	; Check if bidirectional operation
 
 	sjmp	exit_run_mode
 
@@ -4265,6 +4270,11 @@ exit_run_mode_on_timeout:
 exit_run_mode:
 	clr	IE_EA					; Disable all interrupts
 	call	switch_power_off
+
+	; Disable wdt and wait before posibly reenable shortly again
+	Wdt_Disable
+	call wait1ms
+
 	mov	Flags0, #0				; Clear run time flags (in case they are used in interrupts)
 	mov	Flags1, #0
 
