@@ -2349,6 +2349,7 @@ setup_zc_scan_timeout_startup_done:
 	setb	IE_EA
 
 wait_before_zc_scan_exit:
+	Wdt_Kick_Enable				; Kick wdt
 	ret
 
 
@@ -2475,6 +2476,7 @@ comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer3 enabled and interrupt flag cleared
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable Timer3 interrupts
+	Wdt_Kick_Enable				; Kick wdt
 	jmp	comp_start				; If comparator output is not correct - go back and restart
 
 comp_read_wrong_low_rpm:
@@ -2532,7 +2534,8 @@ setup_comm_wait:
 
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable Timer3 interrupts
-	setb	IE_EA					; Enable interrupts again
+	setb	IE_EA				; Enable interrupts again
+	Wdt_Kick_Enable				; Kick wdt
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -2610,6 +2613,7 @@ wait_for_comm_wait:
 	mov	TMR3RLH, Wt_Zc_Scan_Start_H
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable Timer3 interrupts
+	Wdt_Kick_Enable				; Kick wdt
 	ret
 
 
@@ -3822,7 +3826,7 @@ setup_dshot:
 
 	; Setup interrupts
 	mov	IE, #2Dh					; Enable Timer1/2 interrupts and Int0/1 interrupts
-	mov	EIE1, #80h				; Enable Timer3 interrupts
+	mov	EIE1, #80h					; Enable Timer3 interrupts
 	mov	IP, #03h					; High priority to Timer0 and Int0 interrupts
 
 	setb	IE_EA					; Enable all interrupts
@@ -4063,7 +4067,6 @@ motor_start_bidir_done:
 ; Run 1 = B(p-on) + C(n-pwm) - comparator A evaluated
 ; Out_cA changes from low to high
 run1:
-	Wdt_Kick_Enable
 	call	wait_for_comp_out_high		; Wait for high
 ;		setup_comm_wait			; Setup wait time from zero cross to commutation
 ;		evaluate_comparator_integrity	; Check whether comparator reading has been normal
@@ -4077,7 +4080,6 @@ run1:
 ; Run 2 = A(p-on) + C(n-pwm) - comparator B evaluated
 ; Out_cB changes from high to low
 run2:
-	Wdt_Kick_Enable
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -4092,7 +4094,6 @@ run2:
 ; Run 3 = A(p-on) + B(n-pwm) - comparator C evaluated
 ; Out_cC changes from low to high
 run3:
-	Wdt_Kick_Enable
 	call	wait_for_comp_out_high
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -4106,7 +4107,6 @@ run3:
 ; Run 4 = C(p-on) + B(n-pwm) - comparator A evaluated
 ; Out_cA changes from high to low
 run4:
-	Wdt_Kick_Enable
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -4120,7 +4120,6 @@ run4:
 ; Run 5 = C(p-on) + A(n-pwm) - comparator B evaluated
 ; Out_cB changes from low to high
 run5:
-	Wdt_Kick_Enable
 	call	wait_for_comp_out_high
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
@@ -4134,7 +4133,6 @@ run5:
 ; Run 6 = B(p-on) + A(n-pwm) - comparator C evaluated
 ; Out_cC changes from high to low
 run6:
-	Wdt_Kick_Enable
 	call	wait_for_comp_out_low
 ;		setup_comm_wait
 ;		evaluate_comparator_integrity
