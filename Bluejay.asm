@@ -4161,9 +4161,10 @@ run6:
 	sjmp	exit_run_mode
 
 startup_phase_done:
-	clr	Flag_Startup_Phase			; Clear startup phase flag
-	mov	Pwm_Limit, Pwm_Limit_Beg
-	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
+	; Clear startup phase flag & remove pwm limits
+	clr	Flag_Startup_Phase
+	mov	Pwm_Limit, #255
+	mov	Pwm_Limit_By_Rpm, #255
 
 initial_run_phase:
 	; If it is a direction change - branch

@@ -192,7 +192,7 @@ Wdt_Configure MACRO
 ENDM
 
 Wdt_Kick_Enable MACRO
-	mov WDTCN,#0A5h					; reset watchdog timer
+	;mov WDTCN,#0A5h					; reset watchdog timer
 	; ensure insert wait for 2 divided LFOSC0 clock periods before kicking again, otherwise wdg reset is canceled
 ENDM
 
