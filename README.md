@@ -22,6 +22,7 @@ Bluejay aims to be an open source successor to BLHeli_S adding several improveme
 - Smoother throttle to pwm conversion
 - User configurable startup tunes :musical_note:
 - Smooth throttle limitting based on temperature
+- Watchdog timer protection implemented for 51.2ms
 - Numerous optimizations and bug fixes
 
 See the project [changelog](CHANGELOG.md) for a list of changes.
