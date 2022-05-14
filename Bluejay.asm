@@ -432,6 +432,7 @@ LOCAL wait_for_t3 done_waiting
 
 wait_for_t3:
 	jnb	Flag_Timer3_Pending, done_waiting
+	Wdt_Kick_Enable						; Kick watchdog
 	sjmp	wait_for_t3
 
 done_waiting:
@@ -2349,7 +2350,6 @@ setup_zc_scan_timeout_startup_done:
 	setb	IE_EA
 
 wait_before_zc_scan_exit:
-	Wdt_Kick_Enable				; Kick wdt
 	ret
 
 
@@ -2408,6 +2408,8 @@ ENDIF
 	mov	Temp3, #(20 SHL MCU_48MHZ)	; Maximum 20
 
 comp_check_timeout:
+	Wdt_Kick_Enable						; Kick watchdog
+
 	jb	Flag_Timer3_Pending, comp_check_timeout_not_timed_out	; Has zero cross scan timeout elapsed?
 
 	mov	A, Comparator_Read_Cnt			; Check that comparator has been read
@@ -2476,7 +2478,6 @@ comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer3 enabled and interrupt flag cleared
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable Timer3 interrupts
-	Wdt_Kick_Enable				; Kick wdt
 	jmp	comp_start				; If comparator output is not correct - go back and restart
 
 comp_read_wrong_low_rpm:
@@ -2535,7 +2536,6 @@ setup_comm_wait:
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable Timer3 interrupts
 	setb	IE_EA				; Enable interrupts again
-	Wdt_Kick_Enable				; Kick wdt
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -2613,7 +2613,6 @@ wait_for_comm_wait:
 	mov	TMR3RLH, Wt_Zc_Scan_Start_H
 	setb	Flag_Timer3_Pending
 	orl	EIE1, #80h				; Enable Timer3 interrupts
-	Wdt_Kick_Enable				; Kick wdt
 	ret
 
 

@@ -187,7 +187,7 @@ ENDM
 
 Wdt_Configure MACRO
 	mov LFO0CN, #83h				; Enable Low Frequency Oscillator and set to 80Khz in preparation to later enable WDT
-	mov WDTCN,#3 					; Set WDT interval to 51,2 ms
+	mov WDTCN,#0 					; Set WDT interval to 0,8 ms
 	nop 							; insert wait for 1 SYSCLK period
 ENDM
 
