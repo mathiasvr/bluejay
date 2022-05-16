@@ -3990,14 +3990,6 @@ motor_start:
 
 	call	wait1ms
 
-	; Set up start operating conditions
-	clr	IE_EA						; Disable interrupts
-	mov	Temp2, #Pgm_Startup_Power_Max
-	mov	Pwm_Limit_Beg, @Temp2		; Set initial pwm limit
-	mov	Pwm_Limit, Pwm_Limit_Beg
-	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
-	mov	Temp_Pwm_Level_Setpoint, Pwm_Limit_Beg
-
 	; Read initial average temperature
 	Start_Adc						; Start adc conversion
 
@@ -4008,9 +4000,19 @@ motor_start:
 	jnz	($+5)						; Is reading below 256?
 	mov	Temp_Level, #0				; Yes - set average temperature value to zero
 
+	mov	Temp_Pwm_Level_Setpoint, #255	; Initialize temperature pwm level setpoint
+
 	mov	Adc_Conversion_Cnt, #1		; Make sure a temp reading is ckecked
 	call	check_temp_and_limit_power
 	mov	Adc_Conversion_Cnt, #1		; Make sure a temp reading is ckecked next time
+
+	; Set up start operating conditions
+	clr	IE_EA						; Disable interrupts
+	mov	Temp2, #Pgm_Startup_Power_Max
+	mov	Pwm_Limit_Beg, @Temp2		; Set initial pwm limit
+	mov	Pwm_Limit, Pwm_Limit_Beg
+	mov	Pwm_Limit_By_Rpm, Pwm_Limit_Beg
+	mov	Temp_Pwm_Level_Setpoint, Pwm_Limit_Beg
 
 	; Begin startup sequence
 IF MCU_48MHZ == 1
