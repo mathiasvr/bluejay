@@ -23,7 +23,7 @@ Bluejay aims to be an open source successor to BLHeli_S adding several improveme
 - User configurable startup tunes :musical_note:
 - Smooth throttle limitting based on temperature
 - Watchdog timer protection as low as 0,8ms
-- Mechanism to inform the pilot when max pwm is being limited because of configured temperature limit is reached
+- Mechanism to notify bf 0 rpm when max pwm is being limited because of configured temperature limit is reached
 - Numerous optimizations and bug fixes
 
 See the project [changelog](CHANGELOG.md) for a list of changes.
