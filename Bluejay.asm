@@ -170,7 +170,7 @@ Flag_Dir_Change_Brake		BIT	Flags1.5		; Set when braking before direction change 
 Flag_High_Rpm				BIT	Flags1.6		; Set when motor rpm is high (Comm_Period4x_H less than 2)
 
 Flags2:					DS	1			; State flags. NOT reset upon motor_start
-;						BIT	Flags2.0
+Flag_Temperature_Exceeded	BIT	Flags2.0		; Set if temperature is above the configured one
 Flag_Pgm_Dir_Rev			BIT	Flags2.1		; Set if the programmed direction is reversed
 Flag_Pgm_Bidir				BIT	Flags2.2		; Set if the programmed control mode is bidirectional operation
 Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when Timer2 interrupt shall be ignored
@@ -182,7 +182,7 @@ Flag_Rcp_DShot_Inverted		BIT	Flags2.7		; DShot RC pulse input is inverted (and s
 Flags3:					DS	1			; State flags. NOT reset upon motor_start
 Flag_Telemetry_Pending		BIT	Flags3.0		; DShot telemetry data packet is ready to be sent
 Flag_Dithering				BIT	Flags3.1		; PWM dithering enabled
-Flag_Had_Signal			BIT	Flags3.2		; Used to detect reset after having had a valid signal
+Flag_Had_Signal				BIT	Flags3.2		; Used to detect reset after having had a valid signal
 
 Tlm_Data_L:				DS	1			; DShot telemetry data (lo byte)
 Tlm_Data_H:				DS	1			; DShot telemetry data (hi byte)
@@ -1725,12 +1725,14 @@ temp_level_inc:
 temp_level_update_setpoint:
 	mov	A, Temp_Level
 
+	clr Flag_Temperature_Exceeded		; Clear temperature exceeded flag
 	mov	Temp_Pwm_Level_Setpoint, #255	; Remove setpoint
 
 	clr	C
 	subb	A, Temp_Prot_Limit			; Is temperature below first limit?
 	jc	temp_update_pwm_limit			; Yes - exit
 
+	setb Flag_Temperature_Exceeded		; Set temperature exceeded flag when above max temperature level
 	mov	Temp_Pwm_Level_Setpoint, #200	; No - update pwm limit (about 80%)
 
 	clr	C
@@ -2917,6 +2919,9 @@ dshot_tlm_create_packet:
 
 	Early_Return_Packet_Stage 0
 
+	; If temperature exceeded flag transmit 0 erpm telemetry
+	jb Flag_Temperature_Exceeded, dshot_tlm_zero
+
 	; Read commutation period
 	clr	IE_EA
 	mov	Tlm_Data_L, Comm_Period4x_L
@@ -2950,6 +2955,7 @@ dshot_tlm_create_packet:
 	mov	A, Tlm_Data_L				; Already 12-bit
 	jnz	dshot_tlm_12bit_encoded
 
+dshot_tlm_zero:
 	; If period is zero then reset to FFFFh (FFFh for 12-bit)
 	mov	Tlm_Data_H, #0Fh
 	mov	Tlm_Data_L, #0FFh
@@ -4000,6 +4006,7 @@ motor_start:
 	jnz	($+5)						; Is reading below 256?
 	mov	Temp_Level, #0				; Yes - set average temperature value to zero
 
+	clr Flag_Temperature_Exceeded		; Clear temperature exceeded flag
 	mov	Temp_Pwm_Level_Setpoint, #255	; Initialize temperature pwm level setpoint
 
 	mov	Adc_Conversion_Cnt, #1		; Make sure a temp reading is ckecked
