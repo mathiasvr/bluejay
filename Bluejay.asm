@@ -1720,7 +1720,7 @@ temp_level_inc:
 	jnz	temp_level_update_setpoint	; Level Updated, so setpoint should be updated
 
 	mov Temp_Level, #255			; Already maximum - only update pwm limit
-	jmp temp_update_pwm_limit
+	sjmp temp_update_pwm_limit
 
 temp_level_update_setpoint:
 	mov	A, Temp_Level
@@ -1770,7 +1770,7 @@ temp_update_pwm_limit:
 	jz temp_check_exit					; pwm limit is 0 -> Exit
 	dec A
 	mov Pwm_Limit, A
-	jmp temp_check_exit
+	sjmp temp_check_exit
 
 temp_update_pwm_limit_inc:
 	; Increase pwm limit
@@ -2479,8 +2479,8 @@ comp_read_wrong_extend_timeout:
 comp_read_wrong_timeout_set:
 	mov	TMR3CN0, #04h				; Timer3 enabled and interrupt flag cleared
 	setb	Flag_Timer3_Pending
-	orl	EIE1, #80h				; Enable Timer3 interrupts
-	jmp	comp_start				; If comparator output is not correct - go back and restart
+	orl	EIE1, #80h					; Enable Timer3 interrupts
+	ajmp	comp_start				; If comparator output is not correct - go back and restart
 
 comp_read_wrong_low_rpm:
 	mov	A, Comm_Period4x_H			; Set timeout to ~4x comm period 4x value
@@ -3264,7 +3264,7 @@ read_all_eeprom_parameters:
 	call	read_eeprom_byte
 	mov	A, Bit_Access
 	cjne	A, #0AAh, read_eeprom_store_defaults
-	jmp	read_eeprom_read
+	sjmp	read_eeprom_read
 
 read_eeprom_store_defaults:
 	mov	Flash_Key_1, #0A5h
@@ -3273,7 +3273,7 @@ read_eeprom_store_defaults:
 	call	erase_and_store_all_in_eeprom
 	mov	Flash_Key_1, #0
 	mov	Flash_Key_2, #0
-	jmp	read_eeprom_exit
+	sjmp	read_eeprom_exit
 
 read_eeprom_read:
 	; Read eeprom
@@ -4165,14 +4165,15 @@ run6:
 	jnc	startup_phase_done
 
 	jnb	Flag_Rcp_Stop, run1			; If pulse is above stop value - Continue to run
-	sjmp	exit_run_mode
+	ajmp	exit_run_mode
 
 startup_phase_done:
 	; Clear startup phase flag & remove pwm limits
 	clr	Flag_Startup_Phase
-	mov	Pwm_Limit, #255
+	mov	Pwm_Limit, #255					; Reset temperature level pwm limit
 	mov	Pwm_Limit_By_Rpm, #255
-	mov	Temp_Pwm_Level_Setpoint, #255
+	mov	Temp_Pwm_Level_Setpoint, #255	; Reset temperature level setpoint
+	clr Flag_Temperature_Exceeded		; Clear temperature exceeded flag
 
 initial_run_phase:
 	; If it is a direction change - branch
