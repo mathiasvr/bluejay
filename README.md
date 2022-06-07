@@ -25,7 +25,7 @@ Bluejay aims to be an open source successor to BLHeli_S adding several improveme
 - Watchdog timer protection
 - Temperature throttle limit & notification
 	- Smooth throttle limitting
-	- Notify Betaflight 0 rpm when temperature limit is reached (activate OSD Motor Diagnostics in Betaflight to see in OSD when temperature limit is being applied).
+	- Notify Betaflight 0 rpm when temperature limit is reached. Note. Activate OSD Motor Diagnostics in Betaflight to see in OSD when temperature limit is being applied.
 - Numerous optimizations and bug fixes
 
 See the project [changelog](CHANGELOG.md) for a list of changes.
