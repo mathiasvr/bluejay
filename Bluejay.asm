@@ -1675,10 +1675,12 @@ check_temp_and_limit_power:
 
 check_temp_conversion_counter:
 	; Increment conversion counter and check temp rate is reached
-	dec	Adc_Conversion_Cnt
+	inc	Adc_Conversion_Cnt
+
+	; Check temperature update rate mask (0-7)
 	mov  A, Adc_Conversion_Cnt
-	jnz temp_check_exit
-	mov	Adc_Conversion_Cnt, #TEMP_CHECK_RATE		; Reset temp check counter
+	anl A, #TEMP_UPDATE_RATE_MASK					; Count between 0-7
+	jnz temp_check_exit								; If not zero -> Exit
 
 	; Check ADC conversion is done
 	jnb	ADC0CN0_ADINT, check_temp_conversion_counter	; Avoid infinite loop
@@ -1756,6 +1758,11 @@ temp_level_update_setpoint:
 	; Otherwise hard stuttering is produced
 
 temp_update_pwm_limit:
+	; Check pwm limit update rate mask (0-63, pwm limit update rate is slower than temperature update rate)
+	mov  A, Adc_Conversion_Cnt
+	anl A, #TEMP_LIMIT_RATE_MASK					; Count between 0-63
+	jnz temp_check_exit								; If not zero -> exit
+
 	; pwm limit is updated one unit at a time to avoid abrupt pwm changes
 	; resulting in current spikes
 	; Compare pwm limit to setpoint
@@ -4009,9 +4016,9 @@ motor_start:
 	clr Flag_Temperature_Exceeded		; Clear temperature exceeded flag
 	mov	Temp_Pwm_Level_Setpoint, #255	; Initialize temperature pwm level setpoint
 
-	mov	Adc_Conversion_Cnt, #1		; Make sure a temp reading is ckecked
+	mov	Adc_Conversion_Cnt, #(TEMP_UPDATE_RATE_MASK-1)		; Make sure a temp reading is ckecked
 	call	check_temp_and_limit_power
-	mov	Adc_Conversion_Cnt, #1		; Make sure a temp reading is ckecked next time
+	mov	Adc_Conversion_Cnt, #(TEMP_UPDATE_RATE_MASK-1)		; Make sure a temp reading is ckecked
 
 	; Set up start operating conditions
 	clr	IE_EA						; Disable interrupts
