@@ -22,8 +22,8 @@ Bluejay aims to be an open source successor to BLHeli_S adding several improveme
 - Smoother throttle to pwm conversion
 - User configurable startup tunes :musical_note:
 - Smooth throttle limitting based on temperature
-- Watchdog timer protection
-- Temperature throttle limit & notification
+- New: Watchdog timer protection
+- New: Temperature throttle limit & notification
 	- Smooth throttle limitting
 	- Notify Betaflight 0 rpm (telemetry 0x0FFF value) when temperature limit is reached. Note. Activate OSD Motor Diagnostics in Betaflight to see it as an stuck 'S' motor.
 - Numerous optimizations and bug fixes
