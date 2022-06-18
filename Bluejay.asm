@@ -2927,7 +2927,7 @@ dshot_tlm_create_packet:
 	Early_Return_Packet_Stage 0
 
 	; If temperature exceeded flag transmit 0 erpm telemetry
-	jb Flag_Temperature_Exceeded, dshot_tlm_zero
+	jb Flag_Temperature_Exceeded, dshot_tlm_period_ready
 
 	; Read commutation period
 	clr	IE_EA
@@ -2954,15 +2954,19 @@ dshot_tlm_create_packet:
 	addc	A, Temp2
 	mov	Tlm_Data_H, A
 
+dshot_tlm_period_ready:
 	Early_Return_Packet_Stage 1
-	mov	A, Tlm_Data_H
+
+	; If temperature exceeded flag transmit 0 erpm telemetry
+	jb Flag_Temperature_Exceeded, dshot_tlm_zero_code
 
 	; 12-bit encode telemetry data
+	mov	A, Tlm_Data_H
 	jnz	dshot_12bit_encode
 	mov	A, Tlm_Data_L				; Already 12-bit
 	jnz	dshot_tlm_12bit_encoded
 
-dshot_tlm_zero:
+dshot_tlm_zero_code:
 	; If period is zero then reset to FFFFh (FFFh for 12-bit)
 	mov	Tlm_Data_H, #0Fh
 	mov	Tlm_Data_L, #0FFh
