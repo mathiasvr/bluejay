@@ -125,7 +125,7 @@ DEFAULT_PGM_DIRECTION			EQU	1	; 1=Normal	2=Reversed	3=Bidir		4=Bidir rev
 DEFAULT_PGM_BEEP_STRENGTH		EQU	40	; 0..255 (BLHeli_S is 1..255)
 DEFAULT_PGM_BEACON_STRENGTH		EQU	80	; 0..255
 DEFAULT_PGM_BEACON_DELAY			EQU	4	; 1=1m		2=2m			3=5m			4=10m		5=Infinite
-DEFAULT_PGM_ENABLE_TEMP_PROT		EQU	7	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
+DEFAULT_PGM_ENABLE_TEMP_PROT		EQU	1	; 0=Disabled	1=80C	2=90C	3=100C	4=110C	5=120C	6=130C	7=140C
 
 DEFAULT_PGM_BRAKE_ON_STOP		EQU	0	; 1=Enabled	0=Disabled
 DEFAULT_PGM_LED_CONTROL			EQU	0	; Byte for LED control. 2 bits per LED, 0=Off, 1=On
@@ -1674,7 +1674,8 @@ check_temp_and_limit_power:
 	; Check temp protection enabled?
 	mov	Temp2, #Pgm_Enable_Temp_Prot
 	mov	A, @Temp2
-	jz	temp_check_exit				; No -> Exit
+	jnz	check_temp_conversion_counter
+	ajmp temp_check_exit				; No -> Exit
 
 check_temp_conversion_counter:
 	; Increment conversion counter and check temp rate is reached
@@ -1760,9 +1761,15 @@ temp_level_update_setpoint:
 
 temp_update_pwm_limit:
 	; Check pwm limit update rate mask (0-63, pwm limit update rate is slower than temperature update rate)
-	mov  A, Adc_Conversion_Cnt
+	mov A, Adc_Conversion_Cnt
 	anl A, #TEMP_LIMIT_RATE_MASK					; Count between 0-63
 	jnz temp_check_exit								; If not zero -> exit
+
+	; Prepare extended telemetry temperature value for next telemetry transmission
+	mov A, Temp_Level
+	add A, #65							; Codify over -40 degree Celsius (zero Temp_Level corresponds to 25 degree Celsius)
+	mov Ext_Telemetry_L, A				; Set telemetry low value with temperature data
+	mov Ext_Telemetry_H, #02h			; Set telemetry high value on first repeated dshot coding partition
 
 	; pwm limit is updated one unit at a time to avoid abrupt pwm changes
 	; resulting in current spikes
