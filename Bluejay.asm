@@ -170,7 +170,7 @@ Flag_Dir_Change_Brake		BIT	Flags1.5		; Set when braking before direction change 
 Flag_High_Rpm				BIT	Flags1.6		; Set when motor rpm is high (Comm_Period4x_H less than 2)
 
 Flags2:					DS	1			; State flags. NOT reset upon motor_start
-Flag_Temperature_Exceeded	BIT	Flags2.0		; Set if temperature is above the configured one
+;None						BIT	Flags2.0		; Placeholder
 Flag_Pgm_Dir_Rev			BIT	Flags2.1		; Set if the programmed direction is reversed
 Flag_Pgm_Bidir				BIT	Flags2.2		; Set if the programmed control mode is bidirectional operation
 Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when Timer2 interrupt shall be ignored
@@ -259,6 +259,9 @@ DShot_GCR_Pulse_Time_2_Tmp:	DS	1
 DShot_GCR_Pulse_Time_3_Tmp:	DS	1
 
 DShot_GCR_Start_Delay:		DS	1
+
+Ext_Telemetry_L:			DS	1
+Ext_Telemetry_H:			DS	1
 
 ;**** **** **** **** ****
 ; Indirect addressing data segments
@@ -1727,14 +1730,12 @@ temp_level_inc:
 temp_level_update_setpoint:
 	mov	A, Temp_Level
 
-	clr Flag_Temperature_Exceeded		; Clear temperature exceeded flag
 	mov	Temp_Pwm_Level_Setpoint, #255	; Remove setpoint
 
 	clr	C
 	subb	A, Temp_Prot_Limit			; Is temperature below first limit?
 	jc	temp_update_pwm_limit			; Yes - exit
 
-	setb Flag_Temperature_Exceeded		; Set temperature exceeded flag when above max temperature level
 	mov	Temp_Pwm_Level_Setpoint, #200	; No - update pwm limit (about 80%)
 
 	clr	C
@@ -2926,8 +2927,9 @@ dshot_tlm_create_packet:
 
 	Early_Return_Packet_Stage 0
 
-	; If temperature exceeded flag transmit 0 erpm telemetry
-	jb Flag_Temperature_Exceeded, dshot_tlm_period_ready
+	; If coded telemetry ready jump to telemetry ready
+	mov A, Ext_Telemetry_H
+	jnz dshot_tlm_ready
 
 	; Read commutation period
 	clr	IE_EA
@@ -2954,11 +2956,12 @@ dshot_tlm_create_packet:
 	addc	A, Temp2
 	mov	Tlm_Data_H, A
 
-dshot_tlm_period_ready:
+dshot_tlm_ready:
 	Early_Return_Packet_Stage 1
 
-	; If temperature exceeded flag transmit 0 erpm telemetry
-	jb Flag_Temperature_Exceeded, dshot_tlm_zero_code
+	; If extended telemetry ready jump to extended telemetry coded
+	mov A, Ext_Telemetry_H
+	jnz dshot_tlm_ext_coded
 
 	; 12-bit encode telemetry data
 	mov	A, Tlm_Data_H
@@ -2966,10 +2969,17 @@ dshot_tlm_period_ready:
 	mov	A, Tlm_Data_L				; Already 12-bit
 	jnz	dshot_tlm_12bit_encoded
 
-dshot_tlm_zero_code:
 	; If period is zero then reset to FFFFh (FFFh for 12-bit)
 	mov	Tlm_Data_H, #0Fh
 	mov	Tlm_Data_L, #0FFh
+	sjmp dshot_tlm_12bit_encoded
+
+dshot_tlm_ext_coded:
+	; Move extended telemetry data to telemetry data to send
+	mov Tlm_Data_H, Ext_Telemetry_H
+	mov Tlm_Data_L, Ext_Telemetry_L
+	; Clear extended telemetry data
+	mov Ext_Telemetry_H, #0
 
 dshot_tlm_12bit_encoded:
 	Early_Return_Packet_Stage 2
@@ -4017,7 +4027,7 @@ motor_start:
 	jnz	($+5)						; Is reading below 256?
 	mov	Temp_Level, #0				; Yes - set average temperature value to zero
 
-	clr Flag_Temperature_Exceeded		; Clear temperature exceeded flag
+	mov Ext_Telemetry_H, #0				; Clear extended telemetry data
 	mov	Temp_Pwm_Level_Setpoint, #255	; Initialize temperature pwm level setpoint
 
 	mov	Adc_Conversion_Cnt, #(TEMP_UPDATE_RATE_MASK-1)		; Make sure a temp reading is ckecked
@@ -4184,7 +4194,6 @@ startup_phase_done:
 	mov	Pwm_Limit, #255					; Reset temperature level pwm limit
 	mov	Pwm_Limit_By_Rpm, #255
 	mov	Temp_Pwm_Level_Setpoint, #255	; Reset temperature level setpoint
-	clr Flag_Temperature_Exceeded		; Clear temperature exceeded flag
 
 initial_run_phase:
 	; If it is a direction change - branch
