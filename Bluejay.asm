@@ -1672,8 +1672,7 @@ set_pwm_limit_high_rpm_store:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 check_temp_and_limit_power:
 	; Check temp protection enabled?
-	mov	Temp2, #Pgm_Enable_Temp_Prot
-	mov	A, @Temp2
+	mov	A, Temp_Prot_Limit
 	jnz	check_temp_conversion_counter
 	ajmp temp_check_exit				; No -> Exit
 
@@ -2983,8 +2982,8 @@ dshot_tlm_ready:
 
 dshot_tlm_ext_coded:
 	; Move extended telemetry data to telemetry data to send
-	mov Tlm_Data_H, Ext_Telemetry_H
 	mov Tlm_Data_L, Ext_Telemetry_L
+	mov Tlm_Data_H, Ext_Telemetry_H
 	; Clear extended telemetry data
 	mov Ext_Telemetry_H, #0
 
@@ -3641,6 +3640,7 @@ decode_demag_high:
 
 decode_demag_done:
 	; Decode temperature protection limit
+	mov Temp_Prot_Limit, #0
 	mov	Temp1, #Pgm_Enable_Temp_Prot
 	mov	A, @Temp1
 	mov	Temp1, A
