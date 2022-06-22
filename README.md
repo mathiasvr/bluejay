@@ -25,7 +25,7 @@ Bluejay aims to be an open source successor to BLHeli_S adding several improveme
 - EXT: Watchdog timer protection
 - EXT: Temperature throttle limit & notification
 	- Smooth throttle limitting
-	- Added temperature telemetry on repeated bidirectional DSHOT 0x02 range
+- EXT: Temperature telemetry on repeated bidirectional DSHOT 0x02 range
 - Numerous optimizations and bug fixes
 
 See the project [changelog](CHANGELOG.md) for a list of changes.
