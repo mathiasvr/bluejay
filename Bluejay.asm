@@ -107,7 +107,9 @@ Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __		yes	no	high	-	Pino
 ;PWM_FREQ			EQU	0	; 0=24, 1=48, 2=96 kHz
 
 
-PWM_CENTERED	EQU	DEADTIME > 0			; Use center aligned pwm on ESCs with dead time
+PWM_CENTERED					EQU		DEADTIME > 0			; Use center aligned pwm on ESCs with dead time
+
+USE_EXTENDED_TELEMETRY_DEBUG	EQU		0	; Do not use extended telemetry debugging values
 
 IF MCU_48MHZ < 2 AND PWM_FREQ	< 3
 	; Number of bits in pwm high byte
@@ -1673,8 +1675,7 @@ set_pwm_limit_high_rpm_store:
 check_temp_and_limit_power:
 	; Check temp protection enabled?
 	mov	A, Temp_Prot_Limit
-	jnz	check_temp_conversion_counter
-	ajmp temp_check_exit				; No -> Exit
+	jz	temp_check_exit									; If no temperature limit exit
 
 check_temp_conversion_counter:
 	; Increment conversion counter and check temp rate is reached
@@ -1682,8 +1683,8 @@ check_temp_conversion_counter:
 
 	; Check temperature update rate mask (0-7)
 	mov  A, Adc_Conversion_Cnt
-	anl A, #TEMP_UPDATE_RATE_MASK					; Count between 0-7
-	jnz temp_check_exit								; If not zero -> Exit
+	anl A, #TEMP_UPDATE_RATE_MASK						; Count between 0-7
+	jnz temp_check_exit									; Leave if not 0
 
 	; Check ADC conversion is done
 	jnb	ADC0CN0_ADINT, check_temp_conversion_counter	; Avoid infinite loop
@@ -1764,12 +1765,6 @@ temp_update_pwm_limit:
 	anl A, #TEMP_LIMIT_RATE_MASK					; Count between 0-63
 	jnz temp_check_exit								; If not zero -> exit
 
-	; Prepare extended telemetry temperature value for next telemetry transmission
-	mov A, Temp_Level
-	add A, #65							; Codify over -40 degree Celsius (zero Temp_Level corresponds to 25 degree Celsius)
-	mov Ext_Telemetry_L, A				; Set telemetry low value with temperature data
-	mov Ext_Telemetry_H, #02h			; Set telemetry high value on first repeated dshot coding partition
-
 	; pwm limit is updated one unit at a time to avoid abrupt pwm changes
 	; resulting in current spikes
 	; Compare pwm limit to setpoint
@@ -1797,6 +1792,65 @@ temp_update_pwm_limit_inc:
 temp_check_exit:
 	ret
 
+
+
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+; Extended telemetry
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+
+
+do_extended_telemetry:
+	; Use the same counter than adc conversion counter to load extended telemetry
+	; This way we have Temp3 & Temp4 with temperature value
+	mov A, Adc_Conversion_Cnt
+	anl A, #TEMP_LIMIT_RATE_MASK					; Count between 0-63
+
+IF USE_EXTENDED_TELEMETRY_DEBUG == 1
+	cjne A, #0, do_extended_telemetry_debug_0
+ELSE
+	jnz do_extended_telemetry_end
+ENDIF
+
+	; Prepare extended telemetry temperature value for next telemetry transmission
+	; Check value above or below 30ºC
+	mov A, Temp4
+	jnz do_extended_telemetry_temp_above_30
+
+	; Value below 30ºC
+	mov A, Temp3
+	clr C
+	subb A, #(255 - 30)
+	sjmp do_extended_telemetry_temp_loaded
+
+do_extended_telemetry_temp_above_30:
+	; Value above 30ºC
+	mov A, Temp3
+	clr C
+	add A, #30
+
+do_extended_telemetry_temp_loaded:
+	mov Ext_Telemetry_L, A				; Set telemetry low value with temperature data
+	mov Ext_Telemetry_H, #02h			; Set telemetry high value on first repeated dshot coding partition
+	ret
+
+do_extended_telemetry_debug_0:
+	cjne A, #21, do_extended_telemetry_debug_1
+	mov Ext_Telemetry_L, #11			; Set telemetry low value with temperature data
+	mov Ext_Telemetry_H, #0Ch			; Set telemetry high value on first repeated dshot coding partition
+	ret
+
+do_extended_telemetry_debug_1:
+	cjne A, #42, do_extended_telemetry_end
+	mov Ext_Telemetry_L, #22			; Set telemetry low value with temperature data
+	mov Ext_Telemetry_H, #0Eh			; Set telemetry high value on first repeated dshot coding partition
+	ret
+
+do_extended_telemetry_end:
+	ret
 
 
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
@@ -4176,6 +4230,7 @@ run6:
 	call	wait_for_comm
 	call	comm6_comm1
 	call	check_temp_and_limit_power
+	call 	do_extended_telemetry
 	call	calc_next_comm_period
 ;		wait_advance_timing
 ;		calc_new_wait_times
