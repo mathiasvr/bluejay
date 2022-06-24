@@ -1816,21 +1816,21 @@ ELSE
 ENDIF
 
 	; Prepare extended telemetry temperature value for next telemetry transmission
-	; Check value above or below 30ºC
+	; Check value above or below 20ºC
 	mov A, Temp4
-	jnz do_extended_telemetry_temp_above_30
+	jnz do_extended_telemetry_temp_above_20
 
-	; Value below 30ºC
+	; Value below 20ºC
 	mov A, Temp3
 	clr C
-	subb A, #(255 - 30)
+	subb A, #(255 - 20)
 	sjmp do_extended_telemetry_temp_loaded
 
-do_extended_telemetry_temp_above_30:
-	; Value above 30ºC
+do_extended_telemetry_temp_above_20:
+	; Value above 20ºC
 	mov A, Temp3
 	clr C
-	add A, #30
+	add A, #20
 
 do_extended_telemetry_temp_loaded:
 	mov Ext_Telemetry_L, A				; Set telemetry low value with temperature data
