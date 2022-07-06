@@ -1673,13 +1673,13 @@ set_pwm_limit_high_rpm_store:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 check_temp_and_limit_power:
+	; Increment conversion counter and check temp rate is reached
+	; TODO: DO NOT USE THIS COUNTER IN EXTENDED DSHOT TELEMETRY
+	inc	Adc_Conversion_Cnt
+
 	; Check temp protection enabled?
 	mov	A, Temp_Prot_Limit
 	jz	temp_check_exit									; If no temperature limit exit
-
-check_temp_conversion_counter:
-	; Increment conversion counter and check temp rate is reached
-	inc	Adc_Conversion_Cnt
 
 	; Check temperature update rate mask (0-7)
 	mov  A, Adc_Conversion_Cnt
@@ -1687,7 +1687,7 @@ check_temp_conversion_counter:
 	jnz temp_check_exit									; Leave if not 0
 
 	; Check ADC conversion is done
-	jnb	ADC0CN0_ADINT, check_temp_conversion_counter	; Avoid infinite loop
+	jnb	ADC0CN0_ADINT, temp_check_exit					; Leave if conversion is not ready
 
 	; Read ADC 10 bit result
 	mov	Temp3, ADC0L
@@ -1827,16 +1827,19 @@ ENDIF
 	mov A, Temp4
 	jnz do_extended_telemetry_temp_above_20
 
-	; Value below 20ºC
+	; Value below 20ºC -> to code between 0-20
 	mov A, Temp3
 	clr C
 	subb A, #(255 - 20)
+	jnc do_extended_telemetry_temp_loaded
+
+	; Value below 0ºC -> clamp to 0
+	clr A
 	sjmp do_extended_telemetry_temp_loaded
 
 do_extended_telemetry_temp_above_20:
-	; Value above 20ºC
+	; Value above 20ºC -> to code between 20-255
 	mov A, Temp3
-	clr C
 	add A, #20
 
 do_extended_telemetry_temp_loaded:
