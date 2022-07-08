@@ -1677,10 +1677,6 @@ check_temp_and_limit_power:
 	; TODO: DO NOT USE THIS COUNTER IN EXTENDED DSHOT TELEMETRY
 	inc	Adc_Conversion_Cnt
 
-	; Check temp protection enabled?
-	mov	A, Temp_Prot_Limit
-	jz	temp_check_exit									; If no temperature limit exit
-
 	; Check temperature update rate mask (0-7)
 	mov  A, Adc_Conversion_Cnt
 	anl A, #TEMP_UPDATE_RATE_MASK						; Count between 0-7
@@ -1697,6 +1693,12 @@ check_temp_and_limit_power:
 	; so we don't have to wait next time
 	Stop_Adc
 	Start_Adc
+
+	; Check temp protection enabled, and exit when protection is disabled
+	; This way temperature is avaliable for extended telemetry even if no
+	; Temperature protection is active
+	mov	A, Temp_Prot_Limit
+	jz	temp_check_exit
 
 	; Check TEMP_LIMIT in Base.inc and make calculations to understand temperature readings
 	; Is temperature reading below 256? (ADC 10bit value corresponding to about 25ºC)
