@@ -21,7 +21,6 @@ Bluejay aims to be an open source successor to BLHeli_S adding several improveme
 - High performance: Low commutation interference
 - Smoother throttle to pwm conversion
 - User configurable startup tunes :musical_note:
-- Smooth throttle limitting based on temperature
 - EXT: Watchdog timer protection
 - EXT: Smooth throttle limitting based on temperature
 - EXT: Temperature telemetry on extended bidirectional DSHOT 0x02 range
