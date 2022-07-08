@@ -172,7 +172,7 @@ Flag_Dir_Change_Brake		BIT	Flags1.5		; Set when braking before direction change 
 Flag_High_Rpm				BIT	Flags1.6		; Set when motor rpm is high (Comm_Period4x_H less than 2)
 
 Flags2:					DS	1			; State flags. NOT reset upon motor_start
-;None						BIT	Flags2.0		; Placeholder
+Flag_Ext_Tele				BIT	Flags2.0		; Set if extended telemetry is enabled
 Flag_Pgm_Dir_Rev			BIT	Flags2.1		; Set if the programmed direction is reversed
 Flag_Pgm_Bidir				BIT	Flags2.2		; Set if the programmed control mode is bidirectional operation
 Flag_Skip_Timer2_Int		BIT	Flags2.3		; Set for 48MHz MCUs when Timer2 interrupt shall be ignored
@@ -1673,13 +1673,13 @@ set_pwm_limit_high_rpm_store:
 ;
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 check_temp_and_limit_power:
+	; Increment conversion counter and check temp rate is reached
+	; TODO: DO NOT USE THIS COUNTER IN EXTENDED DSHOT TELEMETRY
+	inc	Adc_Conversion_Cnt
+
 	; Check temp protection enabled?
 	mov	A, Temp_Prot_Limit
 	jz	temp_check_exit									; If no temperature limit exit
-
-check_temp_conversion_counter:
-	; Increment conversion counter and check temp rate is reached
-	inc	Adc_Conversion_Cnt
 
 	; Check temperature update rate mask (0-7)
 	mov  A, Adc_Conversion_Cnt
@@ -1687,7 +1687,7 @@ check_temp_conversion_counter:
 	jnz temp_check_exit									; Leave if not 0
 
 	; Check ADC conversion is done
-	jnb	ADC0CN0_ADINT, check_temp_conversion_counter	; Avoid infinite loop
+	jnb	ADC0CN0_ADINT, temp_check_exit					; Leave if conversion is not ready
 
 	; Read ADC 10 bit result
 	mov	Temp3, ADC0L
@@ -1804,10 +1804,17 @@ temp_check_exit:
 
 
 do_extended_telemetry:
+	; Return if extended telemetry is disabled
+	jnb Flag_Ext_Tele, do_extended_telemetry_end
+
+	; Return if a telemetry response is ongoing
+	mov A, Ext_Telemetry_H
+	jnz do_extended_telemetry_end
+
 	; Use the same counter than adc conversion counter to load extended telemetry
 	; This way we have Temp3 & Temp4 with temperature value
 	mov A, Adc_Conversion_Cnt
-	anl A, #TEMP_LIMIT_RATE_MASK					; Count between 0-63
+	anl A, #0FFh					; Count between 0-255
 
 IF USE_EXTENDED_TELEMETRY_DEBUG == 1
 	cjne A, #0, do_extended_telemetry_debug_0
@@ -1820,16 +1827,19 @@ ENDIF
 	mov A, Temp4
 	jnz do_extended_telemetry_temp_above_20
 
-	; Value below 20ºC
+	; Value below 20ºC -> to code between 0-20
 	mov A, Temp3
 	clr C
 	subb A, #(255 - 20)
+	jnc do_extended_telemetry_temp_loaded
+
+	; Value below 0ºC -> clamp to 0
+	clr A
 	sjmp do_extended_telemetry_temp_loaded
 
 do_extended_telemetry_temp_above_20:
-	; Value above 20ºC
+	; Value above 20ºC -> to code between 20-255
 	mov A, Temp3
-	clr C
 	add A, #20
 
 do_extended_telemetry_temp_loaded:
@@ -1840,13 +1850,13 @@ do_extended_telemetry_temp_loaded:
 do_extended_telemetry_debug_0:
 	cjne A, #21, do_extended_telemetry_debug_1
 	mov Ext_Telemetry_L, #11			; Set telemetry low value with temperature data
-	mov Ext_Telemetry_H, #0Ch			; Set telemetry high value on first repeated dshot coding partition
+	mov Ext_Telemetry_H, #0Ah			; Set telemetry high value on first repeated dshot coding partition
 	ret
 
 do_extended_telemetry_debug_1:
 	cjne A, #42, do_extended_telemetry_end
 	mov Ext_Telemetry_L, #22			; Set telemetry low value with temperature data
-	mov Ext_Telemetry_H, #0Eh			; Set telemetry high value on first repeated dshot coding partition
+	mov Ext_Telemetry_H, #0Ch			; Set telemetry high value on first repeated dshot coding partition
 	ret
 
 do_extended_telemetry_end:
@@ -2861,27 +2871,31 @@ detect_rcp_level_read:
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 dshot_cmd_check:
 	mov	A, DShot_Cmd
-	jz	dshot_cmd_exit_no_clear
+	jnz	dshot_cmd_beeps_check
+	ret
 
+dshot_cmd_beeps_check:
 	mov	Temp1, A
 	clr	C
-	subb	A, #6					; Beacon beeps for command 1-5
-	jnc	dshot_cmd_direction_normal
+	subb	A, #6				; Beacon beeps for command 1-5
+	jnc	dshot_cmd_check_count
 
 	clr	IE_EA					; Disable all interrupts
-	call	switch_power_off			; Switch power off in case braking is set
+	call	switch_power_off	; Switch power off in case braking is set
 	call	beacon_beep
-	call	wait200ms					; Wait a bit for next beep
-	setb	IE_EA					; Enable all interrupts
+	call	wait200ms			; Wait a bit for next beep
+	setb	IE_EA				; Enable all interrupts
 
 	sjmp	dshot_cmd_exit
 
-dshot_cmd_direction_normal:
-	clr	C						; Remaining commands must be received 6 times in a row
+dshot_cmd_check_count:
+	; Remaining commands must be received 6 times in a row
+	clr	C
 	mov	A, DShot_Cmd_Cnt
 	subb	A, #6
 	jc	dshot_cmd_exit_no_clear
 
+dshot_cmd_direction_normal:
 	; Set motor spinning direction to normal
 	cjne	Temp1, #7, dshot_cmd_direction_reverse
 
@@ -2907,9 +2921,31 @@ dshot_cmd_direction_bidir_off:
 
 dshot_cmd_direction_bidir_on:
 	; Set motor control mode to bidirectional
-	cjne	Temp1, #10, dshot_cmd_direction_user_normal
+	cjne	Temp1, #10, dshot_cmd_extended_telemetry_enable
 
 	setb	Flag_Pgm_Bidir
+
+	sjmp	dshot_cmd_exit
+
+dshot_cmd_extended_telemetry_enable:
+	; Enable extended telemetry
+	cjne	Temp1, #13, dshot_cmd_extended_telemetry_disable
+
+	mov Ext_Telemetry_L, #00h
+	mov Ext_Telemetry_H, #0Eh	; Send state/event 0 frame to signal telemetry enable
+
+	setb 	Flag_Ext_Tele
+
+	sjmp	dshot_cmd_exit
+
+dshot_cmd_extended_telemetry_disable:
+	; Disable extended telemetry
+	cjne	Temp1, #14, dshot_cmd_direction_user_normal
+
+	mov Ext_Telemetry_L, #0FFh
+	mov Ext_Telemetry_H, #0Eh	; Send state/event 0xff frame to signal telemetry disable
+
+	clr 	Flag_Ext_Tele
 
 	sjmp	dshot_cmd_exit
 
@@ -3910,6 +3946,7 @@ setup_dshot:
 	mov	IT01CF, #(08h + (RTX_PIN SHL 4) + RTX_PIN) ; Route RCP input to Int0/1, with Int0 inverted
 
 	clr	Flag_Telemetry_Pending		; Clear DShot telemetry flag
+	clr	Flag_Ext_Tele				; Clear extended telemetry enabled flag
 
 	; Setup interrupts
 	mov	IE, #2Dh					; Enable Timer1/2 interrupts and Int0/1 interrupts
