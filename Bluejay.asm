@@ -109,6 +109,10 @@ Z_	EQU	26		; Bm Cm Am Vn __ RX __ __	Ac Ap Bc Bp Cc Cp __ __		yes	no	high	-	Pino
 
 PWM_CENTERED					EQU		DEADTIME > 0			; Use center aligned pwm on ESCs with dead time
 
+; Before flying with watchdog enabled it is necessary to have the drone with all motors activated
+; for at least 2 battery cycles time to be sure that the ESC can hold it
+USE_WATCHDOG					EQU		0	; Do not use watchdog by default (more testing needed)
+
 USE_EXTENDED_TELEMETRY_DEBUG	EQU		0	; Do not use extended telemetry debugging values
 
 IF MCU_48MHZ < 2 AND PWM_FREQ	< 3
